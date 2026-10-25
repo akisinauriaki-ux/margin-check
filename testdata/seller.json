@@ -8,5 +8,6 @@
   "paypal_fixed_fee_cents": 49,
   "paypal_fee_evidence_id": "E-501",
   "paypal_fixed_fee_evidence_id": "E-502",
-  "yearly_cost_of_money_percent": 10.0
+  "yearly_cost_of_money_percent": 10.0,
+  "underline_min_giveaway_percent": 2.0
 }

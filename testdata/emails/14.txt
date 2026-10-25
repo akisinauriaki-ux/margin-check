@@ -3,13 +3,13 @@ Based on: E-503
 Buyer:
 Hi,
 We want to buy 20 boxes of ceramic bowls at $40 each.
-We need a 30% discount, free shipping, and our annual volume rebate to be settled after sale.
+We need a 40% discount, free shipping, and our annual volume rebate to be settled after sale.
 
 Seller:
 Hi,
-We can agree to 20 boxes at $40 each with a 30% discount and free shipping.
+We can agree to 20 boxes at $40 each with a 40% discount and free shipping.
 Regarding the rebate, our volume rebate percentage will be determined at the end of the quarter.
 Payment is due on receipt.
 
 Buyer:
-Agreed, send over the invoice for 20 boxes at 30% off with free shipping.
+Agreed, send over the invoice for 20 boxes at 40% off with free shipping.

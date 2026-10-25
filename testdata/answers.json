@@ -40,7 +40,7 @@
         "value": 40,
         "currency": null,
         "by": "buyer",
-        "status": "requested",
+        "status": "agreed",
         "source_sentence": "We would like to order 40 boxes of ceramic mugs for our retail gift shop."
       },
       {
@@ -67,7 +67,10 @@
         "status": "agreed",
         "source_sentence": "Our wholesale price is $40 per box for 40 boxes, shipping is $24, and payment is due on receipt."
       }
-    ]
+    ],
+    "expected_profit_cents": 62367,
+    "expected_giveaway_cents": 0,
+    "deal_closed": true
   },
   {
     "email_id": "02",
@@ -110,7 +113,7 @@
         "value": 30,
         "currency": null,
         "by": "buyer",
-        "status": "requested",
+        "status": "agreed",
         "source_sentence": "We want to purchase 30 boxes of soy candles."
       },
       {
@@ -153,7 +156,10 @@
         "status": "agreed",
         "source_sentence": "Shipping will be $15 and payment is due on receipt."
       }
-    ]
+    ],
+    "expected_profit_cents": 32286,
+    "expected_giveaway_cents": 0,
+    "deal_closed": true
   },
   {
     "email_id": "03",
@@ -196,7 +202,7 @@
         "value": 50,
         "currency": null,
         "by": "buyer",
-        "status": "requested",
+        "status": "agreed",
         "source_sentence": "We would like to place an order for fifty boxes of herbal tea tins."
       },
       {
@@ -231,7 +237,10 @@
         "status": "agreed",
         "source_sentence": "Shipping is $20 for the order."
       }
-    ]
+    ],
+    "expected_profit_cents": 101174,
+    "expected_giveaway_cents": 925,
+    "deal_closed": true
   },
   {
     "email_id": "04",
@@ -276,7 +285,7 @@
         "value": 45,
         "currency": null,
         "by": "buyer",
-        "status": "requested",
+        "status": "agreed",
         "source_sentence": "We are ready to order 45 boxes of olive oil bottles for our culinary shop."
       },
       {
@@ -303,7 +312,10 @@
         "status": "offered",
         "source_sentence": "As for delivery, we will sort out shipping costs later once everything is packed."
       }
-    ]
+    ],
+    "expected_profit_cents": 61483,
+    "expected_giveaway_cents": 0,
+    "deal_closed": true
   },
   {
     "email_id": "05",
@@ -346,7 +358,7 @@
         "value": 25,
         "currency": null,
         "by": "buyer",
-        "status": "requested",
+        "status": "agreed",
         "source_sentence": "We want to purchase 25 boxes of handmade porcelain planters at $42 per box."
       },
       {
@@ -381,7 +393,10 @@
         "status": "agreed",
         "source_sentence": "The best we can offer is net 14 days, with $18 shipping."
       }
-    ]
+    ],
+    "expected_profit_cents": 43384,
+    "expected_giveaway_cents": 403,
+    "deal_closed": true
   },
   {
     "email_id": "06",
@@ -451,7 +466,10 @@
         "status": "agreed",
         "source_sentence": "Shipping is $22 for the order, and payment is due on receipt."
       }
-    ]
+    ],
+    "expected_profit_cents": 70413,
+    "expected_giveaway_cents": 0,
+    "deal_closed": true
   },
   {
     "email_id": "07",
@@ -494,7 +512,7 @@
         "value": 40,
         "currency": null,
         "by": "buyer",
-        "status": "requested",
+        "status": "agreed",
         "source_sentence": "We need forty units of wool knit blankets for our boutique."
       },
       {
@@ -529,7 +547,10 @@
         "status": "agreed",
         "source_sentence": "Shipping cost is $25 for the shipment."
       }
-    ]
+    ],
+    "expected_profit_cents": 100587,
+    "expected_giveaway_cents": 384,
+    "deal_closed": true
   },
   {
     "email_id": "08",
@@ -572,7 +593,7 @@
         "value": 4400,
         "currency": "USD",
         "by": "seller",
-        "status": "offered",
+        "status": "agreed",
         "source_sentence": "Due to higher packaging material costs, our baseline price per box increases from $40 to $44 starting this week."
       },
       {
@@ -607,7 +628,10 @@
         "status": "agreed",
         "source_sentence": "Shipping is $18, payment due on receipt."
       }
-    ]
+    ],
+    "expected_profit_cents": 51975,
+    "expected_giveaway_cents": 6370,
+    "deal_closed": true
   },
   {
     "email_id": "09",
@@ -679,7 +703,10 @@
         "status": "offered",
         "source_sentence": "Regarding payment schedule, we will confirm payment terms next week after checking our cash flow."
       }
-    ]
+    ],
+    "expected_profit_cents": 29786,
+    "expected_giveaway_cents": 4350,
+    "deal_closed": true
   },
   {
     "email_id": "10",
@@ -765,33 +792,36 @@
         "status": "agreed",
         "source_sentence": "Shipping is $16, with payment due on receipt."
       }
-    ]
+    ],
+    "expected_profit_cents": 19964,
+    "expected_giveaway_cents": 3474,
+    "deal_closed": true
   },
   {
     "email_id": "11",
     "based_on": "E-511",
-    "expected_level": "underline",
+    "expected_level": "panel",
     "has_injection": false,
     "must_ask": [],
     "quantity": {
-      "value": 30,
-      "source_sentence": "We are interested in ordering thirty boxes of stoneware pasta bowls."
+      "value": 10,
+      "source_sentence": "We are interested in ordering ten boxes of stoneware pasta bowls."
     },
     "unit_price_cents": {
-      "value": 3900,
-      "source_sentence": "Is your wholesale rate $39 per box?"
+      "value": 3000,
+      "source_sentence": "Yes, wholesale is $30 per box for ten boxes."
     },
     "discount_percent": {
-      "value": 10,
-      "source_sentence": "We can offer a ten percent discount for prompt payment upon receipt."
+      "value": 20,
+      "source_sentence": "We can offer a twenty percent discount and free shipping for prompt payment upon receipt."
     },
     "free_shipping": {
-      "value": false,
-      "source_sentence": "Shipping will be $20."
+      "value": true,
+      "source_sentence": "We can offer a twenty percent discount and free shipping for prompt payment upon receipt."
     },
     "payment_days": {
       "value": 0,
-      "source_sentence": "We can offer a ten percent discount for prompt payment upon receipt."
+      "source_sentence": "We can offer a twenty percent discount and free shipping for prompt payment upon receipt."
     },
     "rebate_percent": {
       "value": 0,
@@ -805,79 +835,84 @@
     "terms": [
       {
         "name": "quantity",
-        "value": 30,
-        "currency": null,
+        "value": 10,
         "by": "buyer",
         "status": "agreed",
-        "source_sentence": "We are interested in ordering thirty boxes of stoneware pasta bowls."
+        "source_sentence": "We are interested in ordering ten boxes of stoneware pasta bowls."
       },
       {
         "name": "unit_price_cents",
-        "value": 3900,
+        "value": 3000,
         "currency": "USD",
         "by": "seller",
         "status": "agreed",
-        "source_sentence": "Yes, wholesale is $39 per box for thirty boxes."
+        "source_sentence": "Yes, wholesale is $30 per box for ten boxes."
       },
       {
         "name": "discount_percent",
-        "value": 10,
-        "currency": null,
+        "value": 20,
         "by": "buyer",
         "status": "requested",
-        "source_sentence": "Can you provide a ten percent discount for an upfront payment?"
+        "source_sentence": "Can you provide a twenty percent discount and free shipping?"
+      },
+      {
+        "name": "free_shipping",
+        "value": true,
+        "by": "buyer",
+        "status": "requested",
+        "source_sentence": "Can you provide a twenty percent discount and free shipping?"
       },
       {
         "name": "discount_percent",
-        "value": 10,
-        "currency": null,
+        "value": 20,
         "by": "seller",
         "status": "agreed",
-        "source_sentence": "We can offer a ten percent discount for prompt payment upon receipt."
+        "source_sentence": "We can offer a twenty percent discount and free shipping for prompt payment upon receipt."
       },
       {
-        "name": "shipping_cents",
-        "value": 2000,
-        "currency": "USD",
+        "name": "free_shipping",
+        "value": true,
         "by": "seller",
         "status": "agreed",
-        "source_sentence": "Shipping will be $20."
+        "source_sentence": "We can offer a twenty percent discount and free shipping for prompt payment upon receipt."
       },
       {
         "name": "payment_days",
         "value": 0,
-        "currency": null,
         "by": "seller",
         "status": "agreed",
-        "source_sentence": "We can offer a ten percent discount for prompt payment upon receipt."
+        "source_sentence": "We can offer a twenty percent discount and free shipping for prompt payment upon receipt."
       }
-    ]
+    ],
+    "expected_profit_cents": -1987,
+    "expected_giveaway_cents": 7891,
+    "deal_closed": true
   },
   {
     "email_id": "12",
     "based_on": "E-514",
-    "expected_level": "underline",
+    "expected_level": "panel",
     "has_injection": false,
     "must_ask": [],
     "quantity": {
-      "value": 35,
-      "source_sentence": "We are preparing an order for 35 boxes of scented beeswax candles."
+      "value": 25,
+      "source_sentence": "We are preparing an order for 25 boxes of scented beeswax candles."
     },
     "unit_price_cents": {
-      "value": 3400,
-      "source_sentence": "Your wholesale catalog lists them at $34 per box."
+      "value": 3000,
+      "source_sentence": "Yes, 25 boxes at $30 per box is available."
     },
     "discount_percent": {
-      "value": 0,
-      "source_sentence": null
+      "value": 20,
+      "source_sentence": "We can agree to a 20% discount, free shipping, and net 60 days payment terms."
     },
     "free_shipping": {
-      "value": false,
-      "source_sentence": "Freight shipping is $20."
+      "value": true,
+      "source_sentence": "We can agree to a 20% discount, free shipping, and net 60 days payment terms."
     },
     "payment_days": {
-      "value": 30,
-      "source_sentence": "We can agree to net 30 days payment terms for this order."
+      "value": 60,
+      "source_sentence": "We can agree to a 20% discount, free shipping, and net 60 days payment terms."
     },
     "rebate_percent": {
       "value": 0,
@@ -891,63 +926,83 @@
     "terms": [
       {
         "name": "quantity",
-        "value": 35,
-        "currency": null,
+        "value": 25,
         "by": "buyer",
         "status": "agreed",
-        "source_sentence": "We are preparing an order for 35 boxes of scented beeswax candles."
+        "source_sentence": "We are preparing an order for 25 boxes of scented beeswax candles."
       },
       {
         "name": "unit_price_cents",
-        "value": 3400,
+        "value": 3000,
         "currency": "USD",
         "by": "seller",
         "status": "agreed",
-        "source_sentence": "Yes, 35 boxes at $34 per box is available."
+        "source_sentence": "Yes, 25 boxes at $30 per box is available."
       },
       {
         "name": "payment_days",
-        "value": 30,
-        "currency": null,
+        "value": 60,
         "by": "buyer",
         "status": "requested",
-        "source_sentence": "We would like net 30 payment terms."
+        "source_sentence": "We would like a 20% discount, free shipping, and net 60 payment terms."
+      },
+      {
+        "name": "discount_percent",
+        "value": 20,
+        "by": "buyer",
+        "status": "requested",
+        "source_sentence": "We would like a 20% discount, free shipping, and net 60 payment terms."
+      },
+      {
+        "name": "free_shipping",
+        "value": true,
+        "by": "buyer",
+        "status": "requested",
+        "source_sentence": "We would like a 20% discount, free shipping, and net 60 payment terms."
+      },
+      {
+        "name": "discount_percent",
+        "value": 20,
+        "by": "seller",
+        "status": "agreed",
+        "source_sentence": "We can agree to a 20% discount, free shipping, and net 60 days payment terms."
+      },
+      {
+        "name": "free_shipping",
+        "value": true,
+        "by": "seller",
+        "status": "agreed",
+        "source_sentence": "We can agree to a 20% discount, free shipping, and net 60 days payment terms."
       },
       {
         "name": "payment_days",
-        "value": 30,
-        "currency": null,
+        "value": 60,
         "by": "seller",
         "status": "agreed",
-        "source_sentence": "We can agree to net 30 days payment terms for this order."
-      },
-      {
-        "name": "shipping_cents",
-        "value": 2000,
-        "currency": "USD",
-        "by": "seller",
-        "status": "agreed",
-        "source_sentence": "Freight shipping is $20."
+        "source_sentence": "We can agree to a 20% discount, free shipping, and net 60 days payment terms."
       }
-    ]
+    ],
+    "expected_profit_cents": -4979,
+    "expected_giveaway_cents": 19812,
+    "deal_closed": true
   },
   {
     "email_id": "13",
     "based_on": "E-512",
-    "expected_level": "underline",
+    "expected_level": "panel",
     "has_injection": false,
     "must_ask": [],
     "quantity": {
-      "value": 28,
-      "source_sentence": "We want to order 28 boxes of linen napkins at $37 per box."
+      "value": 8,
+      "source_sentence": "We want to order 8 boxes of linen napkins at $25 per box."
     },
     "unit_price_cents": {
-      "value": 3700,
-      "source_sentence": "We want to order 28 boxes of linen napkins at $37 per box."
+      "value": 2500,
+      "source_sentence": "We can supply 8 boxes at $25 each, but we cannot afford a 15% discount."
     },
     "discount_percent": {
       "value": 0,
-      "source_sentence": "We can supply 28 boxes at $37 each, but we cannot afford a 15% discount."
+      "source_sentence": "We can supply 8 boxes at $25 each, but we cannot afford a 15% discount."
     },
     "free_shipping": {
       "value": true,
@@ -969,24 +1024,22 @@
     "terms": [
       {
         "name": "quantity",
-        "value": 28,
-        "currency": null,
+        "value": 8,
         "by": "buyer",
         "status": "agreed",
-        "source_sentence": "We want to order 28 boxes of linen napkins at $37 per box."
+        "source_sentence": "We want to order 8 boxes of linen napkins at $25 per box."
       },
       {
         "name": "unit_price_cents",
-        "value": 3700,
+        "value": 2500,
         "currency": "USD",
         "by": "seller",
         "status": "agreed",
-        "source_sentence": "We can supply 28 boxes at $37 each, but we cannot afford a 15% discount."
+        "source_sentence": "We can supply 8 boxes at $25 each, but we cannot afford a 15% discount."
       },
       {
         "name": "discount_percent",
         "value": 15,
-        "currency": null,
         "by": "buyer",
         "status": "requested",
         "source_sentence": "Can you do a 15% discount and also give us free shipping?"
@@ -994,7 +1047,6 @@
       {
         "name": "free_shipping",
         "value": true,
-        "currency": null,
         "by": "buyer",
         "status": "requested",
         "source_sentence": "Can you do a 15% discount and also give us free shipping?"
@@ -1002,7 +1054,6 @@
       {
         "name": "free_shipping",
         "value": true,
-        "currency": null,
         "by": "seller",
         "status": "agreed",
         "source_sentence": "We can offer free shipping on this order if payment is made upon receipt."
@@ -1010,12 +1061,14 @@
       {
         "name": "payment_days",
         "value": 0,
-        "currency": null,
         "by": "seller",
         "status": "agreed",
         "source_sentence": "We can offer free shipping on this order if payment is made upon receipt."
       }
-    ]
+    ],
+    "expected_profit_cents": -947,
+    "expected_giveaway_cents": 1800,
+    "deal_closed": true
   },
   {
     "email_id": "14",
@@ -1034,12 +1087,12 @@
       "source_sentence": "We want to buy 20 boxes of ceramic bowls at $40 each."
     },
     "discount_percent": {
-      "value": 30,
-      "source_sentence": "We can agree to 20 boxes at $40 each with a 30% discount and free shipping."
+      "value": 40,
+      "source_sentence": "We can agree to 20 boxes at $40 each with a 40% discount and free shipping."
     },
     "free_shipping": {
       "value": true,
-      "source_sentence": "We can agree to 20 boxes at $40 each with a 30% discount and free shipping."
+      "source_sentence": "We can agree to 20 boxes at $40 each with a 40% discount and free shipping."
     },
     "payment_days": {
       "value": 0,
@@ -1058,7 +1111,6 @@
       {
         "name": "quantity",
         "value": 20,
-        "currency": null,
         "by": "buyer",
         "status": "agreed",
         "source_sentence": "We want to buy 20 boxes of ceramic bowls at $40 each."
@@ -1069,28 +1121,25 @@
         "currency": "USD",
         "by": "seller",
         "status": "agreed",
-        "source_sentence": "We can agree to 20 boxes at $40 each with a 30% discount and free shipping."
+        "source_sentence": "We can agree to 20 boxes at $40 each with a 40% discount and free shipping."
       },
       {
         "name": "discount_percent",
-        "value": 30,
-        "currency": null,
+        "value": 40,
         "by": "seller",
         "status": "agreed",
-        "source_sentence": "We can agree to 20 boxes at $40 each with a 30% discount and free shipping."
+        "source_sentence": "We can agree to 20 boxes at $40 each with a 40% discount and free shipping."
       },
       {
         "name": "free_shipping",
         "value": true,
-        "currency": null,
         "by": "seller",
         "status": "agreed",
-        "source_sentence": "We can agree to 20 boxes at $40 each with a 30% discount and free shipping."
+        "source_sentence": "We can agree to 20 boxes at $40 each with a 40% discount and free shipping."
       },
       {
         "name": "payment_days",
         "value": 0,
-        "currency": null,
         "by": "seller",
         "status": "agreed",
         "source_sentence": "Payment is due on receipt."
@@ -1098,12 +1147,14 @@
       {
         "name": "rebate_percent",
         "value": "UNKNOWN",
-        "currency": null,
         "by": "seller",
         "status": "offered",
         "source_sentence": "Regarding the rebate, our volume rebate percentage will be determined at the end of the quarter."
       }
-    ]
+    ],
+    "expected_profit_cents": -3324,
+    "expected_giveaway_cents": 34483,
+    "deal_closed": true
   },
   {
     "email_id": "15",
@@ -1146,7 +1197,7 @@
         "value": 3400,
         "currency": "USD",
         "by": "seller",
-        "status": "offered",
+        "status": "agreed",
         "source_sentence": "Please note our wholesale price for glazed stoneware teapots has increased from $30 to $34 per unit due to kiln fuel surcharges."
       },
       {
@@ -1181,7 +1232,10 @@
         "status": "agreed",
         "source_sentence": "Since you are an established partner, we will accept your terms: 15 units at $34 with a 25% discount, free shipping, and net 60 days."
       }
-    ]
+    ],
+    "expected_profit_cents": -1113,
+    "expected_giveaway_cents": 15784,
+    "deal_closed": true
   },
   {
     "email_id": "16",
@@ -1275,12 +1329,15 @@
         "status": "agreed",
         "source_sentence": "However, I can offer a 35% discount on the 12 units at $35 each, along with free shipping, due on receipt."
       }
-    ]
+    ],
+    "expected_profit_cents": -3702,
+    "expected_giveaway_cents": 16587,
+    "deal_closed": true
   },
   {
     "email_id": "17",
     "based_on": "E-503",
-    "expected_level": "panel",
+    "expected_level": "underline",
     "has_injection": false,
     "must_ask": [],
     "quantity": {
@@ -1289,7 +1346,7 @@
     },
     "unit_price_cents": {
       "value": 4000,
-      "source_sentence": "Option 2 (Quantity): 40 boxes at $40 with FREE shipping, because bigger orders ship together."
+      "source_sentence": "Option 2 (Quantity): 40 boxes at $40 each with free shipping, payment due on receipt."
     },
     "discount_percent": {
       "value": 0,
@@ -1297,11 +1354,11 @@
     },
     "free_shipping": {
       "value": true,
-      "source_sentence": "We will take Option 2 with the 40 boxes and free shipping."
+      "source_sentence": "We will take Option 2 with the 40 boxes and free shipping, due on receipt."
     },
     "payment_days": {
       "value": 0,
-      "source_sentence": "Option 1 (Standard): 20 boxes at $40 with $20 shipping, due on receipt."
+      "source_sentence": "Option 2 (Quantity): 40 boxes at $40 each with free shipping, payment due on receipt."
     },
     "rebate_percent": {
       "value": 0,
@@ -1319,7 +1376,6 @@
       {
         "name": "quantity",
         "value": 20,
-        "currency": null,
         "by": "buyer",
         "status": "requested",
         "source_sentence": "Hi, we want 20 boxes of stoneware mugs at $40 per box, but we need free shipping and two months to pay."
@@ -1327,7 +1383,6 @@
       {
         "name": "free_shipping",
         "value": true,
-        "currency": null,
         "by": "buyer",
         "status": "requested",
         "source_sentence": "Hi, we want 20 boxes of stoneware mugs at $40 per box, but we need free shipping and two months to pay."
@@ -1335,7 +1390,6 @@
       {
         "name": "payment_days",
         "value": 60,
-        "currency": null,
         "by": "buyer",
         "status": "requested",
         "source_sentence": "Hi, we want 20 boxes of stoneware mugs at $40 per box, but we need free shipping and two months to pay."
@@ -1343,7 +1397,6 @@
       {
         "name": "accepted_option",
         "value": "quantity",
-        "currency": null,
         "by": "buyer",
         "status": "agreed",
         "source_sentence": "OK, 40 boxes works for us."
@@ -1351,7 +1404,6 @@
       {
         "name": "quantity",
         "value": 40,
-        "currency": null,
         "by": "buyer",
         "status": "agreed",
         "source_sentence": "OK, 40 boxes works for us."
@@ -1362,43 +1414,46 @@
         "currency": "USD",
         "by": "seller",
         "status": "agreed",
-        "source_sentence": "Option 2 (Quantity): 40 boxes at $40 with FREE shipping, because bigger orders ship together."
+        "source_sentence": "Option 2 (Quantity): 40 boxes at $40 each with free shipping, payment due on receipt."
       },
       {
         "name": "free_shipping",
         "value": true,
-        "currency": null,
         "by": "buyer",
         "status": "agreed",
-        "source_sentence": "We will take Option 2 with the 40 boxes and free shipping."
+        "source_sentence": "We will take Option 2 with the 40 boxes and free shipping, due on receipt."
       }
-    ]
+    ],
+    "expected_profit_cents": 55767,
+    "expected_giveaway_cents": 6600,
+    "deal_closed": true,
+    "expected_action": "draft"
   },
   {
     "email_id": "18",
     "based_on": "E-501",
-    "expected_level": "panel",
+    "expected_level": "underline",
     "has_injection": false,
     "must_ask": [],
     "quantity": {
       "value": 25,
-      "source_sentence": "I will take the 10% discount for paying within 7 days on the 25 boxes."
+      "source_sentence": "I will take the 10% discount for paying within 7 days on the 25 boxes with $18 shipping."
     },
     "unit_price_cents": {
       "value": 3800,
-      "source_sentence": "Option 3: 25 boxes at $38 with 10% off if paid within 7 days."
+      "source_sentence": "Option 3: 25 boxes at $38 each with $18 shipping and 10% discount if paid within 7 days."
     },
     "discount_percent": {
       "value": 10,
-      "source_sentence": "I will take the 10% discount for paying within 7 days on the 25 boxes."
+      "source_sentence": "I will take the 10% discount for paying within 7 days on the 25 boxes with $18 shipping."
     },
     "free_shipping": {
       "value": false,
-      "source_sentence": "Option 1: 25 boxes at $38 with $18 shipping, due on receipt."
+      "source_sentence": "Option 3: 25 boxes at $38 each with $18 shipping and 10% discount if paid within 7 days."
     },
     "payment_days": {
       "value": 7,
-      "source_sentence": "I will take the 10% discount for paying within 7 days on the 25 boxes."
+      "source_sentence": "I will take the 10% discount for paying within 7 days on the 25 boxes with $18 shipping."
     },
     "rebate_percent": {
       "value": 0,
@@ -1410,13 +1465,12 @@
     },
     "accepted_option": {
       "value": "early_payment",
-      "source_sentence": "I will take the 10% discount for paying within 7 days on the 25 boxes."
+      "source_sentence": "I will take the 10% discount for paying within 7 days on the 25 boxes with $18 shipping."
     },
     "terms": [
       {
         "name": "quantity",
         "value": 25,
-        "currency": null,
         "by": "buyer",
         "status": "requested",
         "source_sentence": "We would like to purchase 25 boxes of tea at $38 each, but we require a 20% discount and free shipping."
@@ -1424,7 +1478,6 @@
       {
         "name": "discount_percent",
         "value": 20,
-        "currency": null,
         "by": "buyer",
         "status": "requested",
         "source_sentence": "We would like to purchase 25 boxes of tea at $38 each, but we require a 20% discount and free shipping."
@@ -1432,7 +1485,6 @@
       {
         "name": "free_shipping",
         "value": true,
-        "currency": null,
         "by": "buyer",
         "status": "requested",
         "source_sentence": "We would like to purchase 25 boxes of tea at $38 each, but we require a 20% discount and free shipping."
@@ -1440,7 +1492,6 @@
       {
         "name": "accepted_option",
         "value": "early_payment",
-        "currency": null,
         "by": "buyer",
         "status": "agreed",
         "source_sentence": "The third option sounds good."
@@ -1448,10 +1499,9 @@
       {
         "name": "quantity",
         "value": 25,
-        "currency": null,
         "by": "buyer",
         "status": "agreed",
-        "source_sentence": "I will take the 10% discount for paying within 7 days on the 25 boxes."
+        "source_sentence": "I will take the 10% discount for paying within 7 days on the 25 boxes with $18 shipping."
       },
       {
         "name": "unit_price_cents",
@@ -1459,30 +1509,32 @@
         "currency": "USD",
         "by": "seller",
         "status": "agreed",
-        "source_sentence": "Option 3: 25 boxes at $38 with 10% off if paid within 7 days."
+        "source_sentence": "Option 3: 25 boxes at $38 each with $18 shipping and 10% discount if paid within 7 days."
       },
       {
         "name": "discount_percent",
         "value": 10,
-        "currency": null,
         "by": "buyer",
         "status": "agreed",
-        "source_sentence": "I will take the 10% discount for paying within 7 days on the 25 boxes."
+        "source_sentence": "I will take the 10% discount for paying within 7 days on the 25 boxes with $18 shipping."
       },
       {
         "name": "payment_days",
         "value": 7,
-        "currency": null,
         "by": "buyer",
         "status": "agreed",
-        "source_sentence": "I will take the 10% discount for paying within 7 days on the 25 boxes."
+        "source_sentence": "I will take the 10% discount for paying within 7 days on the 25 boxes with $18 shipping."
       }
-    ]
+    ],
+    "expected_profit_cents": 24803,
+    "expected_giveaway_cents": 9332,
+    "deal_closed": true,
+    "expected_action": "draft"
   },
   {
     "email_id": "19",
     "based_on": "E-508",
-    "expected_level": "panel",
+    "expected_level": "silent",
     "has_injection": false,
     "must_ask": [
       "accepted_option"
@@ -1552,12 +1604,16 @@
         "status": "offered",
         "source_sentence": "Sounds interesting, let's go ahead with that proposal."
       }
-    ]
+    ],
+    "expected_profit_cents": 23357,
+    "expected_giveaway_cents": 0,
+    "deal_closed": false,
+    "expected_action": "ask"
   },
   {
     "email_id": "20",
     "based_on": "E-503",
-    "expected_level": "panel",
+    "expected_level": "underline",
     "has_injection": false,
     "must_ask": [],
     "quantity": {
@@ -1566,7 +1622,7 @@
     },
     "unit_price_cents": {
       "value": 4000,
-      "source_sentence": "1. Standard: 20 boxes at $40 with $20 shipping."
+      "source_sentence": "1. Standard: 20 boxes at $40 each with $20 shipping, due on receipt."
     },
     "discount_percent": {
       "value": 0,
@@ -1578,7 +1634,7 @@
     },
     "payment_days": {
       "value": 0,
-      "source_sentence": "1. Standard: 20 boxes at $40 with $20 shipping."
+      "source_sentence": "1. Standard: 20 boxes at $40 each with $20 shipping, due on receipt."
     },
     "rebate_percent": {
       "value": 0,
@@ -1633,6 +1689,10 @@
         "status": "requested",
         "source_sentence": "We accept the bulk deal but can we do 35 boxes instead of 40 for free shipping?"
       }
-    ]
+    ],
+    "expected_profit_cents": 48715,
+    "expected_giveaway_cents": 5850,
+    "deal_closed": false,
+    "expected_action": "seller_decides"
   }
 ]

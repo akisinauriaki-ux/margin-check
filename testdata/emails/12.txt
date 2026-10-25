@@ -2,16 +2,15 @@ Based on: E-514
 
 Buyer:
 > Hi,
-> We are preparing an order for 35 boxes of scented beeswax candles.
-> Your wholesale catalog lists them at $34 per box.
-> We would like net 30 payment terms.
+> We are preparing an order for 25 boxes of scented beeswax candles.
+> Your wholesale catalog lists them at $30 per box.
+> We would like a 20% discount, free shipping, and net 60 payment terms.
 
 Seller:
 > Hi,
-> Yes, 35 boxes at $34 per box is available.
-> We can agree to net 30 days payment terms for this order.
-> Freight shipping is $20.
+> Yes, 25 boxes at $30 per box is available.
+> We can agree to a 20% discount, free shipping, and net 60 days payment terms.
 
 Buyer:
-> Thank you, net 30 on 35 boxes at $34 works for us.
+> Thank you, 25 boxes at $30 with 20% off, free shipping, and net 60 days works for us.
 > Please send the PayPal draft invoice.

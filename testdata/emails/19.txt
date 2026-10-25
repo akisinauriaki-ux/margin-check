@@ -8,9 +8,9 @@ Seller:
 Hi,
 A 30% discount with free shipping is not profitable for us.
 We can offer these options:
-Option A (Standard): 15 boxes at $40 with $15 shipping.
-Option B (Bulk): 30 boxes at $40 with free shipping.
-Option C (Early Payment): 15 boxes at $40 with 10% discount if paid within 7 days.
+Option A (Standard): 15 boxes at $40 each with $15 shipping, due on receipt.
+Option B (Bulk): 30 boxes at $40 each with free shipping, due on receipt.
+Option C (Early Payment): 15 boxes at $40 each with $15 shipping and 10% discount if paid within 7 days.
 
 Buyer:
 Sounds interesting, let's go ahead with that proposal.

@@ -6,11 +6,11 @@ Buyer:
 Seller:
 > We cannot do free shipping and two months of waiting on 20 boxes as that loses money.
 > Here are three options:
-> Option 1 (Standard): 20 boxes at $40 with $20 shipping, due on receipt.
-> Option 2 (Quantity): 40 boxes at $40 with FREE shipping, because bigger orders ship together.
-> Option 3 (Early payment): 20 boxes at $40 with 10% off if paid within 7 days.
+> Option 1 (Standard): 20 boxes at $40 each with $20 shipping, payment due on receipt.
+> Option 2 (Quantity): 40 boxes at $40 each with free shipping, payment due on receipt.
+> Option 3 (Early payment): 20 boxes at $40 each with $20 shipping and 10% discount if paid within 7 days.
 
 Buyer:
 OK, 40 boxes works for us.
-We will take Option 2 with the 40 boxes and free shipping.
+We will take Option 2 with the 40 boxes and free shipping, due on receipt.
 Please send the draft invoice.
