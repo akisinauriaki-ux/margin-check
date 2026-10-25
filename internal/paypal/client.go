@@ -33,6 +33,10 @@ const (
 	// PaymentTermNet30 sets the invoice due date 30 days after the invoice date.
 	// Official doc: https://developer.paypal.com/api/invoicing/v2/invoices-create
 	PaymentTermNet30 = "NET_30"
+
+	// PaymentTermDueOnDateSpecified sets the invoice due date to the explicit detail.payment_term.due_date.
+	// Official docs: https://developer.paypal.com/invoicing/object and https://developer.paypal.com/api/invoicing/v2/invoices-create
+	PaymentTermDueOnDateSpecified = "DUE_ON_DATE_SPECIFIED"
 )
 
 var (
@@ -255,9 +259,10 @@ func (c *Client) fetchTokenLocked(ctx context.Context, requestID string) (string
 
 // InvoiceItemInput describes one line item in whole cents for a draft invoice.
 type InvoiceItemInput struct {
-	Name           string
-	Quantity       int64
-	UnitPriceCents int64
+	Name            string
+	Quantity        int64
+	UnitPriceCents  int64
+	DiscountPercent int64
 }
 
 // DraftInvoiceInput holds the fields needed to create a PayPal Invoicing v2 draft invoice.
@@ -267,6 +272,7 @@ type DraftInvoiceInput struct {
 	BuyerEmail      string
 	InvoiceDate     string
 	PaymentTermType string
+	DueDate         string
 	Items           []InvoiceItemInput
 }
 
@@ -274,6 +280,21 @@ type DraftInvoiceInput struct {
 type Money struct {
 	CurrencyCode string `json:"currency_code"`
 	Value        string `json:"value"`
+}
+
+// ItemDiscount represents items[].discount on a PayPal Invoicing v2 line item.
+// Official docs: https://developer.paypal.com/invoicing/object and https://developer.paypal.com/api/invoicing/v2/invoices-create
+type ItemDiscount struct {
+	Percent string `json:"percent,omitempty"`
+	Amount  *Money `json:"amount,omitempty"`
+}
+
+// InvoiceLineItem represents an entry in items[] on a PayPal Invoicing v2 invoice object.
+type InvoiceLineItem struct {
+	Name       string        `json:"name"`
+	Quantity   string        `json:"quantity"`
+	UnitAmount Money         `json:"unit_amount"`
+	Discount   *ItemDiscount `json:"discount,omitempty"`
 }
 
 // EarlyPaymentDiscountSummary represents detail.payment_term.conditional_rules.early_payment_discount on an invoice.
@@ -321,6 +342,7 @@ type Invoice struct {
 	ID            string               `json:"id"`
 	Status        string               `json:"status"`
 	Detail        InvoiceDetail        `json:"detail"`
+	Items         []InvoiceLineItem    `json:"items,omitempty"`
 	Configuration InvoiceConfiguration `json:"configuration"`
 	Href          string               `json:"href,omitempty"`
 	Links         []Link               `json:"links,omitempty"`
@@ -359,9 +381,10 @@ type billingInfoPayload struct {
 }
 
 type invoiceLineItemPayload struct {
-	Name       string `json:"name"`
-	Quantity   string `json:"quantity"`
-	UnitAmount Money  `json:"unit_amount"`
+	Name       string        `json:"name"`
+	Quantity   string        `json:"quantity"`
+	UnitAmount Money         `json:"unit_amount"`
+	Discount   *ItemDiscount `json:"discount,omitempty"`
 }
 
 // CreateDraftInvoice creates a draft invoice in PayPal Invoicing v2 and never sends it.
@@ -372,10 +395,11 @@ type invoiceLineItemPayload struct {
 //
 // Endpoint: POST /v2/invoicing/invoices
 // Request headers: Authorization: Bearer <token>, Content-Type: application/json, Prefer: return=representation, PayPal-Request-Id.
-// Request JSON fields: detail.currency_code, detail.invoice_date, detail.payment_term.term_type,
+// Request JSON fields: detail.currency_code, detail.invoice_date, detail.payment_term.term_type, detail.payment_term.due_date,
 // invoicer.email_address, primary_recipients[].billing_info.email_address,
-// items[].name, items[].quantity, items[].unit_amount.currency_code, items[].unit_amount.value.
-// Response JSON fields: id, status, detail.invoice_date, detail.currency_code, configuration.has_conditional_rule.
+// items[].name, items[].quantity, items[].unit_amount.currency_code, items[].unit_amount.value, items[].discount.percent.
+// Response JSON fields: id, status, detail.invoice_date, detail.currency_code, detail.payment_term.due_date,
+// items[].discount.percent, configuration.has_conditional_rule.
 func (c *Client) CreateDraftInvoice(ctx context.Context, requestID string, in DraftInvoiceInput) (*Invoice, error) {
 	reqID := strings.TrimSpace(requestID)
 	if reqID == "" {
@@ -403,26 +427,40 @@ func (c *Client) CreateDraftInvoice(ctx context.Context, requestID string, in Dr
 		if it.Quantity <= 0 {
 			return nil, errors.New("paypal: item quantity must be positive")
 		}
+		if it.DiscountPercent < 0 || it.DiscountPercent > 100 {
+			return nil, errors.New("paypal: item discount percent must be between 0 and 100")
+		}
 		val, err := FormatCents(it.UnitPriceCents)
 		if err != nil {
 			return nil, err
 		}
-		items = append(items, invoiceLineItemPayload{
+		line := invoiceLineItemPayload{
 			Name:     name,
 			Quantity: strconv.FormatInt(it.Quantity, 10),
 			UnitAmount: Money{
 				CurrencyCode: currency,
 				Value:        val,
 			},
-		})
+		}
+		if it.DiscountPercent > 0 {
+			line.Discount = &ItemDiscount{
+				Percent: strconv.FormatInt(it.DiscountPercent, 10),
+			}
+		}
+		items = append(items, line)
 	}
 
 	detail := InvoiceDetail{
 		CurrencyCode: currency,
 		InvoiceDate:  strings.TrimSpace(in.InvoiceDate),
 	}
-	if term := strings.TrimSpace(in.PaymentTermType); term != "" {
-		detail.PaymentTerm = &InvoicePaymentTerm{TermType: term}
+	term := strings.TrimSpace(in.PaymentTermType)
+	dueDate := strings.TrimSpace(in.DueDate)
+	if term != "" || dueDate != "" {
+		detail.PaymentTerm = &InvoicePaymentTerm{
+			TermType: term,
+			DueDate:  dueDate,
+		}
 	}
 
 	payload := createInvoicePayload{

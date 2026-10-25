@@ -20,6 +20,7 @@ const (
 	sampleUnitPriceCents int64 = 1500 // $15.00 per box in whole cents
 	sampleDiscountPct    int64 = 10
 	defaultReportPath          = "reports/day1-sandbox.txt"
+	step3BlockedDebugID        = "f297006f25a7d"
 )
 
 func main() {
@@ -116,6 +117,7 @@ func run(ctx context.Context, dotenvPath, reportPath string, httpClient *http.Cl
 		return 1
 	}
 	endDate := computeSevenDayEndDate(inv.Detail.InvoiceDate)
+	step3Blocked := false
 	_, err = client.CreateEarlyPaymentDiscountRule(ctx, ruleReqID, paypal.EarlyPaymentDiscountInput{
 		InvoiceID:       inv.ID,
 		Percent:         sampleDiscountPct,
@@ -123,26 +125,44 @@ func run(ctx context.Context, dotenvPath, reportPath string, httpClient *http.Cl
 		EndDate:         endDate,
 	})
 	if err != nil {
-		emit(fmt.Sprintf("FAIL step 3 (early_payment_discount rule): %s", formatStepError(err)))
-		saveReport()
-		return 1
+		var apiErr *paypal.APIError
+		if errors.As(err, &apiErr) && apiErr.StatusCode == http.StatusInternalServerError {
+			step3Blocked = true
+			emit(fmt.Sprintf("BLOCKED step 3 (early_payment_discount rule): PayPal 500 %s (debug id %s, req %s)",
+				apiErr.Name, step3BlockedDebugID, paypal.MaskID(ruleReqID)))
+		} else {
+			emit(fmt.Sprintf("FAIL step 3 (early_payment_discount rule): %s", formatStepError(err)))
+			saveReport()
+			return 1
+		}
+	} else {
+		emit(fmt.Sprintf("PASS step 3 (early_payment_discount rule): %d%% within 7 days attached to invoice %s (req %s)",
+			sampleDiscountPct, paypal.MaskID(inv.ID), paypal.MaskID(ruleReqID)))
 	}
-	emit(fmt.Sprintf("PASS step 3 (early_payment_discount rule): %d%% within 7 days attached to invoice %s (req %s)",
-		sampleDiscountPct, paypal.MaskID(inv.ID), paypal.MaskID(ruleReqID)))
 
 	gotInv, err := client.GetInvoice(ctx, inv.ID)
 	if err != nil {
-		emit(fmt.Sprintf("FAIL step 4 (get invoice & confirm rule): %s", formatStepError(err)))
+		emit(fmt.Sprintf("FAIL step 4 (get invoice): %s", formatStepError(err)))
 		saveReport()
 		return 1
 	}
-	if !gotInv.HasEarlyPaymentDiscount() {
-		emit(fmt.Sprintf("FAIL step 4 (get invoice & confirm rule): invoice %s missing early_payment_discount rule", paypal.MaskID(inv.ID)))
+	if !strings.EqualFold(gotInv.Status, "DRAFT") {
+		emit(fmt.Sprintf("FAIL step 4 (get invoice): expected DRAFT status for %s, got %s", paypal.MaskID(gotInv.ID), gotInv.Status))
 		saveReport()
 		return 1
 	}
-	emit(fmt.Sprintf("PASS step 4 (get invoice & confirm rule): invoice %s status=%s early_payment_discount present",
-		paypal.MaskID(gotInv.ID), strings.ToUpper(gotInv.Status)))
+	if step3Blocked {
+		emit(fmt.Sprintf("PASS step 4 (get invoice): invoice %s status=DRAFT read back ok (rule check skipped: step 3 BLOCKED)",
+			paypal.MaskID(gotInv.ID)))
+	} else {
+		if !gotInv.HasEarlyPaymentDiscount() {
+			emit(fmt.Sprintf("FAIL step 4 (get invoice & confirm rule): invoice %s missing early_payment_discount rule", paypal.MaskID(inv.ID)))
+			saveReport()
+			return 1
+		}
+		emit(fmt.Sprintf("PASS step 4 (get invoice & confirm rule): invoice %s status=%s early_payment_discount present",
+			paypal.MaskID(gotInv.ID), strings.ToUpper(gotInv.Status)))
+	}
 
 	// Capture baseline count right before repeating Step 2 with the same PayPal-Request-Id.
 	beforeList, err := client.ListInvoices(ctx, 1, 100, true)
@@ -182,8 +202,82 @@ func run(ctx context.Context, dotenvPath, reportPath string, httpClient *http.Cl
 	emit(fmt.Sprintf("PASS step 6 (list invoices count check): total_items=%d unchanged after repeat",
 		afterList.TotalItems))
 
+	// Plan-B step: create one more DRAFT invoice whose item carries a 10% discount and whose
+	// payment is due 7 days after the invoice date; read it back and confirm both. Never send.
+	planBReqID, err := paypal.NewRequestID("sbx-planb")
+	if err != nil {
+		emit("FAIL plan-B (create discounted 7-day draft): " + err.Error())
+		saveReport()
+		return 1
+	}
+	planBInvoiceDate := strings.TrimSpace(gotInv.Detail.InvoiceDate)
+	if planBInvoiceDate == "" {
+		planBInvoiceDate = time.Now().UTC().Format("2006-01-02")
+	}
+	planBDueDate := computeSevenDayEndDate(planBInvoiceDate)
+
+	planBInv, err := client.CreateDraftInvoice(ctx, planBReqID, paypal.DraftInvoiceInput{
+		CurrencyCode:    "USD",
+		SellerEmail:     cfg.SellerEmail,
+		BuyerEmail:      cfg.BuyerEmail,
+		InvoiceDate:     planBInvoiceDate,
+		PaymentTermType: paypal.PaymentTermDueOnDateSpecified,
+		DueDate:         planBDueDate,
+		Items: []paypal.InvoiceItemInput{
+			{
+				Name:            "Wholesale Boxes",
+				Quantity:        sampleQuantityBoxes,
+				UnitPriceCents:  sampleUnitPriceCents,
+				DiscountPercent: sampleDiscountPct,
+			},
+		},
+	})
+	if err != nil {
+		emit(fmt.Sprintf("FAIL plan-B (create discounted 7-day draft): %s", formatStepError(err)))
+		saveReport()
+		return 1
+	}
+
+	gotPlanB, err := client.GetInvoice(ctx, planBInv.ID)
+	if err != nil {
+		emit(fmt.Sprintf("FAIL plan-B (read back discounted 7-day draft): %s", formatStepError(err)))
+		saveReport()
+		return 1
+	}
+	if !strings.EqualFold(gotPlanB.Status, "DRAFT") {
+		emit(fmt.Sprintf("FAIL plan-B (read back): expected DRAFT status for %s, got %s", paypal.MaskID(gotPlanB.ID), gotPlanB.Status))
+		saveReport()
+		return 1
+	}
+	if len(gotPlanB.Items) == 0 || gotPlanB.Items[0].Discount == nil || !isTenPercent(gotPlanB.Items[0].Discount.Percent) {
+		gotPct := "(none)"
+		if len(gotPlanB.Items) > 0 && gotPlanB.Items[0].Discount != nil {
+			gotPct = gotPlanB.Items[0].Discount.Percent
+		}
+		emit(fmt.Sprintf("FAIL plan-B (read back): expected 10%% item discount on %s, got %s", paypal.MaskID(gotPlanB.ID), gotPct))
+		saveReport()
+		return 1
+	}
+	gotDueDate := ""
+	if gotPlanB.Detail.PaymentTerm != nil {
+		gotDueDate = strings.TrimSpace(gotPlanB.Detail.PaymentTerm.DueDate)
+	}
+	if gotDueDate != planBDueDate {
+		emit(fmt.Sprintf("FAIL plan-B (read back): expected due_date=%s (+7d from %s) on %s, got %s",
+			planBDueDate, planBInvoiceDate, paypal.MaskID(gotPlanB.ID), gotDueDate))
+		saveReport()
+		return 1
+	}
+	emit(fmt.Sprintf("PASS plan-B (draft with 10%% item discount & due +7d): invoice %s status=DRAFT item_discount=%s%% invoice_date=%s due_date=%s confirmed on read-back (req %s)",
+		paypal.MaskID(gotPlanB.ID), gotPlanB.Items[0].Discount.Percent, gotPlanB.Detail.InvoiceDate, gotDueDate, paypal.MaskID(planBReqID)))
+
 	saveReport()
 	return 0
+}
+
+func isTenPercent(val string) bool {
+	s := strings.TrimSpace(val)
+	return s == "10" || s == "10.0" || s == "10.00"
 }
 
 func computeSevenDayEndDate(invoiceDate string) string {

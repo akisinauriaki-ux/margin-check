@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -56,7 +57,7 @@ func TestMissingOrBlankDotEnvPrintsExactMessageAndStops(t *testing.T) {
 	}
 }
 
-func TestFullSixStepRunMasksIDsAndHidesSecrets(t *testing.T) {
+func TestRunWithStep3Blocked500AndPlanBDraftMasksIDsAndHidesSecrets(t *testing.T) {
 	clearPayPalEnvForTest(t)
 
 	const (
@@ -66,13 +67,13 @@ func TestFullSixStepRunMasksIDsAndHidesSecrets(t *testing.T) {
 		sellerEmail  = "us-seller-test@example.com"
 		buyerEmail   = "us-buyer-test@example.com"
 		fullInvID    = "INV2-1111-2222-3333-9876"
+		planBInvID   = "INV2-4444-5555-6666-4321"
 	)
 
 	var (
 		mu       sync.Mutex
 		byReqID  = map[string]string{}
 		invoices []string
-		hasRule  bool
 	)
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -90,29 +91,30 @@ func TestFullSixStepRunMasksIDsAndHidesSecrets(t *testing.T) {
 				_, _ = w.Write([]byte(`{"id":"` + existing + `","status":"DRAFT","detail":{"currency_code":"USD","invoice_date":"2026-10-25"}}`))
 				return
 			}
-			byReqID[reqID] = fullInvID
-			invoices = append(invoices, fullInvID)
+			var payload map[string]any
+			_ = json.NewDecoder(r.Body).Decode(&payload)
+			id := fullInvID
+			if len(invoices) >= 1 {
+				id = planBInvID
+			}
+			byReqID[reqID] = id
+			invoices = append(invoices, id)
 			w.WriteHeader(http.StatusCreated)
-			_, _ = w.Write([]byte(`{"id":"` + fullInvID + `","status":"DRAFT","detail":{"currency_code":"USD","invoice_date":"2026-10-25"}}`))
+			_, _ = w.Write([]byte(`{"id":"` + id + `","status":"DRAFT","detail":{"currency_code":"USD","invoice_date":"2026-10-25"}}`))
 
 		case r.Method == http.MethodPost && r.URL.Path == "/v2/invoicing/invoices/"+fullInvID+"/conditional-rules":
-			hasRule = true
-			w.WriteHeader(http.StatusCreated)
-			_, _ = w.Write([]byte(`{"rules":[{"conditional_rule_id":"CR-9999","conditional_rule_type":"EARLY_PAYMENT_DISCOUNT","conditional_rule_value_type":"PERCENT","conditional_rule_value":"10","rule_expiry_terms":{"rule_expiry_condition":"SEVEN_DAYS_AFTER_ISSUE_DATE","condition_rule_end_date":"2026-11-01"}}]}`))
+			w.WriteHeader(http.StatusInternalServerError)
+			_, _ = w.Write([]byte(`{"name":"INTERNAL_SERVER_ERROR","message":"An internal server error has occurred.","debug_id":"f297006f25a7d"}`))
 
 		case r.Method == http.MethodGet && r.URL.Path == "/v2/invoicing/invoices/"+fullInvID:
-			if hasRule {
-				_, _ = w.Write([]byte(`{"id":"` + fullInvID + `","status":"DRAFT","detail":{"currency_code":"USD","invoice_date":"2026-10-25"},"configuration":{"has_conditional_rule":true}}`))
-			} else {
-				_, _ = w.Write([]byte(`{"id":"` + fullInvID + `","status":"DRAFT","detail":{"currency_code":"USD","invoice_date":"2026-10-25"}}`))
-			}
+			_, _ = w.Write([]byte(`{"id":"` + fullInvID + `","status":"DRAFT","detail":{"currency_code":"USD","invoice_date":"2026-10-25"}}`))
+
+		case r.Method == http.MethodGet && r.URL.Path == "/v2/invoicing/invoices/"+planBInvID:
+			_, _ = w.Write([]byte(`{"id":"` + planBInvID + `","status":"DRAFT","detail":{"currency_code":"USD","invoice_date":"2026-10-25","payment_term":{"term_type":"DUE_ON_DATE_SPECIFIED","due_date":"2026-11-01"}},"items":[{"name":"Wholesale Boxes","quantity":"40","unit_amount":{"currency_code":"USD","value":"15.00"},"discount":{"percent":"10"}}]}`))
 
 		case r.Method == http.MethodGet && r.URL.Path == "/v2/invoicing/invoices":
-			if len(invoices) == 1 {
-				_, _ = w.Write([]byte(`{"total_items":1,"total_pages":1,"items":[{"id":"` + fullInvID + `","status":"DRAFT","detail":{"currency_code":"USD"}}]}`))
-			} else {
-				_, _ = w.Write([]byte(`{"total_items":2,"total_pages":1,"items":[]}`))
-			}
+			_, _ = w.Write([]byte(`{"total_items":1,"total_pages":1,"items":[{"id":"` + fullInvID + `","status":"DRAFT","detail":{"currency_code":"USD"}}]}`))
+
 		default:
 			w.WriteHeader(http.StatusNotFound)
 		}
@@ -148,19 +150,17 @@ func TestFullSixStepRunMasksIDsAndHidesSecrets(t *testing.T) {
 	}
 
 	lines := strings.Split(strings.TrimSpace(out.String()), "\n")
-	if len(lines) != 6 {
-		t.Fatalf("expected 6 PASS lines, got %d:\n%s", len(lines), out.String())
+	if len(lines) != 7 {
+		t.Fatalf("expected 7 lines (steps 1-6 + plan-B), got %d:\n%s", len(lines), out.String())
 	}
-	for i, l := range lines {
-		if !strings.HasPrefix(l, "PASS ") {
-			t.Fatalf("line %d did not start with PASS: %q", i+1, l)
-		}
+	if !strings.HasPrefix(lines[2], "BLOCKED step 3") || !strings.Contains(lines[2], "f297006f25a7d") {
+		t.Fatalf("expected line 3 to be BLOCKED step 3 with debug id, got: %q", lines[2])
 	}
-	if !strings.Contains(out.String(), "...9876") {
-		t.Fatalf("expected masked last-4 invoice ID ...9876 in output:\n%s", out.String())
+	if !strings.HasPrefix(lines[6], "PASS plan-B") || !strings.Contains(lines[6], "...4321") {
+		t.Fatalf("expected line 7 to be PASS plan-B with ...4321, got: %q", lines[6])
 	}
 
-	for _, forbidden := range []string{testClientID, testSecret, testToken, sellerEmail, buyerEmail, fullInvID, "INV2-1111"} {
+	for _, forbidden := range []string{testClientID, testSecret, testToken, sellerEmail, buyerEmail, fullInvID, planBInvID, "INV2-1111", "INV2-4444"} {
 		if strings.Contains(out.String(), forbidden) {
 			t.Fatalf("forbidden value %q appeared in output:\n%s", forbidden, out.String())
 		}

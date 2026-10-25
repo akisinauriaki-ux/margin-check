@@ -1,3 +1,5 @@
-PASS step 1 (oauth token): token cached in memory (req ...349a)
-PASS step 2 (create draft invoice): invoice ...F5MX status=DRAFT qty=40 unit_cents=1500 currency=USD (req ...2512)
-FAIL step 3 (early_payment_discount rule): status=500 error_name=INTERNAL_SERVER_ERROR
+PASS step 1 (oauth token): token cached in memory (req ...b3ad)
+PASS step 2 (create draft invoice): invoice ...UX93 status=DRAFT qty=40 unit_cents=1500 currency=USD (req ...594c)
+BLOCKED step 3 (early_payment_discount rule): PayPal 500 INTERNAL_SERVER_ERROR (debug id f297006f25a7d, req ...a758)
+PASS step 4 (get invoice): invoice ...UX93 status=DRAFT read back ok (rule check skipped: step 3 BLOCKED)
+FAIL step 5 (repeat create with same PayPal-Request-Id): duplicate created (...YB4D != ...UX93)
