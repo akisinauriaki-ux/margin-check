@@ -1,0 +1,17 @@
+Based on: E-503
+
+Buyer:
+Hello,
+We would like 20 boxes of ceramic plates at $40 each with free shipping.
+
+Seller:
+Hello,
+Free shipping on 20 boxes would wipe out our margin.
+Here are our three choices:
+1. Standard: 20 boxes at $40 with $20 shipping.
+2. Volume: 40 boxes at $40 with free shipping.
+3. Fast payment: 20 boxes at $40 with 10% discount if paid in 7 days.
+
+Buyer:
+We accept the bulk deal but can we do 35 boxes instead of 40 for free shipping?
+If 35 boxes works with free shipping, send the invoice.

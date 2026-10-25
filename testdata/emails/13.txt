@@ -1,0 +1,15 @@
+Based on: E-512
+
+Buyer:
+Good day,
+We want to order 28 boxes of linen napkins at $37 per box.
+Can you do a 15% discount and also give us free shipping?
+
+Seller:
+Good day,
+We can supply 28 boxes at $37 each, but we cannot afford a 15% discount.
+We can offer free shipping on this order if payment is made upon receipt.
+
+Buyer:
+Okay, we will skip the discount and take the free shipping on 28 boxes at $37.
+Please send the invoice.

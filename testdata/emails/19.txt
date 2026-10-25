@@ -1,0 +1,17 @@
+Based on: E-508
+
+Buyer:
+Hi,
+We want 15 boxes of artisan pottery mugs at $40 with a 30% discount and free shipping.
+
+Seller:
+Hi,
+A 30% discount with free shipping is not profitable for us.
+We can offer these options:
+Option A (Standard): 15 boxes at $40 with $15 shipping.
+Option B (Bulk): 30 boxes at $40 with free shipping.
+Option C (Early Payment): 15 boxes at $40 with 10% discount if paid within 7 days.
+
+Buyer:
+Sounds interesting, let's go ahead with that proposal.
+Please send over the paperwork so we can proceed.

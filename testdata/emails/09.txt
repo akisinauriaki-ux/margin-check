@@ -1,0 +1,15 @@
+Based on: E-510
+
+Buyer:
+Hi,
+We want to purchase 25 boxes of ceramic travel mugs at $38 per box.
+Can you provide free shipping on this order?
+
+Seller:
+Hi,
+Yes, for 25 boxes at $38 each we can offer free shipping as a courtesy.
+Regarding payment schedule, we will confirm payment terms next week after checking our cash flow.
+
+Buyer:
+Great, 25 boxes with free shipping sounds good.
+We will wait to hear on payment terms next week.

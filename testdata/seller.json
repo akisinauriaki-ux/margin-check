@@ -1,0 +1,12 @@
+{
+  "_label": "sample values for testing",
+  "unit_cost_cents": 2300,
+  "unit_cost_evidence_id": "E-503",
+  "shipping_cost_cents_per_order": 600,
+  "shipping_cost_cents_per_box": 150,
+  "paypal_fee_percent": 3.49,
+  "paypal_fixed_fee_cents": 49,
+  "paypal_fee_evidence_id": "E-501",
+  "paypal_fixed_fee_evidence_id": "E-502",
+  "yearly_cost_of_money_percent": 10.0
+}

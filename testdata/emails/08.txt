@@ -1,0 +1,15 @@
+Based on: E-503
+
+Seller:
+Notice to our wholesale partners:
+Due to higher packaging material costs, our baseline price per box increases from $40 to $44 starting this week.
+
+Buyer:
+Thanks for the update.
+We need to order 30 boxes, but can you give us a 5% discount on the new $44 price to help offset the price hike?
+Shipping can be your standard $18, due on receipt.
+
+Seller:
+We can do that for you this time.
+We will apply a 5% discount to the new $44 price for your 30 boxes.
+Shipping is $18, payment due on receipt.

@@ -1,0 +1,15 @@
+Based on: E-506
+
+Buyer:
+Good afternoon,
+We are ready to order 45 boxes of olive oil bottles for our culinary shop.
+Please let us know the price per box.
+
+Seller:
+Good afternoon,
+Our wholesale price is $38 per box for 45 boxes, with payment due on receipt.
+As for delivery, we will sort out shipping costs later once everything is packed.
+
+Buyer:
+Sounds good, 45 boxes at $38 works.
+Send the invoice for the boxes and let us know shipping once packed.

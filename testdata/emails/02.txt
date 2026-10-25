@@ -1,0 +1,17 @@
+Based on: E-510
+
+Buyer:
+Hi,
+We want to purchase 30 boxes of soy candles.
+Can you give us a 10% discount and include free shipping?
+
+Seller:
+Hi,
+We can supply 30 boxes of soy candles at our standard wholesale rate of $35 per box.
+However, we cannot offer a 10% discount or free shipping on this volume.
+Shipping will be $15 and payment is due on receipt.
+
+Buyer:
+Understood, that makes sense.
+We accept 30 boxes at $35 per box plus $15 shipping.
+Please email the invoice.

@@ -1,0 +1,15 @@
+Based on: E-503
+
+Buyer:
+Hello,
+We would like to order 40 boxes of ceramic mugs for our retail gift shop.
+Could you let us know your wholesale pricing and shipping details?
+
+Seller:
+Hello,
+Our wholesale price is $40 per box for 40 boxes, shipping is $24, and payment is due on receipt.
+We have all 40 boxes in stock and ready to ship.
+
+Buyer:
+That works for us.
+Please send over the invoice and we will settle it upon receipt.

@@ -1,0 +1,16 @@
+Based on: E-509
+
+Buyer:
+Hello there,
+We would like to place an order for fifty boxes of herbal tea tins.
+Could you do payment terms of net 15 days?
+
+Seller:
+Hello,
+Yes, fifty boxes of herbal tea tins will be $45 per box.
+We can approve payment terms of net 15 days for your account.
+Shipping is $20 for the order.
+
+Buyer:
+Great, fifty boxes at $45 per box with net 15 terms sounds perfect.
+Please prepare the invoice.

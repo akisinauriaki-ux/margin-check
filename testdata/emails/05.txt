@@ -1,0 +1,17 @@
+Based on: E-513
+
+Buyer:
+Hi,
+We want to purchase 25 boxes of handmade porcelain planters at $42 per box.
+Can you extend payment terms of net 60 days so we have two months to pay?
+
+Seller:
+Hi,
+We have 25 boxes of porcelain planters at $42 each.
+However, we cannot do net 60 days as waiting two months creates too much unpaid balance risk.
+The best we can offer is net 14 days, with $18 shipping.
+
+Buyer:
+Fair enough, we understand.
+Net 14 days works for us on the 25 boxes at $42 each.
+Please send the bill.

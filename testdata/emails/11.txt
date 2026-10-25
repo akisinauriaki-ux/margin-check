@@ -1,0 +1,18 @@
+Based on: E-511
+
+Buyer:
+Hello,
+We are interested in ordering thirty boxes of stoneware pasta bowls.
+Is your wholesale rate $39 per box?
+Can you provide a ten percent discount for an upfront payment?
+
+Seller:
+Hello,
+Yes, wholesale is $39 per box for thirty boxes.
+We can offer a ten percent discount for prompt payment upon receipt.
+Shipping will be $20.
+
+Buyer:
+Sounds good.
+We accept thirty boxes at $39 each with ten percent off and $20 shipping.
+Send the bill when ready.

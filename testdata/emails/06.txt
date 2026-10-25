@@ -1,0 +1,14 @@
+Based on: E-505
+
+Buyer:
+> Hello,
+> We are checking whether we can reorder 60 units of organic honey jars.
+> Standard wholesale was $36 per unit on our last invoice.
+
+Seller:
+> Yes, we have 60 units available at $36 per unit.
+> Shipping is $22 for the order, and payment is due on receipt.
+
+Buyer:
+> Perfect, confirmed for 60 units at $36 each.
+> Go ahead and generate the draft invoice.

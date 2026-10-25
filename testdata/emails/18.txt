@@ -1,0 +1,18 @@
+Based on: E-501
+
+Buyer:
+Hello,
+We would like to purchase 25 boxes of tea at $38 each, but we require a 20% discount and free shipping.
+
+Seller:
+Hello,
+That discount and free shipping would cause us to lose money on 25 boxes.
+We can offer three choices:
+Option 1: 25 boxes at $38 with $18 shipping, due on receipt.
+Option 2: 50 boxes at $38 with free shipping.
+Option 3: 25 boxes at $38 with 10% off if paid within 7 days.
+
+Buyer:
+The third option sounds good.
+I will take the 10% discount for paying within 7 days on the 25 boxes.
+Please send the invoice.

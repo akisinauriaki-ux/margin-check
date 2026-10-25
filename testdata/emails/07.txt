@@ -1,0 +1,15 @@
+Based on: E-507
+
+Buyer:
+Hello,
+We need forty units of wool knit blankets for our boutique.
+Is $50 per unit still your rate, and can we pay net 7?
+
+Seller:
+Hello,
+Yes, forty units will be $50 per unit, and payment terms of net 7 days are approved.
+Shipping cost is $25 for the shipment.
+
+Buyer:
+Confirmed for forty units at $50 each with net 7 terms.
+Please issue the PayPal invoice.
