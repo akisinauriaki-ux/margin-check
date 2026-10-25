@@ -1,2 +1,3 @@
-PASS step 1 (oauth token): token cached in memory (req ...3920)
-FAIL step 2 (create draft invoice): status=403 error_name=NOT_AUTHORIZED issue=NOT_AUTHORIZED
+PASS step 1 (oauth token): token cached in memory (req ...349a)
+PASS step 2 (create draft invoice): invoice ...F5MX status=DRAFT qty=40 unit_cents=1500 currency=USD (req ...2512)
+FAIL step 3 (early_payment_discount rule): status=500 error_name=INTERNAL_SERVER_ERROR
