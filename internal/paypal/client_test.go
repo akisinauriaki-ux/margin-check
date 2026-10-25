@@ -379,3 +379,159 @@ func TestConditionalRule204AndHrefFallback(t *testing.T) {
 		t.Fatalf("expected 204 No Content to succeed, got: %v", err)
 	}
 }
+
+func TestRepeatCreateDraftInvoiceUsesDeterministicInvoiceNumberAndRecoversOn422Duplicate(t *testing.T) {
+	const (
+		fakeClientID     = "FAKE_CLIENT_ID_DUP"
+		fakeClientSecret = "FAKE_SECRET_DUP"
+		fakeToken        = "FAKE_TOKEN_DUP"
+		firstInvoiceID   = "INV2-DUP1-DUP2-DUP3-7788"
+		secondInvoiceID  = "INV2-NEW1-NEW2-NEW3-9900"
+	)
+
+	var (
+		mu             sync.Mutex
+		byInvNum       = map[string]string{}
+		createdNumbers []string
+		searchCalls    int
+	)
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		mu.Lock()
+		defer mu.Unlock()
+
+		switch {
+		case r.Method == http.MethodPost && r.URL.Path == "/v1/oauth2/token":
+			_, _ = w.Write([]byte(`{"access_token":"` + fakeToken + `","token_type":"Bearer","expires_in":3600}`))
+
+		case r.Method == http.MethodPost && r.URL.Path == "/v2/invoicing/invoices":
+			// Simulate real PayPal Sandbox: ignore PayPal-Request-Id, enforce unique detail.invoice_number.
+			var payload struct {
+				Detail struct {
+					InvoiceNumber string `json:"invoice_number"`
+				} `json:"detail"`
+			}
+			_ = json.NewDecoder(r.Body).Decode(&payload)
+			invNum := payload.Detail.InvoiceNumber
+			if invNum == "" {
+				w.WriteHeader(http.StatusBadRequest)
+				_, _ = w.Write([]byte(`{"name":"INVALID_REQUEST"}`))
+				return
+			}
+			if len(invNum) > MaxInvoiceNumberLen {
+				w.WriteHeader(http.StatusBadRequest)
+				_, _ = w.Write([]byte(`{"name":"INVALID_STRING_LENGTH"}`))
+				return
+			}
+			if _, exists := byInvNum[invNum]; exists {
+				w.WriteHeader(http.StatusUnprocessableEntity)
+				_, _ = w.Write([]byte(`{"name":"UNPROCESSABLE_ENTITY","message":"The requested action could not be performed, semantically incorrect, or failed business validation.","details":[{"issue":"DUPLICATE_INVOICE_NUMBER","description":"Invoice number already exists."}]}`))
+				return
+			}
+			id := firstInvoiceID
+			if len(byInvNum) >= 1 {
+				id = secondInvoiceID
+			}
+			byInvNum[invNum] = id
+			createdNumbers = append(createdNumbers, invNum)
+			w.WriteHeader(http.StatusCreated)
+			_, _ = w.Write([]byte(`{"id":"` + id + `","status":"DRAFT","detail":{"currency_code":"USD","invoice_number":"` + invNum + `","invoice_date":"2026-10-25"}}`))
+
+		case r.Method == http.MethodPost && r.URL.Path == "/v2/invoicing/search-invoices":
+			searchCalls++
+			if strings.TrimSpace(r.Header.Get("PayPal-Request-Id")) == "" {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			var searchReq struct {
+				InvoiceNumber string `json:"invoice_number"`
+			}
+			_ = json.NewDecoder(r.Body).Decode(&searchReq)
+			id, ok := byInvNum[searchReq.InvoiceNumber]
+			if !ok {
+				_, _ = w.Write([]byte(`{"total_items":0,"total_pages":0,"items":[]}`))
+				return
+			}
+			_, _ = w.Write([]byte(`{"total_items":1,"total_pages":1,"items":[{"id":"` + id + `","status":"DRAFT","detail":{"currency_code":"USD","invoice_number":"` + searchReq.InvoiceNumber + `","invoice_date":"2026-10-25"}}]}`))
+
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer srv.Close()
+
+	client, err := NewClient(srv.URL, fakeClientID, fakeClientSecret, srv.Client())
+	if err != nil {
+		t.Fatalf("NewClient: %v", err)
+	}
+
+	ctx := context.Background()
+	in := DraftInvoiceInput{
+		CurrencyCode:    "USD",
+		SellerEmail:     "seller@example.com",
+		BuyerEmail:      "buyer@example.com",
+		PaymentTermType: PaymentTermNet30,
+		Items:           []InvoiceItemInput{{Name: "Wholesale Boxes", Quantity: 40, UnitPriceCents: 1500}},
+	}
+
+	// (a) First call creates the draft; repeat with the same key receives 422 DUPLICATE_INVOICE_NUMBER,
+	// searches by detail.invoice_number, and returns the first invoice's ID marked AlreadyExisted=true.
+	first, err := client.CreateDraftInvoice(ctx, "idem-key-alpha", in)
+	if err != nil {
+		t.Fatalf("first CreateDraftInvoice failed: %v", err)
+	}
+	if first.ID != firstInvoiceID || first.AlreadyExisted {
+		t.Fatalf("unexpected first invoice: %+v", first)
+	}
+
+	repeat, err := client.CreateDraftInvoice(ctx, "idem-key-alpha", in)
+	if err != nil {
+		t.Fatalf("repeat CreateDraftInvoice failed: %v", err)
+	}
+	if repeat.ID != first.ID {
+		t.Fatalf("expected repeat ID %q to match first ID %q", repeat.ID, first.ID)
+	}
+	if !repeat.AlreadyExisted {
+		t.Fatal("expected repeat invoice to have AlreadyExisted=true")
+	}
+	if repeat.Detail.InvoiceNumber != first.Detail.InvoiceNumber {
+		t.Fatalf("expected same derived invoice_number, got %q vs %q", repeat.Detail.InvoiceNumber, first.Detail.InvoiceNumber)
+	}
+
+	// (b) Different keys give different invoice numbers (each <= 25 chars) and create a separate draft.
+	second, err := client.CreateDraftInvoice(ctx, "idem-key-beta", in)
+	if err != nil {
+		t.Fatalf("second CreateDraftInvoice failed: %v", err)
+	}
+	if second.ID != secondInvoiceID || second.AlreadyExisted {
+		t.Fatalf("unexpected second invoice: %+v", second)
+	}
+	if second.Detail.InvoiceNumber == first.Detail.InvoiceNumber {
+		t.Fatalf("different keys produced identical invoice_number %q", second.Detail.InvoiceNumber)
+	}
+	if len(first.Detail.InvoiceNumber) > MaxInvoiceNumberLen || len(second.Detail.InvoiceNumber) > MaxInvoiceNumberLen {
+		t.Fatalf("invoice_number exceeded %d chars: %q, %q", MaxInvoiceNumberLen, first.Detail.InvoiceNumber, second.Detail.InvoiceNumber)
+	}
+
+	mu.Lock()
+	if len(createdNumbers) != 2 || searchCalls != 1 {
+		t.Fatalf("expected 2 created invoices and 1 search call, got created=%d searchCalls=%d", len(createdNumbers), searchCalls)
+	}
+	mu.Unlock()
+
+	// (c) Prove the derived invoice_number never contains a secret even if secret material is passed.
+	const rawSecret = "TOP_SECRET_TOKEN_XYZ_98765"
+	derived, err := DeriveInvoiceNumber("key-with-" + rawSecret + "-" + fakeClientSecret)
+	if err != nil {
+		t.Fatalf("DeriveInvoiceNumber failed: %v", err)
+	}
+	if len(derived) > MaxInvoiceNumberLen {
+		t.Fatalf("DeriveInvoiceNumber length %d > %d", len(derived), MaxInvoiceNumberLen)
+	}
+	for _, secret := range []string{rawSecret, "TOP_SECRET", "XYZ_98765", fakeClientSecret, fakeClientID, fakeToken} {
+		if strings.Contains(strings.ToUpper(derived), strings.ToUpper(secret)) {
+			t.Fatalf("derived invoice_number %q leaked secret %q", derived, secret)
+		}
+	}
+}

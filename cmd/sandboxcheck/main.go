@@ -174,18 +174,24 @@ func run(ctx context.Context, dotenvPath, reportPath string, httpClient *http.Cl
 
 	repeatInv, err := client.CreateDraftInvoice(ctx, createReqID, draftInput)
 	if err != nil {
-		emit(fmt.Sprintf("FAIL step 5 (repeat create with same PayPal-Request-Id): %s", formatStepError(err)))
+		emit(fmt.Sprintf("FAIL step 5 (repeat create with same idempotency key): %s", formatStepError(err)))
 		saveReport()
 		return 1
 	}
 	if repeatInv.ID != inv.ID {
-		emit(fmt.Sprintf("FAIL step 5 (repeat create with same PayPal-Request-Id): duplicate created (%s != %s)",
+		emit(fmt.Sprintf("FAIL step 5 (repeat create with same idempotency key): duplicate created (%s != %s)",
 			paypal.MaskID(repeatInv.ID), paypal.MaskID(inv.ID)))
 		saveReport()
 		return 1
 	}
-	emit(fmt.Sprintf("PASS step 5 (repeat create with same PayPal-Request-Id): same invoice %s returned (req %s)",
-		paypal.MaskID(repeatInv.ID), paypal.MaskID(createReqID)))
+	if !repeatInv.AlreadyExisted {
+		emit(fmt.Sprintf("FAIL step 5 (repeat create with same idempotency key): expected AlreadyExisted=true for %s",
+			paypal.MaskID(repeatInv.ID)))
+		saveReport()
+		return 1
+	}
+	emit(fmt.Sprintf("PASS step 5 (repeat create with same idempotency key): 422 DUPLICATE_INVOICE_NUMBER caught, existing invoice %s (inv_num %s, already_existed=true) returned (req %s)",
+		paypal.MaskID(repeatInv.ID), paypal.MaskID(repeatInv.Detail.InvoiceNumber), paypal.MaskID(createReqID)))
 
 	afterList, err := client.ListInvoices(ctx, 1, 100, true)
 	if err != nil {

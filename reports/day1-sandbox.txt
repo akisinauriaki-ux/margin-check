@@ -1,5 +1,7 @@
-PASS step 1 (oauth token): token cached in memory (req ...b3ad)
-PASS step 2 (create draft invoice): invoice ...UX93 status=DRAFT qty=40 unit_cents=1500 currency=USD (req ...594c)
-BLOCKED step 3 (early_payment_discount rule): PayPal 500 INTERNAL_SERVER_ERROR (debug id f297006f25a7d, req ...a758)
-PASS step 4 (get invoice): invoice ...UX93 status=DRAFT read back ok (rule check skipped: step 3 BLOCKED)
-FAIL step 5 (repeat create with same PayPal-Request-Id): duplicate created (...YB4D != ...UX93)
+PASS step 1 (oauth token): token cached in memory (req ...9a08)
+PASS step 2 (create draft invoice): invoice ...LQ62 status=DRAFT qty=40 unit_cents=1500 currency=USD (req ...9a74)
+BLOCKED step 3 (early_payment_discount rule): PayPal 500 INTERNAL_SERVER_ERROR (debug id f297006f25a7d, req ...c020)
+PASS step 4 (get invoice): invoice ...LQ62 status=DRAFT read back ok (rule check skipped: step 3 BLOCKED)
+PASS step 5 (repeat create with same idempotency key): 422 DUPLICATE_INVOICE_NUMBER caught, existing invoice ...LQ62 (inv_num ...7B72, already_existed=true) returned (req ...9a74)
+PASS step 6 (list invoices count check): total_items=10 unchanged after repeat
+PASS plan-B (draft with 10% item discount & due +7d): invoice ...JUV9 status=DRAFT item_discount=10% invoice_date=2026-10-25 due_date=2026-11-01 confirmed on read-back (req ...df00)

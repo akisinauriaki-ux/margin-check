@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -37,6 +38,14 @@ const (
 	// PaymentTermDueOnDateSpecified sets the invoice due date to the explicit detail.payment_term.due_date.
 	// Official docs: https://developer.paypal.com/invoicing/object and https://developer.paypal.com/api/invoicing/v2/invoices-create
 	PaymentTermDueOnDateSpecified = "DUE_ON_DATE_SPECIFIED"
+
+	// MaxInvoiceNumberLen is PayPal's maximum length for detail.invoice_number (25 characters).
+	// Official doc: https://developer.paypal.com/invoicing/object
+	MaxInvoiceNumberLen = 25
+
+	// IssueDuplicateInvoiceNumber is the 422 UNPROCESSABLE_ENTITY issue returned by PayPal Sandbox
+	// when detail.invoice_number is reused on POST /v2/invoicing/invoices.
+	IssueDuplicateInvoiceNumber = "DUPLICATE_INVOICE_NUMBER"
 )
 
 var (
@@ -151,6 +160,25 @@ func NewRequestID(prefix string) (string, error) {
 		return hex.EncodeToString(b[:]), nil
 	}
 	return p + "-" + hex.EncodeToString(b[:]), nil
+}
+
+// DeriveInvoiceNumber deterministically derives a unique detail.invoice_number (<= 25 characters)
+// from a caller-owned idempotency key using a one-way SHA-256 digest so raw keys or secrets never
+// appear in the customer-visible invoice_number field.
+// Official docs:
+//   - https://developer.paypal.com/invoicing/core-concepts (detail.invoice_number must be unique)
+//   - https://developer.paypal.com/invoicing/object (invoice_number max 25 characters)
+func DeriveInvoiceNumber(idempotencyKey string) (string, error) {
+	key := strings.TrimSpace(idempotencyKey)
+	if key == "" {
+		return "", errors.New("paypal: idempotency key is required to derive detail.invoice_number")
+	}
+	sum := sha256.Sum256([]byte("margincheck-inv-v1:" + key))
+	invNum := "MC-" + strings.ToUpper(hex.EncodeToString(sum[:])[:22])
+	if len(invNum) > MaxInvoiceNumberLen {
+		invNum = invNum[:MaxInvoiceNumberLen]
+	}
+	return invNum, nil
 }
 
 // EnsureToken fetches (or reuses an unexpired in-memory) OAuth 2.0 access token without returning the raw secret.
@@ -339,13 +367,14 @@ type Link struct {
 
 // Invoice represents a PayPal Invoicing v2 invoice resource (always kept in DRAFT status).
 type Invoice struct {
-	ID            string               `json:"id"`
-	Status        string               `json:"status"`
-	Detail        InvoiceDetail        `json:"detail"`
-	Items         []InvoiceLineItem    `json:"items,omitempty"`
-	Configuration InvoiceConfiguration `json:"configuration"`
-	Href          string               `json:"href,omitempty"`
-	Links         []Link               `json:"links,omitempty"`
+	ID             string               `json:"id"`
+	Status         string               `json:"status"`
+	Detail         InvoiceDetail        `json:"detail"`
+	Items          []InvoiceLineItem    `json:"items,omitempty"`
+	Configuration  InvoiceConfiguration `json:"configuration"`
+	Href           string               `json:"href,omitempty"`
+	Links          []Link               `json:"links,omitempty"`
+	AlreadyExisted bool                 `json:"-"`
 }
 
 // HasEarlyPaymentDiscount reports whether GET /v2/invoicing/invoices/{invoice_id} shows a conditional rule attached.
@@ -388,22 +417,33 @@ type invoiceLineItemPayload struct {
 }
 
 // CreateDraftInvoice creates a draft invoice in PayPal Invoicing v2 and never sends it.
+// It takes a caller-owned idempotencyKey, sets detail.invoice_number to DeriveInvoiceNumber(idempotencyKey)
+// (within PayPal's 25-character limit), and sends PayPal-Request-Id: <idempotencyKey>.
+// When PayPal answers 422 UNPROCESSABLE_ENTITY with issue DUPLICATE_INVOICE_NUMBER, CreateDraftInvoice
+// finds the existing invoice by detail.invoice_number via SearchInvoiceByNumber and returns it with
+// AlreadyExisted=true without creating a second invoice.
 // Official docs:
 //   - https://developer.paypal.com/api/invoicing/v2/invoices-create
+//   - https://developer.paypal.com/invoicing/core-concepts
 //   - https://developer.paypal.com/invoicing/object
+//   - https://developer.paypal.com/api/invoicing/v2/invoices-search-invoices
 //   - https://developer.paypal.com/api/invoicing/v2/schema.json
 //
 // Endpoint: POST /v2/invoicing/invoices
 // Request headers: Authorization: Bearer <token>, Content-Type: application/json, Prefer: return=representation, PayPal-Request-Id.
-// Request JSON fields: detail.currency_code, detail.invoice_date, detail.payment_term.term_type, detail.payment_term.due_date,
-// invoicer.email_address, primary_recipients[].billing_info.email_address,
+// Request JSON fields: detail.currency_code, detail.invoice_number, detail.invoice_date, detail.payment_term.term_type,
+// detail.payment_term.due_date, invoicer.email_address, primary_recipients[].billing_info.email_address,
 // items[].name, items[].quantity, items[].unit_amount.currency_code, items[].unit_amount.value, items[].discount.percent.
-// Response JSON fields: id, status, detail.invoice_date, detail.currency_code, detail.payment_term.due_date,
-// items[].discount.percent, configuration.has_conditional_rule.
-func (c *Client) CreateDraftInvoice(ctx context.Context, requestID string, in DraftInvoiceInput) (*Invoice, error) {
-	reqID := strings.TrimSpace(requestID)
+// Response JSON fields: id, status, detail.invoice_number, detail.invoice_date, detail.currency_code,
+// detail.payment_term.due_date, items[].discount.percent, configuration.has_conditional_rule.
+func (c *Client) CreateDraftInvoice(ctx context.Context, idempotencyKey string, in DraftInvoiceInput) (*Invoice, error) {
+	reqID := strings.TrimSpace(idempotencyKey)
 	if reqID == "" {
 		return nil, errors.New("paypal: PayPal-Request-Id is required for POST /v2/invoicing/invoices")
+	}
+	invNum, err := DeriveInvoiceNumber(reqID)
+	if err != nil {
+		return nil, err
 	}
 	currency := strings.ToUpper(strings.TrimSpace(in.CurrencyCode))
 	if len(currency) != 3 {
@@ -451,8 +491,9 @@ func (c *Client) CreateDraftInvoice(ctx context.Context, requestID string, in Dr
 	}
 
 	detail := InvoiceDetail{
-		CurrencyCode: currency,
-		InvoiceDate:  strings.TrimSpace(in.InvoiceDate),
+		CurrencyCode:  currency,
+		InvoiceNumber: invNum,
+		InvoiceDate:   strings.TrimSpace(in.InvoiceDate),
 	}
 	term := strings.TrimSpace(in.PaymentTermType)
 	dueDate := strings.TrimSpace(in.DueDate)
@@ -497,7 +538,20 @@ func (c *Client) CreateDraftInvoice(ctx context.Context, requestID string, in Dr
 		return nil, err
 	}
 	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
-		return nil, c.parseAPIError(resp.StatusCode, body)
+		parsedErr := c.parseAPIError(resp.StatusCode, body)
+		var apiErr *APIError
+		if resp.StatusCode == http.StatusUnprocessableEntity && errors.As(parsedErr, &apiErr) && apiErr.Issue == IssueDuplicateInvoiceNumber {
+			existing, searchErr := c.SearchInvoiceByNumber(ctx, "search-"+reqID, invNum)
+			if searchErr != nil {
+				return nil, searchErr
+			}
+			existing.AlreadyExisted = true
+			if existing.Detail.InvoiceNumber == "" {
+				existing.Detail.InvoiceNumber = invNum
+			}
+			return existing, nil
+		}
+		return nil, parsedErr
 	}
 
 	var inv Invoice
@@ -512,7 +566,100 @@ func (c *Client) CreateDraftInvoice(ctx context.Context, requestID string, in Dr
 	if inv.ID == "" {
 		return nil, errors.New("paypal: draft invoice response missing id")
 	}
+	if inv.Detail.InvoiceNumber == "" {
+		inv.Detail.InvoiceNumber = invNum
+	}
 	return &inv, nil
+}
+
+type searchInvoicesPayload struct {
+	InvoiceNumber string `json:"invoice_number"`
+}
+
+// SearchInvoiceByNumber finds an invoice by its unique detail.invoice_number (<= 25 characters).
+// Official doc: https://developer.paypal.com/api/invoicing/v2/invoices-search-invoices
+// Endpoint: POST /v2/invoicing/search-invoices?page=1&page_size=20&total_required=true
+// Request headers: Authorization: Bearer <token>, Content-Type: application/json, PayPal-Request-Id.
+// Request JSON field: invoice_number (0..25 characters).
+// Response JSON fields: total_items, total_pages, items[].id, items[].status, items[].detail.invoice_number.
+func (c *Client) SearchInvoiceByNumber(ctx context.Context, requestID, invoiceNumber string) (*Invoice, error) {
+	reqID := strings.TrimSpace(requestID)
+	if reqID == "" {
+		return nil, errors.New("paypal: PayPal-Request-Id is required for POST /v2/invoicing/search-invoices")
+	}
+	invNum := strings.TrimSpace(invoiceNumber)
+	if invNum == "" || len(invNum) > MaxInvoiceNumberLen {
+		return nil, errors.New("paypal: invoice_number (1..25 chars) is required for search")
+	}
+
+	token, err := c.bearerToken(ctx, reqID)
+	if err != nil {
+		return nil, err
+	}
+
+	rawReq, err := json.Marshal(searchInvoicesPayload{InvoiceNumber: invNum})
+	if err != nil {
+		return nil, errors.New("paypal: failed to encode search-invoices JSON")
+	}
+
+	endpoint := c.baseURL + "/v2/invoicing/search-invoices?page=1&page_size=20&total_required=true"
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(rawReq))
+	if err != nil {
+		return nil, errors.New(c.redact(err.Error()))
+	}
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("PayPal-Request-Id", reqID)
+
+	resp, body, err := c.do(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, c.parseAPIError(resp.StatusCode, body)
+	}
+
+	var list InvoiceList
+	if err := json.Unmarshal(body, &list); err != nil {
+		return nil, errors.New("paypal: invalid search-invoices response JSON")
+	}
+	for i := range list.Items {
+		item := &list.Items[i]
+		if item.ID == "" {
+			item.ID = extractInvoiceID(item)
+		}
+		if item.Detail.InvoiceNumber == invNum && item.ID != "" {
+			cp := *item
+			return &cp, nil
+		}
+	}
+	if len(list.Items) == 1 {
+		item := list.Items[0]
+		if item.ID == "" {
+			item.ID = extractInvoiceID(&item)
+		}
+		if item.ID != "" {
+			return &item, nil
+		}
+	}
+
+	// Fallback to GET /v2/invoicing/invoices if search index lags immediately after creation.
+	fallbackList, listErr := c.ListInvoices(ctx, 1, 100, true)
+	if listErr == nil && fallbackList != nil {
+		for i := range fallbackList.Items {
+			item := &fallbackList.Items[i]
+			if item.ID == "" {
+				item.ID = extractInvoiceID(item)
+			}
+			if item.Detail.InvoiceNumber == invNum && item.ID != "" {
+				cp := *item
+				return &cp, nil
+			}
+		}
+	}
+
+	return nil, errors.New("paypal: duplicate invoice_number reported but existing invoice not found")
 }
 
 func extractInvoiceID(inv *Invoice) string {

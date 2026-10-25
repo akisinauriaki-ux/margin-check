@@ -72,7 +72,7 @@ func TestRunWithStep3Blocked500AndPlanBDraftMasksIDsAndHidesSecrets(t *testing.T
 
 	var (
 		mu       sync.Mutex
-		byReqID  = map[string]string{}
+		byInvNum = map[string]string{}
 		invoices []string
 	)
 
@@ -86,21 +86,34 @@ func TestRunWithStep3Blocked500AndPlanBDraftMasksIDsAndHidesSecrets(t *testing.T
 			_, _ = w.Write([]byte(`{"access_token":"` + testToken + `","token_type":"Bearer","expires_in":3600}`))
 
 		case r.Method == http.MethodPost && r.URL.Path == "/v2/invoicing/invoices":
-			reqID := r.Header.Get("PayPal-Request-Id")
-			if existing, ok := byReqID[reqID]; ok {
-				_, _ = w.Write([]byte(`{"id":"` + existing + `","status":"DRAFT","detail":{"currency_code":"USD","invoice_date":"2026-10-25"}}`))
+			var payload struct {
+				Detail struct {
+					InvoiceNumber string `json:"invoice_number"`
+				} `json:"detail"`
+			}
+			_ = json.NewDecoder(r.Body).Decode(&payload)
+			invNum := payload.Detail.InvoiceNumber
+			if _, ok := byInvNum[invNum]; ok {
+				w.WriteHeader(http.StatusUnprocessableEntity)
+				_, _ = w.Write([]byte(`{"name":"UNPROCESSABLE_ENTITY","details":[{"issue":"DUPLICATE_INVOICE_NUMBER"}]}`))
 				return
 			}
-			var payload map[string]any
-			_ = json.NewDecoder(r.Body).Decode(&payload)
 			id := fullInvID
 			if len(invoices) >= 1 {
 				id = planBInvID
 			}
-			byReqID[reqID] = id
+			byInvNum[invNum] = id
 			invoices = append(invoices, id)
 			w.WriteHeader(http.StatusCreated)
-			_, _ = w.Write([]byte(`{"id":"` + id + `","status":"DRAFT","detail":{"currency_code":"USD","invoice_date":"2026-10-25"}}`))
+			_, _ = w.Write([]byte(`{"id":"` + id + `","status":"DRAFT","detail":{"currency_code":"USD","invoice_number":"` + invNum + `","invoice_date":"2026-10-25"}}`))
+
+		case r.Method == http.MethodPost && r.URL.Path == "/v2/invoicing/search-invoices":
+			var searchReq struct {
+				InvoiceNumber string `json:"invoice_number"`
+			}
+			_ = json.NewDecoder(r.Body).Decode(&searchReq)
+			id := byInvNum[searchReq.InvoiceNumber]
+			_, _ = w.Write([]byte(`{"total_items":1,"total_pages":1,"items":[{"id":"` + id + `","status":"DRAFT","detail":{"currency_code":"USD","invoice_number":"` + searchReq.InvoiceNumber + `","invoice_date":"2026-10-25"}}]}`))
 
 		case r.Method == http.MethodPost && r.URL.Path == "/v2/invoicing/invoices/"+fullInvID+"/conditional-rules":
 			w.WriteHeader(http.StatusInternalServerError)

@@ -16,3 +16,7 @@ The app reads pasted email threads, calculates real kept profit in whole cents a
    ```bash
    go run ./cmd/sandboxcheck
    ```
+4. Run the PayPal MCP toolkit connection proof (`--tools=invoices.create` only):
+   ```bash
+   go run ./cmd/toolkitcheck
+   ```
