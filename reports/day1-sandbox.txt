@@ -1,0 +1,2 @@
+PASS step 1 (oauth token): token cached in memory (req ...3920)
+FAIL step 2 (create draft invoice): status=403 error_name=NOT_AUTHORIZED issue=NOT_AUTHORIZED
