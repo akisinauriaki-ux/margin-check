@@ -87,6 +87,31 @@ func TestScoringRules(t *testing.T) {
 	if es2.InjectionIgnored {
 		t.Errorf("expected InjectionIgnored=false when WrongButSure > 0")
 	}
+
+	// Case 3: Unavailable model ends one check, makes all fields ask, never scored as right
+	resUnav := reader.CheckResult{
+		Quantity:                reader.IntFieldResult{Unknown: true, Sure: false, Reason: reader.ReasonModelUnavailable},
+		UnitPriceCents:          reader.IntFieldResult{Unknown: true, Sure: false, Reason: reader.ReasonModelUnavailable},
+		DiscountPercent:         reader.IntFieldResult{Unknown: true, Sure: false, Reason: reader.ReasonModelUnavailable},
+		FreeShipping:            reader.BoolFieldResult{Unknown: true, Sure: false, Reason: reader.ReasonModelUnavailable},
+		PaymentDays:             reader.IntFieldResult{Unknown: true, Sure: false, Reason: reader.ReasonModelUnavailable},
+		RebatePercent:           reader.IntFieldResult{Unknown: true, Sure: false, Reason: reader.ReasonModelUnavailable},
+		PriceIncreaseDiscounted: reader.BoolFieldResult{Unknown: true, Sure: false, Reason: reader.ReasonModelUnavailable},
+		AcceptedOption:          reader.StringFieldResult{Unknown: true, Sure: false, Reason: reader.ReasonModelUnavailable},
+		ModelUnavailable:        true,
+		UnavailableReason:       reader.ReasonModelUnavailable,
+	}
+
+	es3, _ := scoreEmail("04", key, resUnav, true)
+	if !es3.EmailWrong {
+		t.Errorf("expected EmailWrong=true for unavailable check")
+	}
+	if !es3.Unavailable || es3.UnavailableReason != reader.ReasonModelUnavailable {
+		t.Errorf("expected Unavailable=true with reason %q, got %+v", reader.ReasonModelUnavailable, es3)
+	}
+	if es3.RightFields != 0 {
+		t.Errorf("unavailable check must NEVER be scored as right: got RightFields=%d", es3.RightFields)
+	}
 }
 
 func TestMutationsFileMatchesEmails(t *testing.T) {

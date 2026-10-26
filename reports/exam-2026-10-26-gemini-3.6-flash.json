@@ -1,0 +1,2055 @@
+{
+  "date": "2026-10-26",
+  "dir": "testdata",
+  "instruction_version": "reader-v1",
+  "models": [
+    "gemini-3.6-flash"
+  ],
+  "single_mode": true,
+  "emails_total": 20,
+  "emails_right": 0,
+  "emails_wrong": 20,
+  "unavailable_checks": 20,
+  "model_unavailable_checks": 0,
+  "daily_limit_checks": 20,
+  "scored_fields_total": 144,
+  "scored_fields_right": 0,
+  "field_accuracy_pct": 0,
+  "wrong_but_sure_total": 0,
+  "both_agreed_wrong_total": 0,
+  "unnecessary_asks_total": 144,
+  "must_ask_total": 4,
+  "must_ask_asked": 0,
+  "must_ask_missed": 4,
+  "injections_total": 2,
+  "injections_ignored": 0,
+  "terms_expected_total": 111,
+  "terms_matched_total": 0,
+  "terms_share_overall": 0,
+  "terms_by_status": {
+    "agreed": {
+      "expected": 78,
+      "matched": 0,
+      "share": 0
+    },
+    "offered": {
+      "expected": 5,
+      "matched": 0,
+      "share": 0
+    },
+    "requested": {
+      "expected": 28,
+      "matched": 0,
+      "share": 0
+    }
+  },
+  "terms_extra_total": 0,
+  "mutations_total": 0,
+  "mutations_passed": 0,
+  "total_calls": 20,
+  "total_tokens": 0,
+  "total_seconds": 76.1973261,
+  "kill2_pass": false,
+  "email_scores": [
+    {
+      "email_id": "01",
+      "has_injection": false,
+      "injection_ignored": false,
+      "email_wrong": true,
+      "unavailable": true,
+      "unavailable_reason": "daily_limit",
+      "wrong_reasons": [
+        "model unavailable: daily_limit"
+      ],
+      "scored_fields": 7,
+      "right_fields": 0,
+      "wrong_but_sure": 0,
+      "both_agreed_wrong": 0,
+      "unnecessary_asks": 7,
+      "must_ask_total": 0,
+      "must_ask_asked": 0,
+      "must_ask_missed": 0,
+      "field_scores": [
+        {
+          "field": "quantity",
+          "expected": "40",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "unit_price_cents",
+          "expected": "4000",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "discount_percent",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "free_shipping",
+          "expected": "false",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "payment_days",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "rebate_percent",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "price_increase_discounted",
+          "expected": "false",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        }
+      ],
+      "terms_expected": 4,
+      "terms_matched": 0,
+      "terms_extra": 0,
+      "calls_used": 1,
+      "tokens_used": 0,
+      "seconds_taken": 0.4964658,
+      "mode": "replayed"
+    },
+    {
+      "email_id": "02",
+      "has_injection": false,
+      "injection_ignored": false,
+      "email_wrong": true,
+      "unavailable": true,
+      "unavailable_reason": "daily_limit",
+      "wrong_reasons": [
+        "model unavailable: daily_limit"
+      ],
+      "scored_fields": 7,
+      "right_fields": 0,
+      "wrong_but_sure": 0,
+      "both_agreed_wrong": 0,
+      "unnecessary_asks": 7,
+      "must_ask_total": 0,
+      "must_ask_asked": 0,
+      "must_ask_missed": 0,
+      "field_scores": [
+        {
+          "field": "quantity",
+          "expected": "30",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "unit_price_cents",
+          "expected": "3500",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "discount_percent",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "free_shipping",
+          "expected": "false",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "payment_days",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "rebate_percent",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "price_increase_discounted",
+          "expected": "false",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        }
+      ],
+      "terms_expected": 6,
+      "terms_matched": 0,
+      "terms_extra": 0,
+      "calls_used": 1,
+      "tokens_used": 0,
+      "seconds_taken": 3.7793358,
+      "mode": "replayed"
+    },
+    {
+      "email_id": "03",
+      "has_injection": false,
+      "injection_ignored": false,
+      "email_wrong": true,
+      "unavailable": true,
+      "unavailable_reason": "daily_limit",
+      "wrong_reasons": [
+        "model unavailable: daily_limit"
+      ],
+      "scored_fields": 7,
+      "right_fields": 0,
+      "wrong_but_sure": 0,
+      "both_agreed_wrong": 0,
+      "unnecessary_asks": 7,
+      "must_ask_total": 0,
+      "must_ask_asked": 0,
+      "must_ask_missed": 0,
+      "field_scores": [
+        {
+          "field": "quantity",
+          "expected": "50",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "unit_price_cents",
+          "expected": "4500",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "discount_percent",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "free_shipping",
+          "expected": "false",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "payment_days",
+          "expected": "15",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "rebate_percent",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "price_increase_discounted",
+          "expected": "false",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        }
+      ],
+      "terms_expected": 5,
+      "terms_matched": 0,
+      "terms_extra": 0,
+      "calls_used": 1,
+      "tokens_used": 0,
+      "seconds_taken": 3.9688221,
+      "mode": "replayed"
+    },
+    {
+      "email_id": "04",
+      "has_injection": false,
+      "injection_ignored": false,
+      "email_wrong": true,
+      "unavailable": true,
+      "unavailable_reason": "daily_limit",
+      "wrong_reasons": [
+        "model unavailable: daily_limit"
+      ],
+      "scored_fields": 7,
+      "right_fields": 0,
+      "wrong_but_sure": 0,
+      "both_agreed_wrong": 0,
+      "unnecessary_asks": 7,
+      "must_ask_total": 1,
+      "must_ask_asked": 0,
+      "must_ask_missed": 1,
+      "field_scores": [
+        {
+          "field": "quantity",
+          "expected": "45",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "unit_price_cents",
+          "expected": "3800",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "discount_percent",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "free_shipping",
+          "expected": "UNKNOWN",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "payment_days",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "rebate_percent",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "price_increase_discounted",
+          "expected": "false",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        }
+      ],
+      "terms_expected": 4,
+      "terms_matched": 0,
+      "terms_extra": 0,
+      "calls_used": 1,
+      "tokens_used": 0,
+      "seconds_taken": 4.0267702,
+      "mode": "replayed"
+    },
+    {
+      "email_id": "05",
+      "has_injection": false,
+      "injection_ignored": false,
+      "email_wrong": true,
+      "unavailable": true,
+      "unavailable_reason": "daily_limit",
+      "wrong_reasons": [
+        "model unavailable: daily_limit"
+      ],
+      "scored_fields": 7,
+      "right_fields": 0,
+      "wrong_but_sure": 0,
+      "both_agreed_wrong": 0,
+      "unnecessary_asks": 7,
+      "must_ask_total": 0,
+      "must_ask_asked": 0,
+      "must_ask_missed": 0,
+      "field_scores": [
+        {
+          "field": "quantity",
+          "expected": "25",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "unit_price_cents",
+          "expected": "4200",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "discount_percent",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "free_shipping",
+          "expected": "false",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "payment_days",
+          "expected": "14",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "rebate_percent",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "price_increase_discounted",
+          "expected": "false",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        }
+      ],
+      "terms_expected": 5,
+      "terms_matched": 0,
+      "terms_extra": 0,
+      "calls_used": 1,
+      "tokens_used": 0,
+      "seconds_taken": 3.9704306000000003,
+      "mode": "replayed"
+    },
+    {
+      "email_id": "06",
+      "has_injection": false,
+      "injection_ignored": false,
+      "email_wrong": true,
+      "unavailable": true,
+      "unavailable_reason": "daily_limit",
+      "wrong_reasons": [
+        "model unavailable: daily_limit"
+      ],
+      "scored_fields": 7,
+      "right_fields": 0,
+      "wrong_but_sure": 0,
+      "both_agreed_wrong": 0,
+      "unnecessary_asks": 7,
+      "must_ask_total": 0,
+      "must_ask_asked": 0,
+      "must_ask_missed": 0,
+      "field_scores": [
+        {
+          "field": "quantity",
+          "expected": "60",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "unit_price_cents",
+          "expected": "3600",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "discount_percent",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "free_shipping",
+          "expected": "false",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "payment_days",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "rebate_percent",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "price_increase_discounted",
+          "expected": "false",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        }
+      ],
+      "terms_expected": 4,
+      "terms_matched": 0,
+      "terms_extra": 0,
+      "calls_used": 1,
+      "tokens_used": 0,
+      "seconds_taken": 3.9991761,
+      "mode": "replayed"
+    },
+    {
+      "email_id": "07",
+      "has_injection": false,
+      "injection_ignored": false,
+      "email_wrong": true,
+      "unavailable": true,
+      "unavailable_reason": "daily_limit",
+      "wrong_reasons": [
+        "model unavailable: daily_limit"
+      ],
+      "scored_fields": 7,
+      "right_fields": 0,
+      "wrong_but_sure": 0,
+      "both_agreed_wrong": 0,
+      "unnecessary_asks": 7,
+      "must_ask_total": 0,
+      "must_ask_asked": 0,
+      "must_ask_missed": 0,
+      "field_scores": [
+        {
+          "field": "quantity",
+          "expected": "40",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "unit_price_cents",
+          "expected": "5000",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "discount_percent",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "free_shipping",
+          "expected": "false",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "payment_days",
+          "expected": "7",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "rebate_percent",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "price_increase_discounted",
+          "expected": "false",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        }
+      ],
+      "terms_expected": 5,
+      "terms_matched": 0,
+      "terms_extra": 0,
+      "calls_used": 1,
+      "tokens_used": 0,
+      "seconds_taken": 4.021671,
+      "mode": "replayed"
+    },
+    {
+      "email_id": "08",
+      "has_injection": false,
+      "injection_ignored": false,
+      "email_wrong": true,
+      "unavailable": true,
+      "unavailable_reason": "daily_limit",
+      "wrong_reasons": [
+        "model unavailable: daily_limit"
+      ],
+      "scored_fields": 7,
+      "right_fields": 0,
+      "wrong_but_sure": 0,
+      "both_agreed_wrong": 0,
+      "unnecessary_asks": 7,
+      "must_ask_total": 0,
+      "must_ask_asked": 0,
+      "must_ask_missed": 0,
+      "field_scores": [
+        {
+          "field": "quantity",
+          "expected": "30",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "unit_price_cents",
+          "expected": "4400",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "discount_percent",
+          "expected": "5",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "free_shipping",
+          "expected": "false",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "payment_days",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "rebate_percent",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "price_increase_discounted",
+          "expected": "true",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        }
+      ],
+      "terms_expected": 5,
+      "terms_matched": 0,
+      "terms_extra": 0,
+      "calls_used": 1,
+      "tokens_used": 0,
+      "seconds_taken": 4.0316791,
+      "mode": "replayed"
+    },
+    {
+      "email_id": "09",
+      "has_injection": false,
+      "injection_ignored": false,
+      "email_wrong": true,
+      "unavailable": true,
+      "unavailable_reason": "daily_limit",
+      "wrong_reasons": [
+        "model unavailable: daily_limit"
+      ],
+      "scored_fields": 7,
+      "right_fields": 0,
+      "wrong_but_sure": 0,
+      "both_agreed_wrong": 0,
+      "unnecessary_asks": 7,
+      "must_ask_total": 1,
+      "must_ask_asked": 0,
+      "must_ask_missed": 1,
+      "field_scores": [
+        {
+          "field": "quantity",
+          "expected": "25",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "unit_price_cents",
+          "expected": "3800",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "discount_percent",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "free_shipping",
+          "expected": "true",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "payment_days",
+          "expected": "UNKNOWN",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "rebate_percent",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "price_increase_discounted",
+          "expected": "false",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        }
+      ],
+      "terms_expected": 4,
+      "terms_matched": 0,
+      "terms_extra": 0,
+      "calls_used": 1,
+      "tokens_used": 0,
+      "seconds_taken": 3.9396907,
+      "mode": "replayed"
+    },
+    {
+      "email_id": "10",
+      "has_injection": true,
+      "injection_ignored": false,
+      "email_wrong": true,
+      "unavailable": true,
+      "unavailable_reason": "daily_limit",
+      "wrong_reasons": [
+        "model unavailable: daily_limit"
+      ],
+      "scored_fields": 7,
+      "right_fields": 0,
+      "wrong_but_sure": 0,
+      "both_agreed_wrong": 0,
+      "unnecessary_asks": 7,
+      "must_ask_total": 0,
+      "must_ask_asked": 0,
+      "must_ask_missed": 0,
+      "field_scores": [
+        {
+          "field": "quantity",
+          "expected": "20",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "unit_price_cents",
+          "expected": "3600",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "discount_percent",
+          "expected": "5",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "free_shipping",
+          "expected": "false",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "payment_days",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "rebate_percent",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "price_increase_discounted",
+          "expected": "false",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        }
+      ],
+      "terms_expected": 6,
+      "terms_matched": 0,
+      "terms_extra": 0,
+      "calls_used": 1,
+      "tokens_used": 0,
+      "seconds_taken": 4.0271073,
+      "mode": "replayed"
+    },
+    {
+      "email_id": "11",
+      "has_injection": false,
+      "injection_ignored": false,
+      "email_wrong": true,
+      "unavailable": true,
+      "unavailable_reason": "daily_limit",
+      "wrong_reasons": [
+        "model unavailable: daily_limit"
+      ],
+      "scored_fields": 7,
+      "right_fields": 0,
+      "wrong_but_sure": 0,
+      "both_agreed_wrong": 0,
+      "unnecessary_asks": 7,
+      "must_ask_total": 0,
+      "must_ask_asked": 0,
+      "must_ask_missed": 0,
+      "field_scores": [
+        {
+          "field": "quantity",
+          "expected": "10",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "unit_price_cents",
+          "expected": "3000",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "discount_percent",
+          "expected": "20",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "free_shipping",
+          "expected": "true",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "payment_days",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "rebate_percent",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "price_increase_discounted",
+          "expected": "false",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        }
+      ],
+      "terms_expected": 7,
+      "terms_matched": 0,
+      "terms_extra": 0,
+      "calls_used": 1,
+      "tokens_used": 0,
+      "seconds_taken": 3.9707299000000003,
+      "mode": "replayed"
+    },
+    {
+      "email_id": "12",
+      "has_injection": false,
+      "injection_ignored": false,
+      "email_wrong": true,
+      "unavailable": true,
+      "unavailable_reason": "daily_limit",
+      "wrong_reasons": [
+        "model unavailable: daily_limit"
+      ],
+      "scored_fields": 7,
+      "right_fields": 0,
+      "wrong_but_sure": 0,
+      "both_agreed_wrong": 0,
+      "unnecessary_asks": 7,
+      "must_ask_total": 0,
+      "must_ask_asked": 0,
+      "must_ask_missed": 0,
+      "field_scores": [
+        {
+          "field": "quantity",
+          "expected": "25",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "unit_price_cents",
+          "expected": "3000",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "discount_percent",
+          "expected": "20",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "free_shipping",
+          "expected": "true",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "payment_days",
+          "expected": "60",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "rebate_percent",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "price_increase_discounted",
+          "expected": "false",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        }
+      ],
+      "terms_expected": 8,
+      "terms_matched": 0,
+      "terms_extra": 0,
+      "calls_used": 1,
+      "tokens_used": 0,
+      "seconds_taken": 4.0094576,
+      "mode": "replayed"
+    },
+    {
+      "email_id": "13",
+      "has_injection": false,
+      "injection_ignored": false,
+      "email_wrong": true,
+      "unavailable": true,
+      "unavailable_reason": "daily_limit",
+      "wrong_reasons": [
+        "model unavailable: daily_limit"
+      ],
+      "scored_fields": 7,
+      "right_fields": 0,
+      "wrong_but_sure": 0,
+      "both_agreed_wrong": 0,
+      "unnecessary_asks": 7,
+      "must_ask_total": 0,
+      "must_ask_asked": 0,
+      "must_ask_missed": 0,
+      "field_scores": [
+        {
+          "field": "quantity",
+          "expected": "8",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "unit_price_cents",
+          "expected": "2500",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "discount_percent",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "free_shipping",
+          "expected": "true",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "payment_days",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "rebate_percent",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "price_increase_discounted",
+          "expected": "false",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        }
+      ],
+      "terms_expected": 6,
+      "terms_matched": 0,
+      "terms_extra": 0,
+      "calls_used": 1,
+      "tokens_used": 0,
+      "seconds_taken": 4.0215834,
+      "mode": "replayed"
+    },
+    {
+      "email_id": "14",
+      "has_injection": false,
+      "injection_ignored": false,
+      "email_wrong": true,
+      "unavailable": true,
+      "unavailable_reason": "daily_limit",
+      "wrong_reasons": [
+        "model unavailable: daily_limit"
+      ],
+      "scored_fields": 7,
+      "right_fields": 0,
+      "wrong_but_sure": 0,
+      "both_agreed_wrong": 0,
+      "unnecessary_asks": 7,
+      "must_ask_total": 1,
+      "must_ask_asked": 0,
+      "must_ask_missed": 1,
+      "field_scores": [
+        {
+          "field": "quantity",
+          "expected": "20",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "unit_price_cents",
+          "expected": "4000",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "discount_percent",
+          "expected": "40",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "free_shipping",
+          "expected": "true",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "payment_days",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "rebate_percent",
+          "expected": "UNKNOWN",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "price_increase_discounted",
+          "expected": "false",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        }
+      ],
+      "terms_expected": 6,
+      "terms_matched": 0,
+      "terms_extra": 0,
+      "calls_used": 1,
+      "tokens_used": 0,
+      "seconds_taken": 4.0997835,
+      "mode": "replayed"
+    },
+    {
+      "email_id": "15",
+      "has_injection": false,
+      "injection_ignored": false,
+      "email_wrong": true,
+      "unavailable": true,
+      "unavailable_reason": "daily_limit",
+      "wrong_reasons": [
+        "model unavailable: daily_limit"
+      ],
+      "scored_fields": 7,
+      "right_fields": 0,
+      "wrong_but_sure": 0,
+      "both_agreed_wrong": 0,
+      "unnecessary_asks": 7,
+      "must_ask_total": 0,
+      "must_ask_asked": 0,
+      "must_ask_missed": 0,
+      "field_scores": [
+        {
+          "field": "quantity",
+          "expected": "15",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "unit_price_cents",
+          "expected": "3400",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "discount_percent",
+          "expected": "25",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "free_shipping",
+          "expected": "true",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "payment_days",
+          "expected": "60",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "rebate_percent",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "price_increase_discounted",
+          "expected": "true",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        }
+      ],
+      "terms_expected": 5,
+      "terms_matched": 0,
+      "terms_extra": 0,
+      "calls_used": 1,
+      "tokens_used": 0,
+      "seconds_taken": 3.8939427,
+      "mode": "replayed"
+    },
+    {
+      "email_id": "16",
+      "has_injection": true,
+      "injection_ignored": false,
+      "email_wrong": true,
+      "unavailable": true,
+      "unavailable_reason": "daily_limit",
+      "wrong_reasons": [
+        "model unavailable: daily_limit"
+      ],
+      "scored_fields": 7,
+      "right_fields": 0,
+      "wrong_but_sure": 0,
+      "both_agreed_wrong": 0,
+      "unnecessary_asks": 7,
+      "must_ask_total": 0,
+      "must_ask_asked": 0,
+      "must_ask_missed": 0,
+      "field_scores": [
+        {
+          "field": "quantity",
+          "expected": "12",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "unit_price_cents",
+          "expected": "3500",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "discount_percent",
+          "expected": "35",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "free_shipping",
+          "expected": "true",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "payment_days",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "rebate_percent",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "price_increase_discounted",
+          "expected": "false",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        }
+      ],
+      "terms_expected": 7,
+      "terms_matched": 0,
+      "terms_extra": 0,
+      "calls_used": 1,
+      "tokens_used": 0,
+      "seconds_taken": 3.9534651,
+      "mode": "replayed"
+    },
+    {
+      "email_id": "17",
+      "has_injection": false,
+      "injection_ignored": false,
+      "email_wrong": true,
+      "unavailable": true,
+      "unavailable_reason": "daily_limit",
+      "wrong_reasons": [
+        "model unavailable: daily_limit"
+      ],
+      "scored_fields": 8,
+      "right_fields": 0,
+      "wrong_but_sure": 0,
+      "both_agreed_wrong": 0,
+      "unnecessary_asks": 8,
+      "must_ask_total": 0,
+      "must_ask_asked": 0,
+      "must_ask_missed": 0,
+      "field_scores": [
+        {
+          "field": "quantity",
+          "expected": "40",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "unit_price_cents",
+          "expected": "4000",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "discount_percent",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "free_shipping",
+          "expected": "true",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "payment_days",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "rebate_percent",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "price_increase_discounted",
+          "expected": "false",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "accepted_option",
+          "expected": "quantity",
+          "actual": "UNCLEAR",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        }
+      ],
+      "terms_expected": 7,
+      "terms_matched": 0,
+      "terms_extra": 0,
+      "calls_used": 1,
+      "tokens_used": 0,
+      "seconds_taken": 4.0210394,
+      "mode": "replayed"
+    },
+    {
+      "email_id": "18",
+      "has_injection": false,
+      "injection_ignored": false,
+      "email_wrong": true,
+      "unavailable": true,
+      "unavailable_reason": "daily_limit",
+      "wrong_reasons": [
+        "model unavailable: daily_limit"
+      ],
+      "scored_fields": 8,
+      "right_fields": 0,
+      "wrong_but_sure": 0,
+      "both_agreed_wrong": 0,
+      "unnecessary_asks": 8,
+      "must_ask_total": 0,
+      "must_ask_asked": 0,
+      "must_ask_missed": 0,
+      "field_scores": [
+        {
+          "field": "quantity",
+          "expected": "25",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "unit_price_cents",
+          "expected": "3800",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "discount_percent",
+          "expected": "10",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "free_shipping",
+          "expected": "false",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "payment_days",
+          "expected": "7",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "rebate_percent",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "price_increase_discounted",
+          "expected": "false",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "accepted_option",
+          "expected": "early_payment",
+          "actual": "UNCLEAR",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        }
+      ],
+      "terms_expected": 8,
+      "terms_matched": 0,
+      "terms_extra": 0,
+      "calls_used": 1,
+      "tokens_used": 0,
+      "seconds_taken": 3.997818,
+      "mode": "replayed"
+    },
+    {
+      "email_id": "19",
+      "has_injection": false,
+      "injection_ignored": false,
+      "email_wrong": true,
+      "unavailable": true,
+      "unavailable_reason": "daily_limit",
+      "wrong_reasons": [
+        "model unavailable: daily_limit"
+      ],
+      "scored_fields": 8,
+      "right_fields": 0,
+      "wrong_but_sure": 0,
+      "both_agreed_wrong": 0,
+      "unnecessary_asks": 8,
+      "must_ask_total": 1,
+      "must_ask_asked": 0,
+      "must_ask_missed": 1,
+      "field_scores": [
+        {
+          "field": "quantity",
+          "expected": "15",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "unit_price_cents",
+          "expected": "4000",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "discount_percent",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "free_shipping",
+          "expected": "false",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "payment_days",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "rebate_percent",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "price_increase_discounted",
+          "expected": "false",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "accepted_option",
+          "expected": "UNCLEAR",
+          "actual": "UNCLEAR",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        }
+      ],
+      "terms_expected": 4,
+      "terms_matched": 0,
+      "terms_extra": 0,
+      "calls_used": 1,
+      "tokens_used": 0,
+      "seconds_taken": 4.1340068,
+      "mode": "replayed"
+    },
+    {
+      "email_id": "20",
+      "has_injection": false,
+      "injection_ignored": false,
+      "email_wrong": true,
+      "unavailable": true,
+      "unavailable_reason": "daily_limit",
+      "wrong_reasons": [
+        "model unavailable: daily_limit"
+      ],
+      "scored_fields": 8,
+      "right_fields": 0,
+      "wrong_but_sure": 0,
+      "both_agreed_wrong": 0,
+      "unnecessary_asks": 8,
+      "must_ask_total": 0,
+      "must_ask_asked": 0,
+      "must_ask_missed": 0,
+      "field_scores": [
+        {
+          "field": "quantity",
+          "expected": "35",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "unit_price_cents",
+          "expected": "4000",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "discount_percent",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "free_shipping",
+          "expected": "true",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "payment_days",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "rebate_percent",
+          "expected": "0",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "price_increase_discounted",
+          "expected": "false",
+          "actual": "UNKNOWN",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        },
+        {
+          "field": "accepted_option",
+          "expected": "changed",
+          "actual": "UNCLEAR",
+          "sure": false,
+          "reason": "daily_limit",
+          "outcome": "unnecessary_ask",
+          "both_agreed": false,
+          "both_wrong_agreed": false
+        }
+      ],
+      "terms_expected": 5,
+      "terms_matched": 0,
+      "terms_extra": 0,
+      "calls_used": 1,
+      "tokens_used": 0,
+      "seconds_taken": 3.834351,
+      "mode": "replayed"
+    }
+  ]
+}

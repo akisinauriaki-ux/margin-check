@@ -14,7 +14,8 @@ func TestQuoteTable(t *testing.T) {
 Seller:
 > Yes, fifty boxes of herbal tea tins will be $45 per box.
 > We can approve payment terms of net 15 days for your account.
-> Shipping is $20 for the order, and payment is due on receipt for smaller orders.`
+> Shipping is $20 for the order, and payment is due on receipt for smaller orders.
+> For large orders, we'll include the shipping at no charge.`
 
 	tests := []struct {
 		name      string
@@ -64,9 +65,18 @@ Seller:
 			wantErr:   false,
 		},
 		{
-			name:      "free shipping true backed by quote",
+			name:      "buyer asking for free shipping does not back free_shipping=true",
 			email:     emailThread,
 			sentence:  `Can you provide a "ten percent" discount - and 'free shipping' on this order?`,
+			field:     "free_shipping",
+			boolVal:   true,
+			wantMatch: false,
+			wantErr:   true,
+		},
+		{
+			name:      "agreed free shipping at no charge backs free_shipping=true",
+			email:     emailThread,
+			sentence:  "For large orders, we'll include the shipping at no charge.",
 			field:     "free_shipping",
 			boolVal:   true,
 			wantMatch: true,

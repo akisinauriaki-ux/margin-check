@@ -3,11 +3,14 @@ package reader
 import (
 	"context"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"margincheck/internal/gemini"
 )
@@ -297,4 +300,176 @@ func TestConfidenceFieldRejected(t *testing.T) {
 		t.Fatalf("expected confidence field to be rejected, got: %v", err)
 	}
 	_ = json.Marshal
+}
+
+func TestVerifyBoolDealFieldEmptyIsCantParse(t *testing.T) {
+	cleanEmail := "We will include free shipping on this order."
+	var errs []string
+
+	// 1. Empty value must return valid=false and ReasonValueCantParse, not false.
+	resEmpty := verifyBoolDealField(cleanEmail, "free_shipping", RawField{
+		Value:          "",
+		SourceSentence: "We will include free shipping on this order.",
+	}, true, false, &errs)
+
+	if resEmpty.valid {
+		t.Errorf("expected valid=false for empty boolean, got valid=true (val=%v)", resEmpty.val)
+	}
+	if resEmpty.reason != ReasonValueCantParse {
+		t.Errorf("expected reason=%q for empty boolean, got %q", ReasonValueCantParse, resEmpty.reason)
+	}
+	if resEmpty.val {
+		t.Errorf("expected val=false when unparseable, got %v", resEmpty.val)
+	}
+
+	// 2. Whitespace-only value must also be unparseable
+	resWhitespace := verifyBoolDealField(cleanEmail, "free_shipping", RawField{
+		Value:          "   ",
+		SourceSentence: "",
+	}, true, false, &errs)
+	if resWhitespace.valid || resWhitespace.reason != ReasonValueCantParse {
+		t.Errorf("expected whitespace boolean to be unparseable, got valid=%v reason=%q", resWhitespace.valid, resWhitespace.reason)
+	}
+
+	// 3. Explicit "false" is valid false
+	resFalse := verifyBoolDealField(cleanEmail, "free_shipping", RawField{
+		Value:          "false",
+		SourceSentence: "",
+	}, true, false, &errs)
+	if !resFalse.valid || resFalse.val != false {
+		t.Errorf("expected valid false, got valid=%v val=%v", resFalse.valid, resFalse.val)
+	}
+
+	// 4. Explicit "true" is valid true with backing quote
+	resTrue := verifyBoolDealField(cleanEmail, "free_shipping", RawField{
+		Value:          "true",
+		SourceSentence: "We will include free shipping on this order.",
+	}, true, false, &errs)
+	if !resTrue.valid || resTrue.val != true {
+		t.Errorf("expected valid true, got valid=%v val=%v", resTrue.valid, resTrue.val)
+	}
+}
+
+func TestUnavailableModelFakeServer(t *testing.T) {
+	email := "We want 20 boxes at $40 each."
+
+	t.Run("HTTP 503 results in model_unavailable ask fields", func(t *testing.T) {
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			_, _ = w.Write([]byte(`{"error": {"code": 503, "message": "Service Unavailable"}}`))
+		}))
+		defer srv.Close()
+
+		cli, err := gemini.NewClient("fake-key", t.TempDir(), true)
+		if err != nil {
+			t.Fatalf("NewClient: %v", err)
+		}
+		cli.BaseURL = srv.URL
+		cli.MinInterval = 0
+
+		r, err := New(Config{
+			Client:     cli,
+			PromptPath: filepath.Join("..", "..", "prompts", "reader-v1.md"),
+			ModelA:     "test-model",
+			Single:     true,
+		})
+		if err != nil {
+			t.Fatalf("New reader: %v", err)
+		}
+
+		res, err := r.Check(context.Background(), "unav-503", email)
+		if err != nil {
+			t.Fatalf("expected Check to succeed and end check gracefully, got error: %v", err)
+		}
+		if !res.ModelUnavailable || res.UnavailableReason != ReasonModelUnavailable {
+			t.Errorf("expected ModelUnavailable=true with reason %q, got %+v", ReasonModelUnavailable, res)
+		}
+		if res.Quantity.Sure || res.Quantity.Reason != ReasonModelUnavailable {
+			t.Errorf("expected Quantity Reason=%q, got %+v", ReasonModelUnavailable, res.Quantity)
+		}
+		if res.UnitPriceCents.Sure || res.UnitPriceCents.Reason != ReasonModelUnavailable {
+			t.Errorf("expected UnitPriceCents Reason=%q, got %+v", ReasonModelUnavailable, res.UnitPriceCents)
+		}
+	})
+
+	t.Run("daily 429 results in daily_limit ask fields", func(t *testing.T) {
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusTooManyRequests)
+			_, _ = w.Write([]byte(`{
+				"error": {
+					"code": "quota_exceeded",
+					"status": "RESOURCE_EXHAUSTED",
+					"message": "Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20 PerDayPerProject"
+				}
+			}`))
+		}))
+		defer srv.Close()
+
+		cli, err := gemini.NewClient("fake-key", t.TempDir(), true)
+		if err != nil {
+			t.Fatalf("NewClient: %v", err)
+		}
+		cli.BaseURL = srv.URL
+		cli.MinInterval = 0
+
+		r, err := New(Config{
+			Client:     cli,
+			PromptPath: filepath.Join("..", "..", "prompts", "reader-v1.md"),
+			ModelA:     "test-model",
+			Single:     true,
+		})
+		if err != nil {
+			t.Fatalf("New reader: %v", err)
+		}
+
+		res, err := r.Check(context.Background(), "unav-daily", email)
+		if err != nil {
+			t.Fatalf("expected Check to return nil error on daily limit, got: %v", err)
+		}
+		if !res.DailyLimitHit || res.UnavailableReason != ReasonDailyLimit {
+			t.Errorf("expected DailyLimitHit=true with reason %q, got %+v", ReasonDailyLimit, res)
+		}
+		if res.Quantity.Sure || res.Quantity.Reason != ReasonDailyLimit {
+			t.Errorf("expected Quantity Reason=%q, got %+v", ReasonDailyLimit, res.Quantity)
+		}
+	})
+
+	t.Run("timeout results in model_unavailable ask fields", func(t *testing.T) {
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			time.Sleep(100 * time.Millisecond)
+		}))
+		defer srv.Close()
+
+		cli, err := gemini.NewClient("fake-key", t.TempDir(), true)
+		if err != nil {
+			t.Fatalf("NewClient: %v", err)
+		}
+		cli.BaseURL = srv.URL
+		cli.MinInterval = 0
+
+		r, err := New(Config{
+			Client:             cli,
+			PromptPath:         filepath.Join("..", "..", "prompts", "reader-v1.md"),
+			ModelA:             "test-model",
+			Single:             true,
+			MaxSecondsPerCheck: 1,
+		})
+		if err != nil {
+			t.Fatalf("New reader: %v", err)
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Millisecond)
+		defer cancel()
+
+		res, err := r.Check(ctx, "unav-timeout", email)
+		if err != nil {
+			t.Fatalf("expected Check to return nil error on timeout, got: %v", err)
+		}
+		if !res.ModelUnavailable || res.UnavailableReason != ReasonModelUnavailable {
+			t.Errorf("expected ModelUnavailable=true with reason %q, got %+v", ReasonModelUnavailable, res)
+		}
+		if res.Quantity.Sure || res.Quantity.Reason != ReasonModelUnavailable {
+			t.Errorf("expected Quantity Reason=%q, got %+v", ReasonModelUnavailable, res.Quantity)
+		}
+	})
 }

@@ -95,3 +95,58 @@ func TestNormalizeTable(t *testing.T) {
 		})
 	}
 }
+
+func TestFreeShippingPhrases(t *testing.T) {
+	tests := []struct {
+		phrase    string
+		wantAgree bool
+	}{
+		// Required positive rows
+		{"include the shipping", true},
+		{"shipping at no charge", true},
+		{"shipping is on us", true},
+		{"we'll cover shipping", true},
+		{"shipping is free", true},
+		{"no charge for shipping", true},
+
+		// Additional positive variants
+		{"I'll include the shipping at no charge", true},
+		{"we will cover shipping", true},
+		{"we'll cover the shipping", true},
+		{"free shipping", true},
+		{"free delivery", true},
+		{"shipping included", true},
+		{"shipping is included", true},
+		{"no shipping fee", true},
+		{"no shipping charge", true},
+
+		// Required negative rows
+		{"free shipping over $500", false},
+		{"shipping is $20", false},
+		{"can you do free shipping?", false},
+
+		// Additional negative rows (conditional, questions, charges)
+		{"free shipping on orders over $100", false},
+		{"can you provide free shipping?", false},
+		{"could you include free shipping?", false},
+		{"can we get free shipping?", false},
+		{"shipping will be $15", false},
+		{"shipping cost is $25", false},
+		{"standard shipping applies", false},
+		{"shipping is not included", false},
+	}
+
+	if len(tests) < 12 {
+		t.Fatalf("expected at least 12 rows, got %d", len(tests))
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.phrase, func(t *testing.T) {
+			got := IsFreeShipping(tc.phrase)
+			if got != tc.wantAgree {
+				t.Errorf("IsFreeShipping(%q) = %v, want %v", tc.phrase, got, tc.wantAgree)
+			}
+		})
+	}
+}

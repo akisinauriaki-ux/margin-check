@@ -685,3 +685,129 @@ func parseLeadingNumberWords(tokens []string) (int64, int) {
 	}
 	return total + current, consumed
 }
+
+// IsFreeShipping reports whether s explicitly promises or agrees to free shipping.
+// It returns false for buyer requests/questions ("can you do free shipping?"),
+// conditional thresholds ("free shipping over $500"), or charged shipping ("shipping is $20").
+func IsFreeShipping(s string) bool {
+	lower := strings.ToLower(s)
+	replacer := strings.NewReplacer(
+		"‘", "'",
+		"’", "'",
+		"“", `"`,
+		"”", `"`,
+		"–", "-",
+		"—", "-",
+	)
+	lower = replacer.Replace(lower)
+	lower = strings.Join(strings.Fields(lower), " ")
+
+	// 1. Question / buyer request check
+	// A buyer asking for free shipping is a request, not an agreement.
+	if strings.Contains(lower, "?") {
+		return false
+	}
+	requestPhrases := []string{
+		"can you",
+		"could you",
+		"would you",
+		"can we",
+		"could we",
+		"is it possible to",
+		"requesting free shipping",
+		"request free shipping",
+		"ask for free shipping",
+		"asking for free shipping",
+		"what about free shipping",
+		"how about free shipping",
+		"do you offer free shipping",
+		"do you do free shipping",
+	}
+	for _, rp := range requestPhrases {
+		if strings.Contains(lower, rp) {
+			return false
+		}
+	}
+
+	// 2. Conditional threshold check (e.g. "free shipping over $500")
+	conditionalPhrases := []string{
+		"over $",
+		"orders over",
+		"order over",
+		"orders above",
+		"on orders of $",
+		"minimum order",
+		"if you order",
+	}
+	for _, cp := range conditionalPhrases {
+		if strings.Contains(lower, cp) {
+			return false
+		}
+	}
+
+	// 3. Charged shipping / rejection check (e.g. "shipping is $20")
+	chargedPhrases := []string{
+		"shipping is $",
+		"shipping will be $",
+		"shipping cost is $",
+		"shipping costs $",
+		"shipping fee of",
+		"shipping charge of",
+		"standard shipping",
+		"shipping is not included",
+		"shipping not included",
+		"cannot offer",
+		"cannot do free shipping",
+		"wipe out our margin",
+		"cause us to lose money",
+	}
+	for _, ch := range chargedPhrases {
+		if strings.Contains(lower, ch) {
+			return false
+		}
+	}
+
+	// 4. Positive free-shipping wording check
+	positivePhrases := []string{
+		"include the shipping",
+		"include shipping",
+		"including shipping",
+		"included the shipping",
+		"shipping included",
+		"shipping is included",
+		"shipping at no charge",
+		"shipping at no extra charge",
+		"no charge for shipping",
+		"no extra charge for shipping",
+		"no additional charge for shipping",
+		"shipping is on us",
+		"shipping's on us",
+		"on us for shipping",
+		"we'll cover shipping",
+		"we'll cover the shipping",
+		"we will cover shipping",
+		"we will cover the shipping",
+		"cover shipping",
+		"cover the shipping",
+		"shipping is free",
+		"shipping free",
+		"free shipping",
+		"free delivery",
+		"free freight",
+		"no shipping fee",
+		"no shipping charge",
+		"no shipping cost",
+		"zero shipping",
+		"waive shipping",
+		"waived shipping",
+		"waiving shipping",
+	}
+	for _, pp := range positivePhrases {
+		if strings.Contains(lower, pp) {
+			return true
+		}
+	}
+
+	return false
+}
+

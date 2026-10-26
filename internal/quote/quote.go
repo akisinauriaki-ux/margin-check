@@ -125,10 +125,7 @@ func Verify(emailText, sentence, field string, intVal int64, boolVal bool, strVa
 
 	case "free_shipping":
 		if boolVal {
-			if strings.Contains(lowerSent, "free shipping") ||
-				strings.Contains(lowerSent, "free delivery") ||
-				strings.Contains(lowerSent, "shipping included") ||
-				strings.Contains(lowerSent, "no shipping") {
+			if normalize.IsFreeShipping(normSent) {
 				return res, nil
 			}
 			return res, fmt.Errorf("%w: free_shipping=true not backed by %q", ErrValueNotInQuote, sentence)

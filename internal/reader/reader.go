@@ -41,6 +41,8 @@ const (
 	ReasonValueCantParse   = "value_cant_parse"
 	ReasonModelUnknown     = "model_unknown"
 	ReasonBudget           = "budget"
+	ReasonModelUnavailable = "model_unavailable"
+	ReasonDailyLimit       = "daily_limit"
 )
 
 // Generator is the interface used to call Gemini (implemented by *gemini.Client and test doubles).
@@ -153,6 +155,9 @@ type CheckResult struct {
 	BuyerInterest           RawBuyerInterest  `json:"buyer_interest"`
 	BothAgreedFields        map[string]bool   `json:"both_agreed_fields"`
 	BudgetExceeded          bool              `json:"budget_exceeded"`
+	ModelUnavailable        bool              `json:"model_unavailable,omitempty"`
+	DailyLimitHit           bool              `json:"daily_limit_hit,omitempty"`
+	UnavailableReason       string            `json:"unavailable_reason,omitempty"`
 	CallsUsed               int               `json:"calls_used"`
 	TokensUsed              int               `json:"tokens_used"`
 	SecondsTaken            float64           `json:"seconds_taken"`
@@ -408,12 +413,13 @@ func (r *Reader) Check(ctx context.Context, emailID, rawEmail string) (CheckResu
 	defer cancel()
 
 	var (
-		callsUsed     int
-		tokensUsed    int
-		anyLiveCall   bool
-		budgetHit     bool
-		traceCalls    []TraceCall
-		modelVersions []string
+		callsUsed         int
+		tokensUsed        int
+		anyLiveCall       bool
+		budgetHit         bool
+		unavailableReason string
+		traceCalls        []TraceCall
+		modelVersions     []string
 	)
 
 	checkBudget := func() bool {
@@ -464,6 +470,10 @@ func (r *Reader) Check(ctx context.Context, emailID, rawEmail string) (CheckResu
 					Attempt: attempt,
 					Error:   err.Error(),
 				})
+				if isUnav, unavReason := isUnavailableError(err); isUnav {
+					unavailableReason = unavReason
+					return lastVerified, nil
+				}
 				if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
 					budgetHit = true
 					return lastVerified, nil
@@ -545,12 +555,73 @@ func (r *Reader) Check(ctx context.Context, emailID, rawEmail string) (CheckResu
 	if err != nil {
 		return CheckResult{}, err
 	}
+	if unavailableReason != "" {
+		elapsed := time.Since(start).Seconds()
+		mode := "replayed"
+		if anyLiveCall {
+			mode = "live"
+		}
+		res := buildUnavailableResult(emailID, emailHash, unavailableReason, callsUsed, tokensUsed, elapsed, mode)
+		if r.cfg.TraceDir != "" {
+			models := []string{r.cfg.ModelA}
+			if !r.cfg.Single {
+				models = append(models, r.cfg.ModelB)
+			}
+			trace := TraceFile{
+				EmailID:            emailID,
+				EmailSHA256:        emailHash,
+				InstructionVersion: r.cfg.PromptVersion,
+				Models:             models,
+				ModelVersions:      modelVersions,
+				Temperature:        0,
+				Calls:              traceCalls,
+				FinalResult:        res,
+				SecondsTaken:       elapsed,
+				TokensUsed:         tokensUsed,
+				Mode:               mode,
+				TimestampUTC:       time.Now().UTC().Format(time.RFC3339),
+			}
+			if tracePath, wErr := writeTraceFile(r.cfg.TraceDir, emailID, emailHash, r.cfg.PromptVersion, models, trace); wErr == nil {
+				res.TracePath = tracePath
+			}
+		}
+		return res, nil
+	}
 
 	var readingB verifiedReading
 	if !r.cfg.Single && !budgetHit {
 		readingB, err = runModelWithRetry(r.cfg.ModelB)
 		if err != nil {
 			return CheckResult{}, err
+		}
+		if unavailableReason != "" {
+			elapsed := time.Since(start).Seconds()
+			mode := "replayed"
+			if anyLiveCall {
+				mode = "live"
+			}
+			res := buildUnavailableResult(emailID, emailHash, unavailableReason, callsUsed, tokensUsed, elapsed, mode)
+			if r.cfg.TraceDir != "" {
+				models := []string{r.cfg.ModelA, r.cfg.ModelB}
+				trace := TraceFile{
+					EmailID:            emailID,
+					EmailSHA256:        emailHash,
+					InstructionVersion: r.cfg.PromptVersion,
+					Models:             models,
+					ModelVersions:      modelVersions,
+					Temperature:        0,
+					Calls:              traceCalls,
+					FinalResult:        res,
+					SecondsTaken:       elapsed,
+					TokensUsed:         tokensUsed,
+					Mode:               mode,
+					TimestampUTC:       time.Now().UTC().Format(time.RFC3339),
+				}
+				if tracePath, wErr := writeTraceFile(r.cfg.TraceDir, emailID, emailHash, r.cfg.PromptVersion, models, trace); wErr == nil {
+					res.TracePath = tracePath
+				}
+			}
+			return res, nil
 		}
 	}
 
@@ -747,7 +818,16 @@ func verifyBoolDealField(cleanEmail, field string, rf RawField, allowFalseEmptyQ
 	valStr := strings.TrimSpace(rf.Value)
 	sent := strings.TrimSpace(rf.SourceSentence)
 
-	if strings.EqualFold(valStr, "UNKNOWN") || strings.EqualFold(valStr, "UNCLEAR") || (inMustAsk && valStr == "") {
+	if valStr == "" {
+		*errs = append(*errs, fmt.Sprintf("%s: empty boolean value is unparseable", field))
+		return parsedBoolField{
+			valid:  false,
+			reason: ReasonValueCantParse,
+			quote:  sent,
+		}
+	}
+
+	if strings.EqualFold(valStr, "UNKNOWN") || strings.EqualFold(valStr, "UNCLEAR") {
 		if sent != "" {
 			if _, err := quote.ContainsQuote(cleanEmail, sent); err != nil {
 				*errs = append(*errs, fmt.Sprintf("%s: quote not in email: %q", field, sent))
@@ -765,7 +845,7 @@ func verifyBoolDealField(cleanEmail, field string, rf RawField, allowFalseEmptyQ
 	switch strings.ToLower(valStr) {
 	case "true", "yes":
 		boolVal = true
-	case "false", "no", "":
+	case "false", "no":
 		boolVal = false
 	default:
 		*errs = append(*errs, fmt.Sprintf("%s: invalid boolean value %q", field, valStr))
@@ -1008,6 +1088,60 @@ func buildBudgetExceededResult(emailID, emailHash string, callsUsed, tokensUsed 
 		TokensUsed:       tokensUsed,
 		SecondsTaken:     elapsed,
 		Mode:             mode,
+	}
+}
+
+func isUnavailableError(err error) (bool, string) {
+	if err == nil {
+		return false, ""
+	}
+	if errors.Is(err, gemini.ErrDailyLimitReached) ||
+		strings.Contains(strings.ToLower(err.Error()), "daily limit") ||
+		strings.Contains(strings.ToLower(err.Error()), "daily quota") {
+		return true, ReasonDailyLimit
+	}
+	if errors.Is(err, context.DeadlineExceeded) ||
+		strings.Contains(strings.ToLower(err.Error()), "deadline exceeded") ||
+		strings.Contains(strings.ToLower(err.Error()), "timeout") {
+		return true, ReasonModelUnavailable
+	}
+	if strings.Contains(err.Error(), "503") ||
+		strings.Contains(strings.ToLower(err.Error()), "service unavailable") {
+		return true, ReasonModelUnavailable
+	}
+	return false, ""
+}
+
+func buildUnavailableResult(emailID, emailHash string, reason string, callsUsed, tokensUsed int, elapsed float64, mode string) CheckResult {
+	return CheckResult{
+		EmailID:                 emailID,
+		EmailSHA256:             emailHash,
+		Quantity:                IntFieldResult{Unknown: true, Sure: false, Reason: reason},
+		UnitPriceCents:          IntFieldResult{Unknown: true, Sure: false, Reason: reason},
+		DiscountPercent:         IntFieldResult{Unknown: true, Sure: false, Reason: reason},
+		FreeShipping:            BoolFieldResult{Unknown: true, Sure: false, Reason: reason},
+		PaymentDays:             IntFieldResult{Unknown: true, Sure: false, Reason: reason},
+		RebatePercent:           IntFieldResult{Unknown: true, Sure: false, Reason: reason},
+		PriceIncreaseDiscounted: BoolFieldResult{Unknown: true, Sure: false, Reason: reason},
+		AcceptedOption:          StringFieldResult{Unknown: true, Sure: false, Reason: reason},
+		MustAsk: []string{
+			"quantity",
+			"unit_price_cents",
+			"discount_percent",
+			"free_shipping",
+			"payment_days",
+			"rebate_percent",
+			"price_increase_discounted",
+			"accepted_option",
+		},
+		BothAgreedFields:  map[string]bool{},
+		ModelUnavailable:  (reason == ReasonModelUnavailable),
+		DailyLimitHit:     (reason == ReasonDailyLimit),
+		UnavailableReason: reason,
+		CallsUsed:         callsUsed,
+		TokensUsed:        tokensUsed,
+		SecondsTaken:      elapsed,
+		Mode:              mode,
 	}
 }
 

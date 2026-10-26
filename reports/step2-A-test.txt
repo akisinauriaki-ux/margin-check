@@ -1,17 +1,53 @@
-﻿go test -v -count=1 ./internal/gemini/... ./internal/normalize/... ./internal/quote/... ./internal/reader/... ./cmd/exam/...
+go test -v ./...
 EXIT_CODE=0
+=== RUN   TestScoringRules
+--- PASS: TestScoringRules (0.00s)
+=== RUN   TestMutationsFileMatchesEmails
+--- PASS: TestMutationsFileMatchesEmails (0.03s)
+PASS
+ok  	margincheck/cmd/exam	(cached)
+=== RUN   TestMissingOrBlankDotEnvPrintsExactMessageAndStops
+--- PASS: TestMissingOrBlankDotEnvPrintsExactMessageAndStops (0.03s)
+=== RUN   TestRunWithStep3Blocked500AndPlanBDraftMasksIDsAndHidesSecrets
+--- PASS: TestRunWithStep3Blocked500AndPlanBDraftMasksIDsAndHidesSecrets (0.06s)
+=== RUN   TestStopRuleHaltsOnFirstFailedSandboxStep
+--- PASS: TestStopRuleHaltsOnFirstFailedSandboxStep (0.04s)
+PASS
+ok  	margincheck/cmd/sandboxcheck	4.774s
+=== RUN   TestHelperMCPServerProcess
+--- PASS: TestHelperMCPServerProcess (0.00s)
+=== RUN   TestToolkitCheckMissingEnvPrintsExactMessageAndStops
+--- PASS: TestToolkitCheckMissingEnvPrintsExactMessageAndStops (0.01s)
+=== RUN   TestRunToolkitProofWithFakeServersVerifiesReadBackAndDetectsMissingPaymentTerms
+--- PASS: TestRunToolkitProofWithFakeServersVerifiesReadBackAndDetectsMissingPaymentTerms (2.61s)
+PASS
+ok  	margincheck/cmd/toolkitcheck	(cached)
+=== RUN   TestHelperMCPServerProcess
+--- PASS: TestHelperMCPServerProcess (0.00s)
+=== RUN   TestNewPayPalMCPCommandPinsExactVersion
+--- PASS: TestNewPayPalMCPCommandPinsExactVersion (0.01s)
+=== RUN   TestBuildMinimalSandboxEnvExcludesSecrets
+--- PASS: TestBuildMinimalSandboxEnvExcludesSecrets (0.00s)
+=== RUN   TestVerifyDraftReadBackFieldByField
+--- PASS: TestVerifyDraftReadBackFieldByField (0.00s)
+=== RUN   TestInspectCreateInvoiceToolIdentifiesMissingPaymentTerms
+--- PASS: TestInspectCreateInvoiceToolIdentifiesMissingPaymentTerms (0.91s)
+=== RUN   TestRunDraftProofConnectsViaGoSDKAndVerifiesDraftViaRESTClient
+--- PASS: TestRunDraftProofConnectsViaGoSDKAndVerifiesDraftViaRESTClient (0.02s)
+PASS
+ok  	margincheck/internal/agenttools	(cached)
 === RUN   TestGeminiClientFakeServer
 === RUN   TestGeminiClientFakeServer/key_in_x-goog-api-key_header_not_URL_and_no_tools_in_body
 === RUN   TestGeminiClientFakeServer/daily_429_stops_immediately_without_retry
 === RUN   TestGeminiClientFakeServer/per-minute_429_waits_once_and_retries_once
 === RUN   TestGeminiClientFakeServer/key_never_appears_in_error_text_even_if_echoed_by_server
---- PASS: TestGeminiClientFakeServer (0.03s)
-    --- PASS: TestGeminiClientFakeServer/key_in_x-goog-api-key_header_not_URL_and_no_tools_in_body (0.01s)
-    --- PASS: TestGeminiClientFakeServer/daily_429_stops_immediately_without_retry (0.00s)
-    --- PASS: TestGeminiClientFakeServer/per-minute_429_waits_once_and_retries_once (0.01s)
-    --- PASS: TestGeminiClientFakeServer/key_never_appears_in_error_text_even_if_echoed_by_server (0.00s)
+--- PASS: TestGeminiClientFakeServer (0.05s)
+    --- PASS: TestGeminiClientFakeServer/key_in_x-goog-api-key_header_not_URL_and_no_tools_in_body (0.02s)
+    --- PASS: TestGeminiClientFakeServer/daily_429_stops_immediately_without_retry (0.01s)
+    --- PASS: TestGeminiClientFakeServer/per-minute_429_waits_once_and_retries_once (0.02s)
+    --- PASS: TestGeminiClientFakeServer/key_never_appears_in_error_text_even_if_echoed_by_server (0.01s)
 PASS
-ok  	margincheck/internal/gemini	1.927s
+ok  	margincheck/internal/gemini	4.668s
 === RUN   TestNormalizeTable
 === RUN   TestNormalizeTable/ten_percent_word
 === RUN   TestNormalizeTable/fifteen_percent_word
@@ -102,14 +138,183 @@ ok  	margincheck/internal/gemini	1.927s
     --- PASS: TestNormalizeTable/unparseable_percent (0.00s)
     --- PASS: TestNormalizeTable/unparseable_payment_days (0.00s)
     --- PASS: TestNormalizeTable/empty_input (0.00s)
+=== RUN   TestFreeShippingPhrases
+=== RUN   TestFreeShippingPhrases/include_the_shipping
+=== RUN   TestFreeShippingPhrases/shipping_at_no_charge
+=== RUN   TestFreeShippingPhrases/shipping_is_on_us
+=== RUN   TestFreeShippingPhrases/we'll_cover_shipping
+=== RUN   TestFreeShippingPhrases/shipping_is_free
+=== RUN   TestFreeShippingPhrases/no_charge_for_shipping
+=== RUN   TestFreeShippingPhrases/I'll_include_the_shipping_at_no_charge
+=== RUN   TestFreeShippingPhrases/we_will_cover_shipping
+=== RUN   TestFreeShippingPhrases/we'll_cover_the_shipping
+=== RUN   TestFreeShippingPhrases/free_shipping
+=== RUN   TestFreeShippingPhrases/free_delivery
+=== RUN   TestFreeShippingPhrases/shipping_included
+=== RUN   TestFreeShippingPhrases/shipping_is_included
+=== RUN   TestFreeShippingPhrases/no_shipping_fee
+=== RUN   TestFreeShippingPhrases/no_shipping_charge
+=== RUN   TestFreeShippingPhrases/free_shipping_over_$500
+=== RUN   TestFreeShippingPhrases/shipping_is_$20
+=== RUN   TestFreeShippingPhrases/can_you_do_free_shipping?
+=== RUN   TestFreeShippingPhrases/free_shipping_on_orders_over_$100
+=== RUN   TestFreeShippingPhrases/can_you_provide_free_shipping?
+=== RUN   TestFreeShippingPhrases/could_you_include_free_shipping?
+=== RUN   TestFreeShippingPhrases/can_we_get_free_shipping?
+=== RUN   TestFreeShippingPhrases/shipping_will_be_$15
+=== RUN   TestFreeShippingPhrases/shipping_cost_is_$25
+=== RUN   TestFreeShippingPhrases/standard_shipping_applies
+=== RUN   TestFreeShippingPhrases/shipping_is_not_included
+--- PASS: TestFreeShippingPhrases (0.00s)
+    --- PASS: TestFreeShippingPhrases/include_the_shipping (0.00s)
+    --- PASS: TestFreeShippingPhrases/shipping_at_no_charge (0.00s)
+    --- PASS: TestFreeShippingPhrases/shipping_is_on_us (0.00s)
+    --- PASS: TestFreeShippingPhrases/we'll_cover_shipping (0.00s)
+    --- PASS: TestFreeShippingPhrases/shipping_is_free (0.00s)
+    --- PASS: TestFreeShippingPhrases/no_charge_for_shipping (0.00s)
+    --- PASS: TestFreeShippingPhrases/I'll_include_the_shipping_at_no_charge (0.00s)
+    --- PASS: TestFreeShippingPhrases/we_will_cover_shipping (0.00s)
+    --- PASS: TestFreeShippingPhrases/we'll_cover_the_shipping (0.00s)
+    --- PASS: TestFreeShippingPhrases/free_shipping (0.00s)
+    --- PASS: TestFreeShippingPhrases/free_delivery (0.00s)
+    --- PASS: TestFreeShippingPhrases/shipping_included (0.00s)
+    --- PASS: TestFreeShippingPhrases/shipping_is_included (0.00s)
+    --- PASS: TestFreeShippingPhrases/no_shipping_fee (0.00s)
+    --- PASS: TestFreeShippingPhrases/no_shipping_charge (0.00s)
+    --- PASS: TestFreeShippingPhrases/free_shipping_over_$500 (0.00s)
+    --- PASS: TestFreeShippingPhrases/shipping_is_$20 (0.00s)
+    --- PASS: TestFreeShippingPhrases/can_you_do_free_shipping? (0.00s)
+    --- PASS: TestFreeShippingPhrases/free_shipping_on_orders_over_$100 (0.00s)
+    --- PASS: TestFreeShippingPhrases/can_you_provide_free_shipping? (0.00s)
+    --- PASS: TestFreeShippingPhrases/could_you_include_free_shipping? (0.00s)
+    --- PASS: TestFreeShippingPhrases/can_we_get_free_shipping? (0.00s)
+    --- PASS: TestFreeShippingPhrases/shipping_will_be_$15 (0.00s)
+    --- PASS: TestFreeShippingPhrases/shipping_cost_is_$25 (0.00s)
+    --- PASS: TestFreeShippingPhrases/standard_shipping_applies (0.00s)
+    --- PASS: TestFreeShippingPhrases/shipping_is_not_included (0.00s)
 PASS
-ok  	margincheck/internal/normalize	0.645s
+ok  	margincheck/internal/normalize	(cached)
+=== RUN   TestEveryPostCarriesPayPalRequestIDAndEndToEndFlow
+--- PASS: TestEveryPostCarriesPayPalRequestIDAndEndToEndFlow (0.02s)
+=== RUN   TestTokenAndSecretNeverAppearInErrorsOrLogs
+--- PASS: TestTokenAndSecretNeverAppearInErrorsOrLogs (0.01s)
+=== RUN   TestSandboxOnlyAndWholeCentsHelpers
+--- PASS: TestSandboxOnlyAndWholeCentsHelpers (0.00s)
+=== RUN   TestConditionalRule204AndHrefFallback
+--- PASS: TestConditionalRule204AndHrefFallback (0.00s)
+=== RUN   TestRepeatCreateDraftInvoiceUsesDeterministicInvoiceNumberAndRecoversOn422Duplicate
+--- PASS: TestRepeatCreateDraftInvoiceUsesDeterministicInvoiceNumberAndRecoversOn422Duplicate (0.01s)
+PASS
+ok  	margincheck/internal/paypal	4.783s
+=== RUN   TestAll20ExamEmails
+=== RUN   TestAll20ExamEmails/Email_01
+=== RUN   TestAll20ExamEmails/Email_02
+=== RUN   TestAll20ExamEmails/Email_03
+=== RUN   TestAll20ExamEmails/Email_04
+=== RUN   TestAll20ExamEmails/Email_05
+=== RUN   TestAll20ExamEmails/Email_06
+=== RUN   TestAll20ExamEmails/Email_07
+=== RUN   TestAll20ExamEmails/Email_08
+=== RUN   TestAll20ExamEmails/Email_09
+=== RUN   TestAll20ExamEmails/Email_10
+=== RUN   TestAll20ExamEmails/Email_11
+=== RUN   TestAll20ExamEmails/Email_12
+=== RUN   TestAll20ExamEmails/Email_13
+=== RUN   TestAll20ExamEmails/Email_14
+=== RUN   TestAll20ExamEmails/Email_15
+=== RUN   TestAll20ExamEmails/Email_16
+=== RUN   TestAll20ExamEmails/Email_17
+=== RUN   TestAll20ExamEmails/Email_18
+=== RUN   TestAll20ExamEmails/Email_19
+=== RUN   TestAll20ExamEmails/Email_20
+--- PASS: TestAll20ExamEmails (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_01 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_02 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_03 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_04 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_05 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_06 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_07 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_08 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_09 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_10 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_11 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_12 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_13 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_14 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_15 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_16 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_17 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_18 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_19 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_20 (0.00s)
+=== RUN   TestEarlyPaymentAnchorCase
+--- PASS: TestEarlyPaymentAnchorCase (0.00s)
+=== RUN   TestEarlyPaymentAnchorPlusOrderSizeDiscount
+--- PASS: TestEarlyPaymentAnchorPlusOrderSizeDiscount (0.00s)
+=== RUN   TestEachOfTheEightLeaksAlone
+=== RUN   TestEachOfTheEightLeaksAlone/Leak1_OrderSizeDiscount
+=== RUN   TestEachOfTheEightLeaksAlone/Leak2_OtherDiscount
+=== RUN   TestEachOfTheEightLeaksAlone/Leak3_Rebate
+=== RUN   TestEachOfTheEightLeaksAlone/Leak4_FreeShipping
+=== RUN   TestEachOfTheEightLeaksAlone/Leak5_PaymentDays
+=== RUN   TestEachOfTheEightLeaksAlone/Leak6_EarlyPaymentDiscount
+=== RUN   TestEachOfTheEightLeaksAlone/Leak7_CoopAllowance
+=== RUN   TestEachOfTheEightLeaksAlone/Leak8_PayPalFee
+--- PASS: TestEachOfTheEightLeaksAlone (0.00s)
+    --- PASS: TestEachOfTheEightLeaksAlone/Leak1_OrderSizeDiscount (0.00s)
+    --- PASS: TestEachOfTheEightLeaksAlone/Leak2_OtherDiscount (0.00s)
+    --- PASS: TestEachOfTheEightLeaksAlone/Leak3_Rebate (0.00s)
+    --- PASS: TestEachOfTheEightLeaksAlone/Leak4_FreeShipping (0.00s)
+    --- PASS: TestEachOfTheEightLeaksAlone/Leak5_PaymentDays (0.00s)
+    --- PASS: TestEachOfTheEightLeaksAlone/Leak6_EarlyPaymentDiscount (0.00s)
+    --- PASS: TestEachOfTheEightLeaksAlone/Leak7_CoopAllowance (0.00s)
+    --- PASS: TestEachOfTheEightLeaksAlone/Leak8_PayPalFee (0.00s)
+=== RUN   TestAllEightLeaksTogether
+--- PASS: TestAllEightLeaksTogether (0.00s)
+=== RUN   TestDoubleDiscounting
+=== RUN   TestDoubleDiscounting/ExamEmail08
+=== RUN   TestDoubleDiscounting/BookExample_Pricing_p112
+--- PASS: TestDoubleDiscounting (0.00s)
+    --- PASS: TestDoubleDiscounting/ExamEmail08 (0.00s)
+    --- PASS: TestDoubleDiscounting/BookExample_Pricing_p112 (0.00s)
+=== RUN   TestRefusals
+=== RUN   TestRefusals/MixedCurrency_DealVsSeller
+=== RUN   TestRefusals/MixedCurrency_CoopVsDeal
+=== RUN   TestRefusals/NoCurrency
+=== RUN   TestRefusals/WhitespaceCurrency
+=== RUN   TestRefusals/NegativeCoopAllowance
+=== RUN   TestRefusals/InvalidQuantity
+=== RUN   TestRefusals/InvalidUnitPrice
+=== RUN   TestRefusals/MissingSellerValuesNamed
+--- PASS: TestRefusals (0.01s)
+    --- PASS: TestRefusals/MixedCurrency_DealVsSeller (0.00s)
+    --- PASS: TestRefusals/MixedCurrency_CoopVsDeal (0.00s)
+    --- PASS: TestRefusals/NoCurrency (0.00s)
+    --- PASS: TestRefusals/WhitespaceCurrency (0.00s)
+    --- PASS: TestRefusals/NegativeCoopAllowance (0.00s)
+    --- PASS: TestRefusals/InvalidQuantity (0.00s)
+    --- PASS: TestRefusals/InvalidUnitPrice (0.00s)
+    --- PASS: TestRefusals/MissingSellerValuesNamed (0.01s)
+=== RUN   TestPropertyTests
+=== RUN   TestPropertyTests/ConcessionNeverIncreasesProfit
+=== RUN   TestPropertyTests/NoLeakIsNegative
+=== RUN   TestPropertyTests/LinesAddUpExactly
+=== RUN   TestPropertyTests/OrderInvariant
+--- PASS: TestPropertyTests (0.03s)
+    --- PASS: TestPropertyTests/ConcessionNeverIncreasesProfit (0.01s)
+    --- PASS: TestPropertyTests/NoLeakIsNegative (0.01s)
+    --- PASS: TestPropertyTests/LinesAddUpExactly (0.00s)
+    --- PASS: TestPropertyTests/OrderInvariant (0.01s)
+PASS
+ok  	margincheck/internal/profit	(cached)
 === RUN   TestQuoteTable
 === RUN   TestQuoteTable/reply_chain_and_wrapped_lines_match_quantity
 === RUN   TestQuoteTable/curly_quotes_and_em-dash_normalised_and_number_word_ten_percent_backs_10
 === RUN   TestQuoteTable/number_word_fifty_boxes_backs_50_and_$45_backs_4500_cents
 === RUN   TestQuoteTable/net_15_days_backs_payment_days_15
-=== RUN   TestQuoteTable/free_shipping_true_backed_by_quote
+=== RUN   TestQuoteTable/buyer_asking_for_free_shipping_does_not_back_free_shipping=true
+=== RUN   TestQuoteTable/agreed_free_shipping_at_no_charge_backs_free_shipping=true
 === RUN   TestQuoteTable/free_shipping_false_backed_by_paid_shipping_sentence
 === RUN   TestQuoteTable/quote_not_in_email_is_rejected
 === RUN   TestQuoteTable/quote_is_in_email_but_does_not_contain_claimed_discount_value
@@ -120,30 +325,35 @@ ok  	margincheck/internal/normalize	0.645s
     --- PASS: TestQuoteTable/curly_quotes_and_em-dash_normalised_and_number_word_ten_percent_backs_10 (0.00s)
     --- PASS: TestQuoteTable/number_word_fifty_boxes_backs_50_and_$45_backs_4500_cents (0.00s)
     --- PASS: TestQuoteTable/net_15_days_backs_payment_days_15 (0.00s)
-    --- PASS: TestQuoteTable/free_shipping_true_backed_by_quote (0.00s)
+    --- PASS: TestQuoteTable/buyer_asking_for_free_shipping_does_not_back_free_shipping=true (0.00s)
+    --- PASS: TestQuoteTable/agreed_free_shipping_at_no_charge_backs_free_shipping=true (0.00s)
     --- PASS: TestQuoteTable/free_shipping_false_backed_by_paid_shipping_sentence (0.00s)
     --- PASS: TestQuoteTable/quote_not_in_email_is_rejected (0.00s)
     --- PASS: TestQuoteTable/quote_is_in_email_but_does_not_contain_claimed_discount_value (0.00s)
     --- PASS: TestQuoteTable/quote_is_in_email_but_has_wrong_quantity (0.00s)
     --- PASS: TestQuoteTable/empty_quote_is_rejected (0.00s)
 PASS
-ok  	margincheck/internal/quote	0.731s
+ok  	margincheck/internal/quote	(cached)
 === RUN   TestNoEightWordOverlapBetweenEmailsAndPrompts
 --- PASS: TestNoEightWordOverlapBetweenEmailsAndPrompts (0.01s)
 === RUN   TestWorkedExamplesInPromptPassVerification
 --- PASS: TestWorkedExamplesInPromptPassVerification (0.00s)
 === RUN   TestPIIMaskingAndUnmasking
---- PASS: TestPIIMaskingAndUnmasking (0.00s)
+--- PASS: TestPIIMaskingAndUnmasking (0.01s)
 === RUN   TestDisagreementRetryAndBudget
 --- PASS: TestDisagreementRetryAndBudget (0.00s)
 === RUN   TestConfidenceFieldRejected
 --- PASS: TestConfidenceFieldRejected (0.00s)
+=== RUN   TestVerifyBoolDealFieldEmptyIsCantParse
+--- PASS: TestVerifyBoolDealFieldEmptyIsCantParse (0.00s)
+=== RUN   TestUnavailableModelFakeServer
+=== RUN   TestUnavailableModelFakeServer/HTTP_503_results_in_model_unavailable_ask_fields
+=== RUN   TestUnavailableModelFakeServer/daily_429_results_in_daily_limit_ask_fields
+=== RUN   TestUnavailableModelFakeServer/timeout_results_in_model_unavailable_ask_fields
+--- PASS: TestUnavailableModelFakeServer (3.12s)
+    --- PASS: TestUnavailableModelFakeServer/HTTP_503_results_in_model_unavailable_ask_fields (3.01s)
+    --- PASS: TestUnavailableModelFakeServer/daily_429_results_in_daily_limit_ask_fields (0.01s)
+    --- PASS: TestUnavailableModelFakeServer/timeout_results_in_model_unavailable_ask_fields (0.11s)
 PASS
-ok  	margincheck/internal/reader	0.974s
-=== RUN   TestScoringRules
---- PASS: TestScoringRules (0.00s)
-=== RUN   TestMutationsFileMatchesEmails
---- PASS: TestMutationsFileMatchesEmails (0.00s)
-PASS
-ok  	margincheck/cmd/exam	0.927s
+ok  	margincheck/internal/reader	(cached)
 
