@@ -150,3 +150,44 @@ func TestFreeShippingPhrases(t *testing.T) {
 		})
 	}
 }
+
+// The digits after a decimal point are not a number of their own: "2.5% off" must never read as 5%, and
+// "2.5 boxes" never as 5 boxes. A decimal that the whole-number fields can't hold is left unread (so the
+// value is unsure and the seller is asked), never cut down to its tail.
+func TestTheTailOfADecimalIsNeverReadAsAWholeNumber(t *testing.T) {
+	if got := ExtractPercents("we want 2.5% off"); len(got) != 0 {
+		t.Errorf("ExtractPercents(2.5%% off) = %v, want nothing", got)
+	}
+	if got := ExtractPercents("12.5 percent discount"); len(got) != 0 {
+		t.Errorf("ExtractPercents(12.5 percent) = %v, want nothing", got)
+	}
+	if v, err := ParsePercent("2.5%"); err == nil {
+		t.Errorf("ParsePercent(2.5%%) = %d, want an error", v)
+	}
+	if got := ExtractQuantities("we need 2.5 boxes"); len(got) != 0 {
+		t.Errorf("ExtractQuantities(2.5 boxes) = %v, want nothing", got)
+	}
+	if got := ExtractPaymentDays("pay within 1.5 days"); len(got) != 0 {
+		t.Errorf("ExtractPaymentDays(1.5 days) = %v, want nothing", got)
+	}
+	if got := ExtractMoney("$40.125 each"); len(got) != 0 {
+		t.Errorf("ExtractMoney($40.125) = %v, want nothing", got)
+	}
+	if got := ExtractMoney("40.125 dollars each"); len(got) != 0 {
+		t.Errorf("ExtractMoney(40.125 dollars) = %v, want nothing", got)
+	}
+
+	// Whole numbers, including ones at the end of a sentence, still read as before.
+	if got := ExtractPercents("We want 20 boxes. 5% off, please."); len(got) != 1 || got[0] != 5 {
+		t.Errorf("ExtractPercents(... 5%% off.) = %v, want [5]", got)
+	}
+	if got := ExtractQuantities("We need 20 boxes."); len(got) != 1 || got[0] != 20 {
+		t.Errorf("ExtractQuantities(20 boxes.) = %v, want [20]", got)
+	}
+	if got := ExtractMoney("at $40.00 per box."); len(got) != 1 || got[0].Int != 4000 {
+		t.Errorf("ExtractMoney($40.00 per box.) = %v, want 4000 cents", got)
+	}
+	if got := ExtractPaymentDays("net 60."); len(got) != 1 || got[0] != 60 {
+		t.Errorf("ExtractPaymentDays(net 60.) = %v, want [60]", got)
+	}
+}
