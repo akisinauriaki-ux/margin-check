@@ -324,7 +324,12 @@ type Store struct {
 
 	mu    sync.Mutex
 	deals map[string]*sync.Mutex // one lock per deal: changes to a deal happen one at a time
+
+	failLog bool // tests only: make every log write fail
 }
+
+// Log returns the deal's decision log. (Seam: there is no log yet.)
+func (s *Store) Log(id string) (string, error) { return "", nil }
 
 // lock waits until no other change to this deal is running, and returns the unlock.
 func (s *Store) lock(id string) func() {

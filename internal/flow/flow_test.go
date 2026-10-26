@@ -501,3 +501,53 @@ func TestASecondApprovalOfADoneRunCallsNothing(t *testing.T) {
 		t.Errorf("result %+v: the first run's result must be kept as it was", again.Result)
 	}
 }
+
+// Every step of a deal adds one line to its decision log and never rewrites an earlier line. The approval is
+// written before PayPal is called, and the log names no email address.
+func TestEveryStepIsAppendedToTheDecisionLog(t *testing.T) {
+	tools := &fakeTools{}
+	d := deps(t, tools)
+	deal, _ := d.Start(context.Background(), askEmail)
+	afterStart, err := d.Store.Log(deal.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	deal, _ = d.BuyerReplied(context.Background(), deal.ID, replyYes)
+	if _, err := d.ApproveAndRun(context.Background(), deal.ID, act.Fingerprint(deal.Proposal.Plan)); err != nil {
+		t.Fatal(err)
+	}
+	all, err := d.Store.Log(deal.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasPrefix(all, afterStart) {
+		t.Fatal("an earlier log line was changed; the log must only grow")
+	}
+	steps := []string{"read", "choices", "reply", "plan", "approved", "ran"}
+	at := 0
+	for _, step := range steps {
+		i := strings.Index(all[at:], `"step":"`+step+`"`)
+		if i < 0 {
+			t.Fatalf("step %q missing or out of order in:\n%s", step, all)
+		}
+		at += i
+	}
+	if strings.Contains(all, "@example.com") {
+		t.Error("the log must not name an email address")
+	}
+}
+
+// If the decision log can't be written, the approval doesn't run: no PayPal action without its record.
+func TestNoRunWithoutItsLogLine(t *testing.T) {
+	tools := &fakeTools{}
+	d := deps(t, tools)
+	deal, _ := d.Start(context.Background(), askEmail)
+	deal, _ = d.BuyerReplied(context.Background(), deal.ID, replyYes)
+	d.Store.failLog = true
+	if _, err := d.ApproveAndRun(context.Background(), deal.ID, act.Fingerprint(deal.Proposal.Plan)); err == nil {
+		t.Fatal("the run went ahead without its log line")
+	}
+	if tools.calls != 0 {
+		t.Errorf("PayPal was called %d times without a logged approval", tools.calls)
+	}
+}
