@@ -169,3 +169,17 @@ func TestTheServerHasTimeLimits(t *testing.T) {
 		t.Errorf("write limit %v must be longer than a run's own limit %v", srv.WriteTimeout, flow.RunTimeLimit)
 	}
 }
+
+// The Approve button says exactly what it will do, in the plan's own terms, so the seller isn't approving a
+// vague "create the draft" they haven't read.
+func TestTheApproveButtonNamesTheExactAction(t *testing.T) {
+	s, deal := testServer(t)
+	page := get(t, s.routes(), "/deal/"+deal.ID)
+	want := "Create the PayPal draft: 30 boxes at $40.00 each, free shipping, due on receipt"
+	if !strings.Contains(page, want) {
+		t.Errorf("the Approve button should read %q", want)
+	}
+	if strings.Contains(page, ">Approve and create the PayPal draft<") {
+		t.Error("the vague button label is still there")
+	}
+}
