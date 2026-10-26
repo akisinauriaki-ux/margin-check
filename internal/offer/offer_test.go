@@ -200,3 +200,21 @@ func TestFormatting(t *testing.T) {
 		}
 	}
 }
+
+// A choice that loses money is never offered. 20 boxes at $23.50 against a $23.00 unit cost and PayPal's fee:
+// standard keeps 47000 - 46000 - (1640+49) = -689 cents, and the early-payment choice loses more.
+func TestAChoiceThatLosesMoneyIsNeverOffered(t *testing.T) {
+	s, err := Build(Request{Currency: "USD", Quantity: 20, UnitPriceCents: 2350, RequestedPaymentDays: 60}, sampleSeller(), Config{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, o := range s.Options {
+		if o.Profit.ProfitCents < 0 {
+			t.Errorf("%s offered while it keeps %d cents", o.Kind, o.Profit.ProfitCents)
+		}
+	}
+	joined := strings.Join(s.Omitted, "; ")
+	if !strings.Contains(joined, "standard: at this price the order loses money") {
+		t.Errorf("omitted %q: the seller must be told why the standard choice is missing", joined)
+	}
+}

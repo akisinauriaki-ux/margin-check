@@ -446,3 +446,35 @@ func TestTheDemoReplyStillBecomesAPlan(t *testing.T) {
 		t.Fatalf("next %q (%s): the demo reply must still give a plan", deal.Next, deal.NextReason)
 	}
 }
+
+// When the thread already shows the seller settling payment on receipt, the buyer's earlier ask for two months
+// is answered. Offering 1.5% off for paying within 7 days would then keep less than the deal on the table.
+func TestNoEarlyPaymentChoiceWhenTheSellerAlreadyHeldFirm(t *testing.T) {
+	const thread = "Buyer: We want 20 boxes at $40 per box and two months to pay.\n\nSeller: We can only do payment on receipt."
+	r := readings()[askEmail]
+	r.PaymentDays = sure(0, "We can only do payment on receipt.")
+	d := deps(t, &fakeTools{})
+	d.Reader.(fakeReader).byEmail[thread] = r
+	deal, err := d.Start(context.Background(), thread)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if deal.Offers == nil {
+		t.Fatalf("no choices: %s", deal.OffersNote)
+	}
+	for _, o := range deal.Offers.Options {
+		if o.Kind == offer.EarlyPayment {
+			t.Fatalf("early-payment choice offered (keeps %d) though the seller already settled payment on receipt", o.Profit.ProfitCents)
+		}
+	}
+
+	// The unanswered ask (the same request, no seller answer yet) still gets the early-payment choice.
+	deal, _ = d.Start(context.Background(), askEmail)
+	found := false
+	for _, o := range deal.Offers.Options {
+		found = found || o.Kind == offer.EarlyPayment
+	}
+	if !found {
+		t.Errorf("an unanswered ask for two months must still get the early-payment choice; omitted %v", deal.Offers.Omitted)
+	}
+}
