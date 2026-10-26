@@ -379,7 +379,7 @@ func main() {
 	txtReport := formatTextReport(summary)
 	fmt.Print(txtReport)
 
-	if err := saveReports(summary, txtReport); err != nil {
+	if err := saveReports("reports", summary, txtReport); err != nil {
 		fmt.Fprintf(os.Stderr, "error saving reports: %v\n", err)
 		os.Exit(1)
 	}
@@ -1197,7 +1197,7 @@ func formatTextReport(s ExamSummary) string {
 	return b.String()
 }
 
-func saveReports(s ExamSummary, txtReport string) error {
+func saveReports(reportDir string, s ExamSummary, txtReport string) error {
 	if err := os.MkdirAll("reports", 0o755); err != nil {
 		return err
 	}

@@ -196,3 +196,25 @@ func TestMutationsFileMatchesEmails(t *testing.T) {
 		}
 	}
 }
+
+func TestSaveReportsCustomDir(t *testing.T) {
+	tmpDir := t.TempDir()
+	summary := ExamSummary{
+		Date:   "2026-10-26",
+		Models: []string{"modelA", "modelB"},
+	}
+	txt := "dummy report content"
+	if err := saveReports(tmpDir, summary, txt); err != nil {
+		t.Fatalf("saveReports: %v", err)
+	}
+
+	expectedTxt := filepath.Join(tmpDir, "exam-2026-10-26-modelA-modelB.txt")
+	expectedJSON := filepath.Join(tmpDir, "exam-2026-10-26-modelA-modelB.json")
+
+	if _, err := os.Stat(expectedTxt); err != nil {
+		t.Errorf("expected text report at %s, got: %v", expectedTxt, err)
+	}
+	if _, err := os.Stat(expectedJSON); err != nil {
+		t.Errorf("expected json report at %s, got: %v", expectedJSON, err)
+	}
+}
