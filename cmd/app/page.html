@@ -78,6 +78,12 @@ td.q{color:var(--muted);font-size:13px}.ok{color:var(--green);font-weight:600}.n
 {{end}}
 {{end}}
 
+{{with .Why}}
+<h2>Why the buyer may be asking</h2>
+<div class="plan">{{if .Guesses}}{{range .Guesses}}<p>{{.Interest}}<br><span class="note">“{{.Quote}}”</span></p>{{end}}{{else}}<p>The AI couldn't tell why from the buyer's words.</p>{{end}}
+<p class="note">This is a guess by the AI, for you only: it rests on the buyer's own words and is never put in your reply. If it matters, ask the buyer.</p></div>
+{{end}}
+
 <h2>Three fair choices for the buyer</h2>
 {{if .Offers}}
 <div class="cards">{{range .Offers.Options}}

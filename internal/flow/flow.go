@@ -157,13 +157,24 @@ func (d Deps) Start(ctx context.Context, thread string) (*Deal, error) {
 			deal.Reply = &draft
 		}
 	}
+	// A separate call, after the reply is written: the guess is for the seller only, and the writer never sees it.
+	if d.Writer != nil {
+		note := why.Read(ctx, why.Config{Client: d.Writer, Model: d.WriterModel}, thread)
+		deal.Why = &note
+	}
 	if err := d.Store.Save(deal); err != nil {
 		return deal, err
 	}
 	if err := d.Store.record(deal.ID, "read", fmt.Sprintf("thread read; outcome %s", deal.Check.Outcome)); err != nil {
 		return deal, err
 	}
-	return deal, d.Store.record(deal.ID, "choices", choicesLine(deal))
+	if err := d.Store.record(deal.ID, "choices", choicesLine(deal)); err != nil {
+		return deal, err
+	}
+	if deal.Why == nil {
+		return deal, nil
+	}
+	return deal, d.Store.record(deal.ID, "why", fmt.Sprintf("%d guess(es) shown to the seller; %d problem(s)", len(deal.Why.Guesses), len(deal.Why.Problems)))
 }
 
 func choicesLine(deal *Deal) string {

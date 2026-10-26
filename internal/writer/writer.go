@@ -242,6 +242,11 @@ func HasCurrencySign(s string) bool {
 // HasPercentSign reports whether s contains a percent sign in any of its forms.
 func HasPercentSign(s string) bool { return strings.ContainsAny(s, "%％﹪‰‱") }
 
+// HasNumberWord reports whether s writes a number or an amount in words ("two months", "a week", "half").
+func HasNumberWord(s string) bool {
+	return numberWordRe.MatchString(s) || unitWordRe.MatchString(s) || fractionOrdinalRe.MatchString(s)
+}
+
 // Fill replaces each blank with its choice's terms, written by code, and lays out the reply.
 func Fill(text string, set offer.Set) string {
 	text = strings.ReplaceAll(text, "\r\n", "\n")

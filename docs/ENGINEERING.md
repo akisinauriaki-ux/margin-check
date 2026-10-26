@@ -67,6 +67,17 @@ The model's own "confidence" is never used. The headline metric is therefore **w
 - **An append-only decision log.** *Designing Data-Intensive Applications* and *Clean Architecture* both favour append-only records over overwriting; *Security Engineering* calls bookkeeping the main defence against insider fraud.
   - Every step of a deal adds a line to its log, and no line is ever rewritten [E-21].
   - The approval is written before PayPal is called. If the log can't be written, nothing runs [E-22].
+- **Short answers are read in context, and the person corrects the reading.**
+  - Real buyers write "Option 2 please". The reader is given the choices we sent ahead of the buyer's words [E-23].
+    Acceptance still has to be quoted from the buyer's own words, never from our choices.
+  - The page marks the AI's reading on a row of choice buttons. The seller confirms or corrects it with one tap, and
+    the same checks apply to a tap as to the AI [E-24].
+- **The interest behind the position, offered as a guess.** *Getting to Yes* advises looking at each position the
+  other side takes and asking "Why?".
+  - A separate AI call writes at most two guesses for the seller. Each must start "The buyer may", carry no figure,
+    describe the buyer rather than advise the seller, and quote words the buyer really wrote. "Can't tell" is an
+    allowed answer [E-25].
+  - The note is never given to the reply writer, so it can't reach the buyer [E-26].
 
 ## 5. Decisions and failures are written down
 
