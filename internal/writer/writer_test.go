@@ -128,6 +128,9 @@ func TestValidate(t *testing.T) {
 		{"Only 5 left {{OPTION_1}} {{OPTION_2}}", "digit"},
 		{"Ten percent off {{OPTION_1}} {{OPTION_2}} costs €", "currency"},
 		{"We could split the difference {{OPTION_1}} {{OPTION_2}}", "split"},
+		{"Take ten percent off {{OPTION_1}} {{OPTION_2}}", "number word"},
+		{"Forty boxes then {{OPTION_1}} {{OPTION_2}}", "number word"},
+		{"One more thing: {{OPTION_1}} {{OPTION_2}}", ""},
 		{"", "empty"},
 		{strings.Repeat("word ", 170) + "{{OPTION_1}} {{OPTION_2}}", "words"},
 	}
