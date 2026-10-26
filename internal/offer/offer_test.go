@@ -186,13 +186,13 @@ func TestRefusesWhatItCannotPriceHonestly(t *testing.T) {
 
 func TestFormatting(t *testing.T) {
 	cases := map[string]string{
-		FormatMoney(4000, "USD"):  "$40.00",
-		FormatMoney(-1987, "USD"): "-$19.87",
-		FormatMoney(5, "EUR"):     "€0.05",
+		FormatMoney(4000, "USD"):   "$40.00",
+		FormatMoney(-1987, "USD"):  "-$19.87",
+		FormatMoney(5, "EUR"):      "€0.05",
 		FormatMoney(123456, "JPY"): "JPY 1234.56",
-		FormatPercent(150):        "1.5%",
-		FormatPercent(1000):       "10%",
-		FormatPercent(125):        "1.25%",
+		FormatPercent(150):         "1.5%",
+		FormatPercent(1000):        "10%",
+		FormatPercent(125):         "1.25%",
 	}
 	for got, want := range cases {
 		if got != want {
