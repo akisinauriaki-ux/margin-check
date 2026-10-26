@@ -47,7 +47,8 @@ func main() {
 	cmd := exec.Command("go", examArgs...)
 	cmd.Env = os.Environ()
 	if mode == ModeReplay {
-		cmd.Env = append(cmd.Env, "GEMINI_API_KEY=replay-only-no-calls")
+		_ = os.Setenv("MARGINCHECK_REPLAY_ONLY", "1")
+		cmd.Env = append(cmd.Env, "MARGINCHECK_REPLAY_ONLY=1")
 	}
 
 	var stdoutBuf, stderrBuf bytes.Buffer
@@ -108,7 +109,10 @@ func main() {
 	safety := RunSafetyChecks(NewPretendPayPal(), defaultExecute)
 
 	var baseline *Baseline
-	if b, bErr := LoadBaseline(*baselineFlag); bErr == nil {
+	b, bErr := LoadBaseline(*baselineFlag)
+	if bErr != nil {
+		examFailReasons = append(examFailReasons, fmt.Sprintf("baseline missing or broken: %v", bErr))
+	} else {
 		baseline = b
 	}
 
@@ -130,10 +134,6 @@ func main() {
 	}
 
 	sc := BuildScorecard(examReport, safety, baseline, mode, *paypalFlag, paypalPass, paypalLines, regs)
-	if *paypalFlag {
-		sc.PayPalPass = paypalPass
-		sc.PayPalLines = paypalLines
-	}
 	if len(examFailReasons) > 0 {
 		sc.Pass = false
 		sc.FailReasons = append(examFailReasons, sc.FailReasons...)

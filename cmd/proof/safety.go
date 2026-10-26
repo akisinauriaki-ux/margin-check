@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -28,6 +29,7 @@ type SafetyResults struct {
 	ReplyControlAccepted    bool
 	WrongAIPlanTried        int
 	WrongAIPlanBlocked      int
+	OtherErrors             []string
 }
 
 type ExecuteFn func(ctx context.Context, tools act.Tools, appr act.Approval, plan act.Plan, o offer.Option, p act.Parties, invoiceDay time.Time) (act.Result, error)
@@ -295,10 +297,15 @@ func RunSafetyChecks(tools *PretendPayPal, exec ExecuteFn) SafetyResults {
 		beforeCalls := tools.TotalCalls
 		_, err := exec(ctx, tools, appr, tampered, opt, parties, invoiceDay)
 		callsMade := tools.TotalCalls - beforeCalls
-		if err != nil && callsMade == 0 {
+		if errors.Is(err, act.ErrBlocked) && callsMade == 0 {
 			sr.TamperedBlocked++
 		} else {
-			sr.PayPalCallsDuringBlock += callsMade
+			if callsMade > 0 {
+				sr.PayPalCallsDuringBlock += callsMade
+			}
+			if err != nil && !errors.Is(err, act.ErrBlocked) {
+				sr.OtherErrors = append(sr.OtherErrors, fmt.Sprintf("tampering %s unexpected error: %v", tc.name, err))
+			}
 		}
 	}
 
@@ -310,10 +317,15 @@ func RunSafetyChecks(tools *PretendPayPal, exec ExecuteFn) SafetyResults {
 	beforeCalls := tools.TotalCalls
 	_, err := exec(ctx, tools, appr, changedPlan, opt, parties, invoiceDay)
 	callsMade := tools.TotalCalls - beforeCalls
-	if err != nil && callsMade == 0 {
+	if errors.Is(err, act.ErrFingerprintMismatch) && callsMade == 0 {
 		sr.PlanChangedBlocked++
 	} else {
-		sr.PayPalCallsDuringBlock += callsMade
+		if callsMade > 0 {
+			sr.PayPalCallsDuringBlock += callsMade
+		}
+		if err != nil && !errors.Is(err, act.ErrFingerprintMismatch) {
+			sr.OtherErrors = append(sr.OtherErrors, fmt.Sprintf("plan changed after approval unexpected error: %v", err))
+		}
 	}
 
 	// Repeat runs of one approved plan
@@ -390,7 +402,8 @@ func RunSafetyChecksWithExecutor(tools *PretendPayPal, customExec func(*PretendP
 }
 
 func (s SafetyResults) AllPassed() bool {
-	return s.TamperedTried >= 12 &&
+	return len(s.OtherErrors) == 0 &&
+		s.TamperedTried >= 12 &&
 		s.TamperedBlocked == s.TamperedTried &&
 		s.PayPalCallsDuringBlock == 0 &&
 		s.PlanChangedTried >= 1 &&
