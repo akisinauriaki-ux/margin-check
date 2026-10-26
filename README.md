@@ -18,7 +18,7 @@ Runs every unit, integration and safety test in the repository.
 ```bash
 go run ./cmd/proof
 ```
-Executes the automated safety scorecard and regression verification without requiring API keys, network access, or real money [C-06]. The saved AI answers ship in the repository, so proof needs no key [C-81]. Replay prompt bytes stay identical across operating systems via `.gitattributes` (`prompts/** text eol=lf`) [C-82]. The scorecard verifies reading accuracy, whole-cent math, plan tampering defences, and duplicate prevention, concluding with `PROOF: PASS` when all checks succeed [C-07]:
+Executes the automated safety scorecard and regression verification with no API keys, no AI calls, no PayPal calls and no money [C-06]. (The first build downloads Go's libraries, like any Go project.) The saved AI answers ship in the repository, so proof needs no key [C-81]. Replay prompt bytes stay identical across operating systems via `.gitattributes` (`prompts/** text eol=lf`) [C-82]. The scorecard verifies reading accuracy, whole-cent math, plan tampering defences, and duplicate prevention, concluding with `PROOF: PASS` when all checks succeed [C-07]:
 ```text
 ======================================================================
                          MARGIN-CHECK PROOF
@@ -26,35 +26,47 @@ Executes the automated safety scorecard and regression verification without requ
 MODE: replayed from saved answers, no AI calls made
 
 READING:
-  wrong but marked sure: 0 [C-83]
-  emails right: 20 / 20 [C-84]
-  fields right: 144 / 144 [C-85]
-  injections ignored: 2 / 2 [C-32]
-  must-ask items asked: 4 / 4 [C-86]
-  unnecessary asks: 0 [C-87]
-  mutation tests: 6 / 6 [C-88]
+  wrong but marked sure: 0
+  emails right: 20 / 20
+  fields right: 144 / 144
+  injections ignored: 2 / 2
+  must-ask items asked: 4 / 4
+  unnecessary asks: 0
+  mutation tests: 6 / 6
 
 MONEY:
-  profit within 1 cent: 16 / 16 [C-89]
-  alert level right: 16 / 16 [C-90]
-  false alarms on healthy deals: 0 [C-91]
+  profit within 1 cent: 16 / 16
+  alert level right: 16 / 16
+  false alarms on healthy deals: 0
 
 SAFETY:
-  tampered plans tried / blocked: 12 / 12 [C-92]
-  paypal calls made during blocked attempts: 0 [C-93]
-  plan changed after approval tried / blocked: 1 / 1 [C-94]
-  repeat runs of one approved plan: drafts created: 1, duplicates: 0 [C-95]
+  tampered plans tried / blocked: 12 / 12
+  paypal calls made during blocked attempts: 0
+  plan changed after approval tried / blocked: 1 / 1
+  repeat runs of one approved plan: drafts created: 1, duplicates: 0
   reply-checker attacks rejected: 7 / 7
-  wrong AI plan blocked: 1 / 1 [C-96]
+  wrong AI plan blocked: 1 / 1
+
+COST:
+  model calls per deal: avg 2, max 2
+  tokens per deal: avg 13571, max 14297
+  seconds per deal: not measured in replay (live run: see --live)
+
+PAYPAL SANDBOX:
+  NOT RUN (pass --paypal to test against PayPal sandbox)
 
 PROOF: PASS
 ======================================================================
 ```
 
+The reading, money and safety lines above are each checked against the saved run in `reports/proof-latest.txt`: [C-83], [C-84], [C-85], [C-32], [C-86], [C-87], [C-88], [C-89], [C-90], [C-91], [C-92], [C-93], [C-94], [C-95], [C-96].
+
 ### 3. Interactive app (with keys)
 ```bash
 go run ./cmd/app
 ```
+Needs `.env` first (see Setup below). Without it, the app stops at once with `fill in .env (see .env.example)`.
+
 Launches the local web server on `http://127.0.0.1:8787` [C-80] with sandbox credentials loaded from `.env`, where the seller can paste sample email threads and step through the five interactive stations [C-08].
 
 ## Setup
