@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -246,3 +247,109 @@ func TestAPlanEditedOnDiskIsRefused(t *testing.T) {
 
 func itoa(n int64) string  { return strconv.FormatInt(n, 10) }
 func cents(c int64) string { return fmt.Sprintf("%d.%02d", c/100, c%100) }
+
+// slowTools is a pretend PayPal whose create takes a moment, like the real toolkit. It records how many runs
+// were inside PayPal at once, and what the run's context looked like.
+type slowTools struct {
+	mu        sync.Mutex
+	inside    int
+	maxInside int
+	created   int
+	inv       *paypal.Invoice
+	ctxErr    error
+	deadline  time.Duration
+}
+
+func (f *slowTools) CreateInvoice(ctx context.Context, a act.CreateInvoiceArgs) (string, bool, error) {
+	f.mu.Lock()
+	f.inside++
+	if f.inside > f.maxInside {
+		f.maxInside = f.inside
+	}
+	existing := f.inv
+	f.ctxErr = ctx.Err()
+	if dl, ok := ctx.Deadline(); ok {
+		f.deadline = time.Until(dl)
+	}
+	f.mu.Unlock()
+
+	time.Sleep(50 * time.Millisecond) // both clicks look for the draft before either has made it
+
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.inside--
+	if existing != nil {
+		return existing.ID, true, nil
+	}
+	f.created++
+	f.inv = &paypal.Invoice{ID: fmt.Sprintf("INV2-TEST-%04d", f.created), Status: "DRAFT",
+		Detail: paypal.InvoiceDetail{CurrencyCode: a.Currency, InvoiceNumber: a.InvoiceNumber},
+		Items: []paypal.InvoiceLineItem{{Quantity: itoa(a.Quantity),
+			UnitAmount: paypal.Money{CurrencyCode: a.Currency, Value: cents(a.UnitPriceCents)}}}}
+	return f.inv.ID, false, nil
+}
+func (f *slowTools) SetDueDate(context.Context, string, act.SetDueDateArgs) error { return nil }
+func (f *slowTools) ReadBack(context.Context, string) (*paypal.Invoice, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	c := *f.inv
+	return &c, nil
+}
+
+// A double click on Approve sends two requests at once. They must run one after the other, so the second
+// finds the draft the first made, and both end with the same good result.
+func TestTwoApprovalsAtOnceRunOneAfterTheOther(t *testing.T) {
+	tools := &slowTools{}
+	d := deps(t, tools)
+	deal, _ := d.Start(context.Background(), askEmail)
+	deal, _ = d.BuyerReplied(context.Background(), deal.ID, replyYes)
+	fp := act.Fingerprint(deal.Proposal.Plan)
+
+	var wg sync.WaitGroup
+	errs := make([]error, 2)
+	for i := range errs {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			_, errs[i] = d.ApproveAndRun(context.Background(), deal.ID, fp)
+		}(i)
+	}
+	wg.Wait()
+
+	for i, err := range errs {
+		if err != nil {
+			t.Errorf("click %d: %v", i+1, err)
+		}
+	}
+	if tools.maxInside != 1 || tools.created != 1 {
+		t.Errorf("%d runs were inside PayPal at once and %d drafts were made; want 1 and 1", tools.maxInside, tools.created)
+	}
+	saved, err := d.Store.Load(deal.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if saved.Result == nil || !saved.Result.ReadBackOK || saved.ResultError != "" {
+		t.Errorf("saved result %+v, error %q; want the good result", saved.Result, saved.ResultError)
+	}
+}
+
+// Closing the browser tab cancels the request. A run that has started must not be cut off halfway by that,
+// but it must still have its own time limit.
+func TestARunIsNotCutOffWhenTheTabCloses(t *testing.T) {
+	tools := &slowTools{}
+	d := deps(t, tools)
+	deal, _ := d.Start(context.Background(), askEmail)
+	deal, _ = d.BuyerReplied(context.Background(), deal.ID, replyYes)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // the tab is already closed
+	if _, err := d.ApproveAndRun(ctx, deal.ID, act.Fingerprint(deal.Proposal.Plan)); err != nil {
+		t.Fatalf("approve: %v", err)
+	}
+	if tools.ctxErr != nil {
+		t.Errorf("the run saw the closed tab (%v) and could stop halfway", tools.ctxErr)
+	}
+	if tools.deadline <= 0 || tools.deadline > 3*time.Minute {
+		t.Errorf("the run's time limit is %v; want a limit of at most 3m", tools.deadline)
+	}
+}
