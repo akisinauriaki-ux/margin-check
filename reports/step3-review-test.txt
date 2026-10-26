@@ -1,0 +1,19 @@
+$ go test -count=1 ./...   (6a9fb84)
+?   	margincheck/cmd/actcheck	[no test files]
+ok  	margincheck/cmd/app	5.036s
+ok  	margincheck/cmd/exam	1.475s
+ok  	margincheck/cmd/sandboxcheck	2.608s
+ok  	margincheck/cmd/toolkitcheck	6.243s
+ok  	margincheck/internal/act	3.179s
+ok  	margincheck/internal/agenttools	3.645s
+ok  	margincheck/internal/check	1.182s
+ok  	margincheck/internal/flow	3.037s
+ok  	margincheck/internal/gemini	2.658s
+ok  	margincheck/internal/normalize	0.880s
+ok  	margincheck/internal/offer	0.696s
+ok  	margincheck/internal/paypal	2.994s
+ok  	margincheck/internal/profit	1.518s
+ok  	margincheck/internal/quote	1.307s
+ok  	margincheck/internal/reader	5.196s
+ok  	margincheck/internal/writer	0.903s
+exit 0
