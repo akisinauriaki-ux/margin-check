@@ -28,7 +28,7 @@ SAFETY:
 COST:
   model calls per deal: avg 2, max 2
   tokens per deal: avg 13570.5, max 14297
-  seconds per deal: avg 0.01s, max 0.02s
+  seconds per deal: avg 0.01s, max 0.04s
 
 PAYPAL SANDBOX:
   NOT RUN (pass --paypal to test against PayPal sandbox)

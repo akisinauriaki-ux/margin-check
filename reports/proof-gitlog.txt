@@ -1,0 +1,25 @@
+﻿2893d0b proof: implement proof command with scorecard, safety checks, and baseline
+c9f915b docs: add judge README with security tables, failure register, and backed claims
+0365b79 proof: add tests and fixtures for proof scorecard (failing tests)
+ea3f986 step 4: saved git log of the writer commits
+366e691 step 4: writer gate outputs (vet, test, live samples)
+1b57d22 step 4: live samples runner for writer-v2
+965fac8 exam: add --report-dir flag to save exam reports to custom directory
+d961099 exam: test --report-dir flag (failing test)
+b1c0cc2 step 4: writer-v2 with greeting rule and warm wording
+b7a3a24 proof: save fresh clone exam replay proof
+7572979 step 4: failing test - the reply must open with a greeting before the choices
+6bd51dc proof: ship replay cache and scan report
+75aef0b MIT licence (Aki, 26 Oct)
+3265fd6 review: saved git log of the review commits
+f84961f review: gate outputs (vet, test, race, sandbox actcheck, exam replay regression)
+6a9fb84 review fix: the screen's server has header, read, write and idle time limits
+424a15f review: failing test - the screen's server has no time limits (seam only: same behaviour as http.ListenAndServe)
+26fcaae review fix: a damaged deal date stops the deal with a plain message instead of becoming year 1
+deabfca review: failing test - a damaged deal date becomes year 1 on the plan
+f4f3e54 review fix: after any create failure, look the draft up by its exact invoice number instead of matching the word DUPLICATE
+839a5fa review: failing test - a repeat create whose toolkit error lacks the word DUPLICATE is reported as a failure
+9eb43ae review fix: the reply and plan checks reject any Unicode number, any currency sign and every percent sign
+0d99816 review: failing tests - the reply and plan checks miss full-width digits, fractions and other currency signs
+610a441 review fix: changes to one deal run one at a time; a started run ignores a closed tab but stops at a 3-minute limit
+5cc3026 review: failing tests - two approvals at once both create and collide on save; a closed tab cancels a started run
