@@ -1,0 +1,17 @@
+f84961f review: gate outputs (vet, test, race, sandbox actcheck, exam replay regression)
+6a9fb84 review fix: the screen's server has header, read, write and idle time limits
+424a15f review: failing test - the screen's server has no time limits (seam only: same behaviour as http.ListenAndServe)
+26fcaae review fix: a damaged deal date stops the deal with a plain message instead of becoming year 1
+deabfca review: failing test - a damaged deal date becomes year 1 on the plan
+f4f3e54 review fix: after any create failure, look the draft up by its exact invoice number instead of matching the word DUPLICATE
+839a5fa review: failing test - a repeat create whose toolkit error lacks the word DUPLICATE is reported as a failure
+9eb43ae review fix: the reply and plan checks reject any Unicode number, any currency sign and every percent sign
+0d99816 review: failing tests - the reply and plan checks miss full-width digits, fractions and other currency signs
+610a441 review fix: changes to one deal run one at a time; a started run ignores a closed tab but stops at a 3-minute limit
+5cc3026 review: failing tests - two approvals at once both create and collide on save; a closed tab cancels a started run
+ded9aab review fix: the read-back reads PayPal's amounts strictly; a sign, extra decimals or anything unreadable is a mismatch
+125cf3c review: failing test - the read-back reads -0.50 as 50 cents and drops extra decimals
+5116499 review fix: the invoice search returns only an exact invoice-number match, or not found
+69630e6 review: failing test - the invoice search returns the only result even when its number differs
+2437fa8 review fix: never read the tail of a decimal as a whole number; such a value stays unread (unsure)
+9c98d7c review: failing test - the tail of a decimal is read as a whole number (2.5% -> 5%, 2.5 boxes -> 5, 40.125 dollars -> $125)
