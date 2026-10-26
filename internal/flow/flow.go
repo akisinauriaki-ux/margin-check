@@ -17,6 +17,7 @@ import (
 	"margincheck/internal/act"
 	"margincheck/internal/check"
 	"margincheck/internal/offer"
+	"margincheck/internal/paypal"
 	"margincheck/internal/profit"
 	"margincheck/internal/reader"
 	"margincheck/internal/writer"
@@ -153,7 +154,28 @@ func (d Deps) Start(ctx context.Context, thread string) (*Deal, error) {
 			deal.Reply = &draft
 		}
 	}
-	return deal, d.Store.Save(deal)
+	if err := d.Store.Save(deal); err != nil {
+		return deal, err
+	}
+	if err := d.Store.record(deal.ID, "read", fmt.Sprintf("thread read; outcome %s", deal.Check.Outcome)); err != nil {
+		return deal, err
+	}
+	return deal, d.Store.record(deal.ID, "choices", choicesLine(deal))
+}
+
+func choicesLine(deal *Deal) string {
+	if deal.Offers == nil {
+		return deal.OffersNote
+	}
+	var kinds []string
+	for _, o := range deal.Offers.Options {
+		kinds = append(kinds, fmt.Sprintf("%s keeps %d cents", o.Kind, o.Profit.ProfitCents))
+	}
+	line := "offered: " + strings.Join(kinds, "; ")
+	if len(deal.Offers.Omitted) > 0 {
+		line += "; left out: " + strings.Join(deal.Offers.Omitted, "; ")
+	}
+	return line
 }
 
 // requestedInt returns the largest value of a buyer's requested term, times scale (0 if none).
@@ -226,7 +248,18 @@ func (d Deps) BuyerReplied(ctx context.Context, dealID, replyThread string) (*De
 			deal.Proposal = &pr
 		}
 	}
-	return deal, d.Store.Save(deal)
+	if err := d.Store.Save(deal); err != nil {
+		return deal, err
+	}
+	if err := d.Store.record(deal.ID, "reply", fmt.Sprintf("next %s: %s", deal.Next, deal.NextReason)); err != nil {
+		return deal, err
+	}
+	if deal.Proposal != nil {
+		p := deal.Proposal
+		return deal, d.Store.record(deal.ID, "plan", fmt.Sprintf("by %s, %d call(s), fingerprint %s, AI plan blocked for %d difference(s)",
+			p.Plan.By, len(p.Plan.Calls), act.Fingerprint(p.Plan), len(p.Blocked)))
+	}
+	return deal, nil
 }
 
 // ApproveAndRun records the seller's approval of the plan they were shown (its fingerprint) and runs it.
@@ -257,6 +290,10 @@ func (d Deps) ApproveAndRun(ctx context.Context, dealID, shownFingerprint string
 	if err != nil {
 		return deal, err
 	}
+	// The approval is written to the log before PayPal is called: no PayPal action without its record.
+	if err := d.Store.record(deal.ID, "approved", "fingerprint "+act.Fingerprint(plan)); err != nil {
+		return deal, err
+	}
 	appr := act.Approve(plan)
 	deal.Approval = &appr
 	runCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), RunTimeLimit)
@@ -266,6 +303,10 @@ func (d Deps) ApproveAndRun(ctx context.Context, dealID, shownFingerprint string
 	deal.ResultError = ""
 	if runErr != nil {
 		deal.ResultError = runErr.Error()
+	}
+	if err := d.Store.record(deal.ID, "ran", fmt.Sprintf("draft %s, status %s, read-back ok %v, already existed %v; error: %s",
+		paypal.MaskID(res.InvoiceID), res.Status, res.ReadBackOK, res.AlreadyExisted, deal.ResultError)); err != nil && runErr == nil {
+		runErr = err
 	}
 	if err := d.Store.Save(deal); err != nil {
 		return deal, err
@@ -328,8 +369,47 @@ type Store struct {
 	failLog bool // tests only: make every log write fail
 }
 
-// Log returns the deal's decision log. (Seam: there is no log yet.)
-func (s *Store) Log(id string) (string, error) { return "", nil }
+// record appends one line to the deal's decision log (.data/deals/<id>.log). The log only grows: lines are
+// never rewritten, so it shows the order in which things happened even after the deal file is updated.
+func (s *Store) record(id, step, detail string) error {
+	if s.failLog {
+		return errors.New("flow: the decision log can't be written; nothing was done")
+	}
+	if !idRe.MatchString(id) {
+		return fmt.Errorf("flow: bad deal id %q", id)
+	}
+	line, err := json.Marshal(struct {
+		At     string `json:"at"`
+		Step   string `json:"step"`
+		Detail string `json:"detail"`
+	}{time.Now().UTC().Format(time.RFC3339), step, emailRe.ReplaceAllString(detail, "***@***")})
+	if err != nil {
+		return err
+	}
+	f, err := os.OpenFile(filepath.Join(s.dir, id+".log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600)
+	if err != nil {
+		return err
+	}
+	if _, err := f.Write(append(line, '\n')); err != nil {
+		f.Close()
+		return err
+	}
+	return f.Close()
+}
+
+var emailRe = regexp.MustCompile(`[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+`)
+
+// Log returns the deal's decision log, one JSON line per step ("" if nothing was recorded yet).
+func (s *Store) Log(id string) (string, error) {
+	if !idRe.MatchString(id) {
+		return "", fmt.Errorf("flow: bad deal id %q", id)
+	}
+	raw, err := os.ReadFile(filepath.Join(s.dir, id+".log"))
+	if errors.Is(err, os.ErrNotExist) {
+		return "", nil
+	}
+	return string(raw), err
+}
 
 // lock waits until no other change to this deal is running, and returns the unlock.
 func (s *Store) lock(id string) func() {
