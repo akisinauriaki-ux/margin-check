@@ -165,3 +165,36 @@ func TestValidateRejectsNumbersAndCurrencySignsInAnyScript(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateGreetingRule(t *testing.T) {
+	// The reply must open with a greeting before the choices (risk 2):
+	// code checks that the first non-empty line contains no choice.
+	cases := []struct {
+		text string
+		want string
+	}{
+		{"{{OPTION_1}}\n{{OPTION_2}}\nWhat works best?", "the reply must open with a greeting before the choices"},
+		{"\n\n{{OPTION_1}}\n{{OPTION_2}}\nWhat works best?", "the reply must open with a greeting before the choices"},
+		{"Option 1 (Standard): 20 boxes.\nOption 2: 40 boxes.\nWhat works best?", "the reply must open with a greeting before the choices"},
+		{"Hi {{OPTION_1}} {{OPTION_2}}. What works for you?", "the reply must open with a greeting before the choices"},
+		{"Thank you for thinking of us. Here is what we can do:\n\n{{OPTION_1}}\n{{OPTION_2}}\n\nWhat works best for you?", ""},
+		{"Hi,\n{{OPTION_1}}\n{{OPTION_2}}\nWhat works best for you?", ""},
+	}
+	for _, c := range cases {
+		probs := Validate(c.text, 2)
+		hasProb := false
+		for _, p := range probs {
+			if p == "the reply must open with a greeting before the choices" {
+				hasProb = true
+				break
+			}
+		}
+		if c.want != "" && !hasProb {
+			t.Errorf("%q: want problem %q, got %v", c.text, c.want, probs)
+		}
+		if c.want == "" && hasProb {
+			t.Errorf("%q: unexpected greeting problem: %v", c.text, probs)
+		}
+	}
+}
+
