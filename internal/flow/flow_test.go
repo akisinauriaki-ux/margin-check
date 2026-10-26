@@ -20,10 +20,26 @@ import (
 
 // --- stand-ins -------------------------------------------------------------------------------------------
 
-type fakeReader struct{ byEmail map[string]reader.CheckResult }
+type fakeReader struct {
+	byEmail map[string]reader.CheckResult
+	seen    *[]string // every text the reader was given, in order
+}
 
+// Check finds the reading by the exact text, or by the text the app's added context ends with (the buyer's
+// pasted answer comes last).
 func (f fakeReader) Check(_ context.Context, id, email string) (reader.CheckResult, error) {
+	if f.seen != nil {
+		*f.seen = append(*f.seen, email)
+	}
 	r, ok := f.byEmail[email]
+	if !ok {
+		for k, v := range f.byEmail {
+			if strings.HasSuffix(email, k) {
+				r, ok = v, true
+				break
+			}
+		}
+	}
 	if !ok {
 		return reader.CheckResult{}, errors.New("unexpected email")
 	}
@@ -549,5 +565,70 @@ func TestNoRunWithoutItsLogLine(t *testing.T) {
 	}
 	if tools.calls != 0 {
 		t.Errorf("PayPal was called %d times without a logged approval", tools.calls)
+	}
+}
+
+// A short answer such as "Option 2 please" only makes sense next to the choices we sent. The reader is given
+// those choices, written by the app, together with the buyer's words.
+func TestAShortReplyIsReadWithTheChoicesWeSent(t *testing.T) {
+	const reply = "Buyer: Option 2 please."
+	r := readings()[askEmail]
+	r.Quantity = reader.IntFieldResult{Unknown: true}
+	r.AcceptedOption = reader.StringFieldResult{Value: "quantity", Sure: true, Quote: "Option 2 please."}
+	var seen []string
+	d := deps(t, &fakeTools{})
+	fr := d.Reader.(fakeReader)
+	fr.byEmail[reply] = r
+	fr.seen = &seen
+	d.Reader = fr
+	deal, _ := d.Start(context.Background(), askEmail)
+	deal, err := d.BuyerReplied(context.Background(), deal.ID, reply)
+	if err != nil {
+		t.Fatal(err)
+	}
+	last := seen[len(seen)-1]
+	if !strings.Contains(last, "Option 2 (Quantity): 30 boxes") || !strings.HasSuffix(last, reply) {
+		t.Fatalf("the reader was given %q; it needs the choices we sent, then the buyer's words", last)
+	}
+	if deal.Next != NextDraft || deal.Proposal == nil {
+		t.Fatalf("next %q (%s): a short, clear answer must become a plan", deal.Next, deal.NextReason)
+	}
+}
+
+// The sentence that proves acceptance must be the buyer's own. The choices the app added can never count as the
+// buyer saying yes.
+func TestAcceptanceMustBeTheBuyersOwnWords(t *testing.T) {
+	const reply = "Buyer: Sounds interesting, let me think."
+	r := readings()[askEmail]
+	r.AcceptedOption = reader.StringFieldResult{Value: "quantity", Sure: true,
+		Quote: "Option 2 (Quantity): 30 boxes at $40.00 each with free shipping, payment on receipt."}
+	d := deps(t, &fakeTools{})
+	d.Reader.(fakeReader).byEmail[reply] = r
+	deal, _ := d.Start(context.Background(), askEmail)
+	deal, err := d.BuyerReplied(context.Background(), deal.ID, reply)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if deal.Next != NextAsk || deal.Proposal != nil {
+		t.Fatalf("next %q: an acceptance quoted from our own choices must not count", deal.Next)
+	}
+}
+
+// Terms read from the choices the app added are ours, not the buyer's: they must not look like the buyer
+// changing the deal.
+func TestOurOwnChoicesAreNotTheBuyersStatedTerms(t *testing.T) {
+	const reply = "Buyer: Option 2 please."
+	r := readings()[askEmail]
+	r.Quantity = sure(20, "Option 1 (Standard): 20 boxes at $40.00 each, shipping $36.00 at cost, payment on receipt.")
+	r.AcceptedOption = reader.StringFieldResult{Value: "quantity", Sure: true, Quote: "Option 2 please."}
+	d := deps(t, &fakeTools{})
+	d.Reader.(fakeReader).byEmail[reply] = r
+	deal, _ := d.Start(context.Background(), askEmail)
+	deal, err := d.BuyerReplied(context.Background(), deal.ID, reply)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if deal.Next != NextDraft {
+		t.Fatalf("next %q (%s): a quantity quoted from our own Option 1 is not the buyer changing the deal", deal.Next, deal.NextReason)
 	}
 }
