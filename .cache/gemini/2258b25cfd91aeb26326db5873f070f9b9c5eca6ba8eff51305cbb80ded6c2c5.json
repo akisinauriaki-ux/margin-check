@@ -1,0 +1,6 @@
+{
+  "model": "gemini-3.5-flash-lite",
+  "instruction_version": "writer-v1",
+  "cache_key": "2258b25cfd91aeb26326db5873f070f9b9c5eca6ba8eff51305cbb80ded6c2c5",
+  "raw_response": "{\n  \"candidates\": [\n    {\n      \"content\": {\n        \"parts\": [\n          {\n            \"text\": \"{\\\"reply\\\": \\\"{{OPTION_1}} \\\\n {{OPTION_2}} \\\\n {{OPTION_3}} \\\\n We truly appreciate your interest in our wonderful items and want to make sure you get the best value possible. Our pricing reflects the care and quality put into every single piece, ensuring you receive absolute excellence. What works best for your schedule today?\\\"}\",\n            \"thoughtSignature\": \"EmAKXgFpFH0TrYM+iOzPovASC3wLcVE+zi5I2MccfFmIR5K576v/FiZXSnVzB/aA04IPWc1AxxHCA6foMEwxLC8g/T4WO/Yc7GU04kB2XlWosOUW264l0HicJpKmGsOteUM=\"\n          }\n        ],\n        \"role\": \"model\"\n      },\n      \"finishReason\": \"STOP\",\n      \"index\": 0\n    }\n  ],\n  \"usageMetadata\": {\n    \"promptTokenCount\": 321,\n    \"candidatesTokenCount\": 73,\n    \"totalTokenCount\": 394,\n    \"promptTokensDetails\": [\n      {\n        \"modality\": \"TEXT\",\n        \"tokenCount\": 321\n      }\n    ],\n    \"serviceTier\": \"standard\"\n  },\n  \"modelVersion\": \"gemini-3.5-flash-lite\",\n  \"responseId\": \"NSPfaurPC460xN8PktCysQk\"\n}\n"
+}

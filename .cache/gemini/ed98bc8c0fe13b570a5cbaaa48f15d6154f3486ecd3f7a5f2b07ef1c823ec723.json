@@ -1,0 +1,6 @@
+{
+  "model": "gemini-3.5-flash-lite",
+  "instruction_version": "planner-v1",
+  "cache_key": "ed98bc8c0fe13b570a5cbaaa48f15d6154f3486ecd3f7a5f2b07ef1c823ec723",
+  "raw_response": "{\n  \"candidates\": [\n    {\n      \"content\": {\n        \"parts\": [\n          {\n            \"text\": \"{\\n  \\\"calls\\\": [\\n    {\\n      \\\"tool\\\": \\\"paypal.create_invoice\\\",\\n      \\\"quantity\\\": 30,\\n      \\\"unit_price_cents\\\": 4000,\\n      \\\"discount_bp\\\": 0,\\n      \\\"shipping_cents\\\": 0,\\n      \\\"due_in_days\\\": 0\\n    }\\n  ],\\n  \\\"explanation\\\": \\\"We will prepare a draft invoice reflecting the terms of your accepted deal.\\\"\\n}\",\n            \"thoughtSignature\": \"EmAKXgFpFH0TGnbFos4BFE4JxI8JS1eJD4thVfzL5Lztebo+OtRnDoWka3oBOTXImnUKltP92+9tKmVIzRsAMI8kH34p3gBilsVRfj0nnahSqhcDRcTuKCsOOKj7O6ZXGH0=\"\n          }\n        ],\n        \"role\": \"model\"\n      },\n      \"finishReason\": \"STOP\",\n      \"index\": 0\n    }\n  ],\n  \"usageMetadata\": {\n    \"promptTokenCount\": 263,\n    \"candidatesTokenCount\": 106,\n    \"totalTokenCount\": 369,\n    \"promptTokensDetails\": [\n      {\n        \"modality\": \"TEXT\",\n        \"tokenCount\": 263\n      }\n    ],\n    \"serviceTier\": \"standard\"\n  },\n  \"modelVersion\": \"gemini-3.5-flash-lite\",\n  \"responseId\": \"YSPfaoGAAsiwxN8P_ueZUA\"\n}\n"
+}

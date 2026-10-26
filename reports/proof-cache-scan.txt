@@ -1,0 +1,14 @@
+SCAN COMMAND:
+python -c "scan .cache/gemini for AIza, A21AA, Bearer, client_secret, email domains, word secret, word token"
+
+Scanned 85 files in margin-check\.cache\gemini:
+Hits: 0
+Patterns checked:
+  - AIza: 0 hits
+  - A21AA: 0 hits
+  - Bearer: 0 hits
+  - client_secret: 0 hits
+  - @ followed by domain: 0 hits
+  - word secret: 0 hits
+  - word token: 0 hits
+RESULT: CLEAN. No secrets or tokens found.

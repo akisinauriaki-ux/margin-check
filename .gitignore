@@ -2,6 +2,7 @@
 *.db
 reports/*.raw
 *.exe
-.cache/
+.cache/*
+!.cache/gemini/
 reports/traces/
 .data/
