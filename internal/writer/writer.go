@@ -64,10 +64,18 @@ type Draft struct {
 var (
 	blankRe  = regexp.MustCompile(`\{\{OPTION_(\d+)\}\}`)
 	anyBlank = regexp.MustCompile(`\{\{[^}]*\}\}`)
-	banned   = []string{"split the difference", "meet in the middle", "meet halfway", "meet you halfway", "halfway"}
+	banned   = []string{
+		"split the difference", "meet in the middle", "meet halfway", "meet you halfway", "halfway",
+		"in the middle", "middle ground", "split the", "meet you", "compromise",
+	}
 	// Numbers written as words. "one" is left out because it is everyday English ("one more thing").
-	numberWordRe = regexp.MustCompile(`(?i)\b(two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|dozen|half|percent|dollars?|euros?|cents?)\b`)
-	reThreeNewlines = regexp.MustCompile(`\n{3,}`)
+	numberWordRe      = regexp.MustCompile(`(?i)\b(two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|dozen|half|percent|dollars?|euros?|cents?)\b`)
+	unitWordRe        = regexp.MustCompile(`(?i)\b(one|a)\s+(box|boxes|units?|months?|weeks?|days?|years?|percent)\b`)
+	fractionOrdinalRe = regexp.MustCompile(`(?i)\b(half|halves|quarters?|thirds?|fourths?|fifths?|tenths?|double|twice|triple)\b`)
+	concessionWordRe  = regexp.MustCompile(`(?i)\b(waive[sd]?|waiving|free|discounts?|discounted|discounting|extra|bonuses?|bonus|gifts?|gift|refunds?|refunded|rebates?|rebate|cheaper|off)\b`)
+	currencyWordRe    = regexp.MustCompile(`(?i)\b(usd|eur|gbp|pounds?|sterling|bucks?|quid)\b`)
+	questionWordRe    = regexp.MustCompile(`(?i)\b(how|what)\b`)
+	reThreeNewlines   = regexp.MustCompile(`\n{3,}`)
 )
 
 // Write asks the AI for a reply around the blanks, checks it, retries once with the reasons, and falls back to
@@ -149,9 +157,15 @@ func Validate(text string, n int) []string {
 		probs = append(probs, "the reply must open with a greeting before the choices")
 	}
 	counts := map[int]int{}
-	for _, m := range blankRe.FindAllStringSubmatch(text, -1) {
+	orderReported := false
+	matches := blankRe.FindAllStringSubmatch(text, -1)
+	for idx, m := range matches {
 		i, _ := strconv.Atoi(m[1])
 		counts[i]++
+		if !orderReported && idx+1 <= n && i != idx+1 {
+			probs = append(probs, "blanks must appear in number order")
+			orderReported = true
+		}
 	}
 	for i := 1; i <= n; i++ {
 		switch c := counts[i]; {
@@ -159,6 +173,13 @@ func Validate(text string, n int) []string {
 			probs = append(probs, fmt.Sprintf("blank {{OPTION_%d}} is missing", i))
 		case c > 1:
 			probs = append(probs, fmt.Sprintf("blank {{OPTION_%d}} appears more than once", i))
+		}
+	}
+	locs := blankRe.FindAllStringIndex(text, -1)
+	if len(locs) > 0 {
+		after := strings.TrimSpace(text[locs[len(locs)-1][1]:])
+		if !strings.HasSuffix(after, "?") || !questionWordRe.MatchString(after) {
+			probs = append(probs, "the reply must end with a question containing 'how' or 'what'")
 		}
 	}
 	for _, b := range anyBlank.FindAllString(text, -1) {
@@ -183,6 +204,18 @@ func Validate(text string, n int) []string {
 	}
 	if w := numberWordRe.FindString(rest); w != "" {
 		probs = append(probs, fmt.Sprintf("it contains the number word %q; numbers come only from the blanks", w))
+	}
+	if m := unitWordRe.FindString(rest); m != "" {
+		probs = append(probs, fmt.Sprintf("it contains terms (%q); numbers and units come only from the blanks", m))
+	}
+	if m := fractionOrdinalRe.FindString(rest); m != "" {
+		probs = append(probs, fmt.Sprintf("it contains fraction or ordinal word %q; numbers come only from the blanks", m))
+	}
+	if m := concessionWordRe.FindString(rest); m != "" {
+		probs = append(probs, fmt.Sprintf("it offers concessions (%q)", m))
+	}
+	if m := currencyWordRe.FindString(rest); m != "" {
+		probs = append(probs, fmt.Sprintf("it contains currency word %q", m))
 	}
 	low := strings.ToLower(rest)
 	for _, b := range banned {
