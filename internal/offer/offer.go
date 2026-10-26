@@ -22,8 +22,9 @@ type Request struct {
 	Currency             string
 	Quantity             int64
 	UnitPriceCents       int64
-	RequestedPaymentDays int64 // the payment terms the buyer asked for; 0 if none
-	RequestedDiscountBP  int64 // the discount the buyer asked for; only used to prove no choice splits it
+	RequestedPaymentDays int64 // the payment terms the choices answer: the buyer's ask, or the terms already settled
+	RequestedDiscountBP  int64 // the discount the buyer asked for; recorded, not used to build the choices
+	PaymentDaysSettled   bool  // the thread already shows the payment terms on the table (not only a request)
 }
 
 // Config holds the few fixed rules of the offer builder. Zero values take the defaults.
@@ -104,7 +105,7 @@ func Build(req Request, seller profit.Seller, cfg Config) (Set, error) {
 	std.Summary = fmt.Sprintf("%d %s at %s each, shipping %s at cost, payment on receipt",
 		std.Quantity, cfg.UnitNoun, FormatMoney(std.UnitPriceCents, cur), FormatMoney(std.ShippingChargeCents, cur))
 	std.Question = fmt.Sprintf("How does %s work for you?", std.Summary)
-	set.Options = append(set.Options, std)
+	set.addUnlessLoss(std)
 
 	// 2. Quantity: free shipping, earned by the smallest larger order (in steps) that keeps at least as much.
 	found := false
@@ -125,7 +126,7 @@ func Build(req Request, seller profit.Seller, cfg Config) (Set, error) {
 			o.Summary = fmt.Sprintf("%d %s at %s each with free shipping, payment on receipt",
 				q, cfg.UnitNoun, FormatMoney(o.UnitPriceCents, cur))
 			o.Question = fmt.Sprintf("How would %s work for you?", o.Summary)
-			set.Options = append(set.Options, o)
+			set.addUnlessLoss(o)
 			found = true
 			break
 		}
@@ -136,7 +137,11 @@ func Build(req Request, seller profit.Seller, cfg Config) (Set, error) {
 
 	// 3. Early payment (plan B): the break-even discount for paying within EarlyDays instead of the asked terms.
 	if req.RequestedPaymentDays <= cfg.EarlyDays {
-		set.Omitted = append(set.Omitted, fmt.Sprintf("early_payment: the buyer did not ask for more than %d days to pay", cfg.EarlyDays))
+		if req.PaymentDaysSettled {
+			set.Omitted = append(set.Omitted, fmt.Sprintf("early_payment: the payment terms already on the table are within %d days", cfg.EarlyDays))
+		} else {
+			set.Omitted = append(set.Omitted, fmt.Sprintf("early_payment: the buyer did not ask for more than %d days to pay", cfg.EarlyDays))
+		}
 		return set, nil
 	}
 	be, err := profit.EarlyPaymentWorthIt(base, seller, req.RequestedPaymentDays, cfg.EarlyDays, 0)
@@ -166,8 +171,17 @@ func Build(req Request, seller profit.Seller, cfg Config) (Set, error) {
 		FormatMoney(e.ShippingChargeCents, cur), e.DueDays)
 	e.Question = fmt.Sprintf("What if you paid within %d days and took %s off the %d %s?",
 		e.DueDays, FormatPercent(e.DiscountBP), e.Quantity, cfg.UnitNoun)
-	set.Options = append(set.Options, e)
+	set.addUnlessLoss(e)
 	return set, nil
+}
+
+// addUnlessLoss offers a choice only if the seller keeps money on it; otherwise it records why it is missing.
+func (s *Set) addUnlessLoss(o Option) {
+	if o.Profit.ProfitCents < 0 {
+		s.Omitted = append(s.Omitted, fmt.Sprintf("%s: at this price the order loses money", o.Kind))
+		return
+	}
+	s.Options = append(s.Options, o)
 }
 
 // FormatMoney writes whole cents as a price, e.g. 4000 USD -> "$40.00".

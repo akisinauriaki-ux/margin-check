@@ -137,8 +137,11 @@ func (d Deps) Start(ctx context.Context, thread string) (*Deal, error) {
 			RequestedPaymentDays: requestedInt(res, "payment_days", 1),
 			RequestedDiscountBP:  requestedInt(res, "discount_percent", 100),
 		}
-		if res.PaymentDays.Sure && res.PaymentDays.Value > req.RequestedPaymentDays {
-			req.RequestedPaymentDays = res.PaymentDays.Value
+		// When the thread shows the payment terms already on the table (a sure, quoted reading), the choices answer
+		// those terms, not the buyer's earlier ask: if the seller held firm on receipt, a discount for paying in
+		// 7 days would keep less than the deal already agreed.
+		if res.PaymentDays.Sure && !res.PaymentDays.Unknown && strings.TrimSpace(res.PaymentDays.Quote) != "" {
+			req.RequestedPaymentDays, req.PaymentDaysSettled = res.PaymentDays.Value, true
 		}
 		deal.Request = &req
 		set, err := offer.Build(req, d.Seller, d.Offer)
