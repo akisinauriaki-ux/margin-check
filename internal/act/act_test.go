@@ -181,6 +181,48 @@ func TestTheInterceptorBlocksAnyDifferenceFromTheOffer(t *testing.T) {
 	}
 }
 
+func TestFieldDiffsMasksEmailAddressesOnBothSides(t *testing.T) {
+	_, e := sampleOptions(t)
+	want := ExpectedPlan("deal-1", e, parties, invoiceDay)
+
+	// 1. Recipient email difference
+	gotRecipient := clonePlan(want)
+	gotRecipient.Calls[0].Create.BuyerEmail = "attacker@example.com"
+	diffsRecipient := Intercept(gotRecipient, want)
+	if len(diffsRecipient) == 0 {
+		t.Fatal("expected diffs for recipient email mismatch")
+	}
+	diffJoined := strings.Join(diffsRecipient, "; ")
+	if strings.Contains(diffJoined, "attacker@example.com") {
+		t.Errorf("unmasked attacker email leaked in diff: %s", diffJoined)
+	}
+	if strings.Contains(diffJoined, "buyer@example.com") {
+		t.Errorf("unmasked buyer email leaked in diff: %s", diffJoined)
+	}
+	if !strings.Contains(diffJoined, "a***@example.com") || !strings.Contains(diffJoined, "b***@example.com") {
+		t.Errorf("diff does not have both emails masked (got a***@example.com and b***@example.com): %s", diffJoined)
+	}
+
+	// 2. Invoicer email difference
+	gotInvoicer := clonePlan(want)
+	gotInvoicer.Calls[0].Create.SellerEmail = "impostor@company.org"
+	diffsInvoicer := Intercept(gotInvoicer, want)
+	if len(diffsInvoicer) == 0 {
+		t.Fatal("expected diffs for invoicer email mismatch")
+	}
+	diffJoined2 := strings.Join(diffsInvoicer, "; ")
+	if strings.Contains(diffJoined2, "impostor@company.org") {
+		t.Errorf("unmasked impostor email leaked in diff: %s", diffJoined2)
+	}
+	if strings.Contains(diffJoined2, "seller@example.com") {
+		t.Errorf("unmasked seller email leaked in diff: %s", diffJoined2)
+	}
+	if !strings.Contains(diffJoined2, "i***@company.org") || !strings.Contains(diffJoined2, "s***@example.com") {
+		t.Errorf("diff does not have both emails masked: %s", diffJoined2)
+	}
+}
+
+
 func TestApprovedPlanRunsAndIsReadBack(t *testing.T) {
 	_, e := sampleOptions(t)
 	plan := ExpectedPlan("deal-1", e, parties, invoiceDay)
