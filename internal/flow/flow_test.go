@@ -478,3 +478,26 @@ func TestNoEarlyPaymentChoiceWhenTheSellerAlreadyHeldFirm(t *testing.T) {
 		t.Errorf("an unanswered ask for two months must still get the early-payment choice; omitted %v", deal.Offers.Omitted)
 	}
 }
+
+// A second approval of a plan that already ran and was read back makes no PayPal call at all.
+func TestASecondApprovalOfADoneRunCallsNothing(t *testing.T) {
+	tools := &fakeTools{}
+	d := deps(t, tools)
+	deal, _ := d.Start(context.Background(), askEmail)
+	deal, _ = d.BuyerReplied(context.Background(), deal.ID, replyYes)
+	fp := act.Fingerprint(deal.Proposal.Plan)
+	if _, err := d.ApproveAndRun(context.Background(), deal.ID, fp); err != nil {
+		t.Fatal(err)
+	}
+	before := tools.calls
+	again, err := d.ApproveAndRun(context.Background(), deal.ID, fp)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if tools.calls != before {
+		t.Errorf("the second approval made %d PayPal calls; a done run must not run again", tools.calls-before)
+	}
+	if again.Result == nil || !again.Result.ReadBackOK || again.Result.AlreadyExisted {
+		t.Errorf("result %+v: the first run's result must be kept as it was", again.Result)
+	}
+}
