@@ -1,0 +1,5 @@
+# The saved AI answers (.cache/gemini) are keyed by the exact bytes of the prompts and the exam emails.
+# Keep those bytes identical on every computer, so a judge on Windows replays the same answers.
+prompts/** text eol=lf
+testdata/** text eol=lf
+.cache/** -text
