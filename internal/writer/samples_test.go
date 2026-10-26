@@ -147,7 +147,7 @@ func TestLiveSamples(t *testing.T) {
 	}
 
 	var report strings.Builder
-	report.WriteString("Live Writer Samples Report (Step 4, Fix C)\n")
+	report.WriteString("Live Writer Samples Report (Step 4, Fix I)\n")
 	report.WriteString("==========================================\n")
 	fmt.Fprintf(&report, "Date: %s\n", time.Now().UTC().Format(time.RFC3339))
 	fmt.Fprintf(&report, "Prompt version: %s\n", PromptVersion)
@@ -250,11 +250,11 @@ func TestLiveSamples(t *testing.T) {
 		t.Errorf("exceeded live call budget: %d > 8", totalCallsBefore)
 	}
 
-	// Write report to margin-check/reports/step4-writer-samples-2.txt
+	// Write report to margin-check/reports/step4-writer-samples-3.txt
 	reportPaths := []string{
-		"../../reports/step4-writer-samples-2.txt",
-		"../reports/step4-writer-samples-2.txt",
-		"reports/step4-writer-samples-2.txt",
+		"../../reports/step4-writer-samples-3.txt",
+		"../reports/step4-writer-samples-3.txt",
+		"reports/step4-writer-samples-3.txt",
 	}
 	written := false
 	for _, rp := range reportPaths {
@@ -268,6 +268,6 @@ func TestLiveSamples(t *testing.T) {
 		}
 	}
 	if !written {
-		t.Errorf("failed to write step4-writer-samples-2.txt")
+		t.Errorf("failed to write step4-writer-samples-3.txt")
 	}
 }
