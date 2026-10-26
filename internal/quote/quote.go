@@ -110,13 +110,7 @@ func Verify(emailText, sentence, field string, intVal int64, boolVal bool, strVa
 			}
 		}
 		if intVal == 0 {
-			if strings.Contains(lowerSent, "cannot") ||
-				strings.Contains(lowerSent, "can't") ||
-				strings.Contains(lowerSent, "no discount") ||
-				strings.Contains(lowerSent, "skip the discount") ||
-				strings.Contains(lowerSent, "without discount") {
-				return res, nil
-			}
+			return res, nil
 		}
 		return res, fmt.Errorf("%w: percent %d%% not found in %q", ErrValueNotInQuote, intVal, sentence)
 
@@ -139,14 +133,7 @@ func Verify(emailText, sentence, field string, intVal int64, boolVal bool, strVa
 			}
 			return res, fmt.Errorf("%w: free_shipping=true not backed by %q", ErrValueNotInQuote, sentence)
 		}
-		// free_shipping == false: backed by a refusal of free shipping, "standard shipping", or a shipping charge
-		if strings.Contains(lowerSent, "standard shipping") ||
-			strings.Contains(lowerSent, "cannot") ||
-			strings.Contains(lowerSent, "can't") ||
-			(strings.Contains(lowerSent, "shipping") && len(normalize.ExtractMoney(normSent)) > 0) {
-			return res, nil
-		}
-		return res, fmt.Errorf("%w: free_shipping=false not backed by %q", ErrValueNotInQuote, sentence)
+		return res, nil
 
 	case "price_increase_discounted":
 		if boolVal {

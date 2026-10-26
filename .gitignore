@@ -2,3 +2,5 @@
 *.db
 reports/*.raw
 *.exe
+.cache/
+reports/traces/
