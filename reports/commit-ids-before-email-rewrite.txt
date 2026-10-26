@@ -1,0 +1,121 @@
+Commit IDs before and after the author-email rewrite (26 Oct 2026)
+
+Before publishing, every commit's author and committer email was changed from the owner's personal address
+to their GitHub private address. Nothing else changed: the files at the newest commit are byte-for-byte
+identical (tree 7f13e93c205b35ff4f0818ee21d2cf06df30799c before and after). Because a commit ID covers its
+author email, every ID changed. Saved reports written before this day quote the old IDs; they are kept
+exactly as they were run. Use this table to find each commit:
+
+old      new      message
+d59927c  0899975  Initialize margin-check skeleton
+e937fe1  56a6f0f  Add 20-email exam, answers.json, and seller profile
+12e1d8c  8970dde  Add sandbox-only PayPal Invoicing v2 client and sandboxcheck CLI
+b94c8cf  1ed5d77  Record day1-sandbox.txt output (stopped at step 2 HTTP 403 NOT_AUTHORIZED)
+5f969a8  05f65f4  Record day1-sandbox.txt run 2 (step 2 PASS, step 3 HTTP 500 INTERNAL_SERVER_ERROR)
+b6f47a5  c79c72c  Mark step 3 BLOCKED, add plan-B support, record run 3 step 5 duplicate finding
+6ad5429  be9f445  day 1 part 1: invoice_number repeat guard, sandboxcheck pass, and MCP toolkit proof
+b33734f  117bf26  Correction step 1 part 2: align exam answers with deal numbers and seller settings
+33daa0d  856c6b8  profit: add hand calculations tests and types stubs for step 2 Part B
+39dab1c  e576635  step 2 part A: add normalize and quote test tables and mutations.json before code and prompts
+4dd2675  7be6f81  profit: implement profit engine, LoadSeller, and pocket price waterfall
+b1cfe43  7e15c68  step 2 part A: implement normalize and quote packages
+cd14c0d  d9752e4  step 2 part C: pin @paypal/mcp@1.8.1, minimal child env, REST read-back verification, and schema finding on payment terms
+544705c  0e3a8d9  step 2 part A: implement gemini client, reader pipeline, reader-v1 prompt, and exam runner
+d602846  ef68151  step 2 part A: save exam reports, step2-A-vet.txt, and step2-A-test.txt
+8f43d92  533839d  profit: add tests for EarlyPaymentWorthIt keeping deal terms, no-currency refusal, and negative coop allowance
+5317ada  82c2865  profit: fix EarlyPaymentWorthIt to keep deal terms, refuse empty currency, refuse negative coop
+3e51e56  1631942  profit: save refreshed step2-b-test.txt and step2-b-vet.txt reports
+b9af9d7  ad9701b  fix A: evaluate listed models, pair gemini-3.1-flash-lite, normalize free shipping, handle unavailable models
+167a368  91097b7  step 2 part D: join reader to profit engine and run full exam with scorecard
+8e04006  0698b29  step 3: tests for the step-2 carry-overs (currency never assumed, old price asked, requests not mixed in)
+77c0377  240c5fa  step 3: check never assumes a currency, finds or asks for the old price, ignores requests when testing for mixed currency
+349dc84  ebae809  step 3: offer builder tests with hand-checked numbers (exam emails 17 and 18)
+ffd33e3  a48f08a  step 3: offer builder (standard, quantity, early payment as plan B), every number from the profit engine
+b9f4985  a1d777c  step 3: reply writer tests (no numbers from the AI, blanks filled by code, retry then template)
+eabafd2  99b93cb  step 3: reply writer (AI sees no email and no numbers; digits, number words and splitting the difference rejected; code fills blanks)
+9c1d340  2eb2c5b  step 3: act tests (fingerprint, interceptor, approval, repeat, half-done, read-back) and invoice shipping read-back type
+b1d03fd  94e39eb  step 3: act core (two tools, fingerprinted approval, interceptor at plan and at execution, resumable second call, read-back)
+b6ce2d4  ab6063c  step 3: tests for set-due-date (no notifications, rest of the draft unchanged, drafts only)
+3b56e9d  08d61e4  step 3: SetDueDate (full update of a DRAFT only, notifications off, nothing else changed)
+e1bf8f4  f3fbfb5  step 3: real tools (toolkit create_invoice with find-first repeat guard, REST due date and read-back); ErrInvoiceNotFound
+ddcb0b1  f56125c  step 3: actcheck - act path proven in the PayPal sandbox (toolkit draft, REST due date, read-back, repeat, tamper refusals)
+b0fbab0  c0aef4d  step 3: AI planner tests (sees no email, wrong plans blocked, code plan offered, no numbers in its words)
+ceb938c  6f49117  step 3: AI planner (sees only verified values; interceptor blocks any difference; code plan offered instead)
+efe1364  7f4d7ba  step 3: label each choice in the reply (Option N (Kind)) so the buyer's answer maps back
+2ae656b  0370c70  step 3: deal flow tests (no money from unsure values; yes -> plan; unclear/changed -> no plan; approval bound to the shown plan)
+9c2041d  7a4f601  step 3: deal flow (start, buyer reply, approve-and-run bound to the shown fingerprint) and deal store
+1cd5e66  c3a13b4  step 3: the screen (localhost only, form token, one big number, three cards, plan with fingerprint, read-back, how it decided)
+c7549dd  b621a6a  step 3: Kill 3 proof through the screen (quantity and early-payment drafts), vet, tests, exam regression
+bb16d31  41b7fda  step 3: saved git log (postmortem of 26 Oct: the log is a file, not a retyped list)
+9c98d7c  08394f3  review: failing test - the tail of a decimal is read as a whole number (2.5% -> 5%, 2.5 boxes -> 5, 40.125 dollars -> $125)
+2437fa8  c9cd0fa  review fix: never read the tail of a decimal as a whole number; such a value stays unread (unsure)
+69630e6  0a04cbf  review: failing test - the invoice search returns the only result even when its number differs
+5116499  f5805d9  review fix: the invoice search returns only an exact invoice-number match, or not found
+125cf3c  dfdc5db  review: failing test - the read-back reads -0.50 as 50 cents and drops extra decimals
+ded9aab  28de56a  review fix: the read-back reads PayPal's amounts strictly; a sign, extra decimals or anything unreadable is a mismatch
+5cc3026  9b2c19f  review: failing tests - two approvals at once both create and collide on save; a closed tab cancels a started run
+610a441  01150bc  review fix: changes to one deal run one at a time; a started run ignores a closed tab but stops at a 3-minute limit
+0d99816  cb33c21  review: failing tests - the reply and plan checks miss full-width digits, fractions and other currency signs
+9eb43ae  a612ed3  review fix: the reply and plan checks reject any Unicode number, any currency sign and every percent sign
+839a5fa  c1c7ff4  review: failing test - a repeat create whose toolkit error lacks the word DUPLICATE is reported as a failure
+f4f3e54  0e7853c  review fix: after any create failure, look the draft up by its exact invoice number instead of matching the word DUPLICATE
+deabfca  c45dc23  review: failing test - a damaged deal date becomes year 1 on the plan
+26fcaae  a740ee5  review fix: a damaged deal date stops the deal with a plain message instead of becoming year 1
+424a15f  39f7e78  review: failing test - the screen's server has no time limits (seam only: same behaviour as http.ListenAndServe)
+6a9fb84  baf2cb9  review fix: the screen's server has header, read, write and idle time limits
+f84961f  44b0dab  review: gate outputs (vet, test, race, sandbox actcheck, exam replay regression)
+3265fd6  45f44a7  review: saved git log of the review commits
+75aef0b  eb3fea6  MIT licence (Aki, 26 Oct)
+6bd51dc  45c207d  proof: ship replay cache and scan report
+7572979  6ed8719  step 4: failing test - the reply must open with a greeting before the choices
+b7a3a24  d44760a  proof: save fresh clone exam replay proof
+b1c0cc2  2882942  step 4: writer-v2 with greeting rule and warm wording
+d961099  10d49e2  exam: test --report-dir flag (failing test)
+965fac8  2286a04  exam: add --report-dir flag to save exam reports to custom directory
+1b57d22  0e99452  step 4: live samples runner for writer-v2
+366e691  d7fe5bf  step 4: writer gate outputs (vet, test, live samples)
+ea3f986  186a11a  step 4: saved git log of the writer commits
+0365b79  403459c  proof: add tests and fixtures for proof scorecard (failing tests)
+c9f915b  af43b3d  docs: add judge README with security tables, failure register, and backed claims
+2893d0b  b72a98e  proof: implement proof command with scorecard, safety checks, and baseline
+7cf9293  0f34c5e  proof: gate outputs (vet, test, gitlog, run1, run2, latest)
+aac1028  5bcc5a0  proof: update saved git log to include gate commit
+be7dca5  e87d1ef  keep prompt and exam bytes identical on every OS so the saved replay answers always match (Windows clone made proof FAIL)
+4742e16  1a8adb8  step 4: failing tests - new greeting rule in Validate and layout in Fill
+c37b024  515b6e1  step 4: new greeting rule in Validate and reply layout in Fill
+6e8ef06  4a6bfcc  step 4: live samples runner updated for Fix C (step4-writer-samples-2.txt)
+af7da6d  e7335fd  fix A: meaningful reply attacks, whole-cent pretend paypal, and integer cost formatting
+5cd879d  3ac057f  fix A: update proof gate reports (latest, run1, run2, test, gitlog)
+fb72056  5d44ac5  docs: prove every claim by direct evidence and tighten claim checks
+d5cfcfc  7064580  step 4 fix C: live samples report (4 of 4 replies accepted from the AI)
+9cfd0cf  f8d2a52  README: ASI03 backed by the toolkit-environment test; token cost backed by the recorded exam run; no package count (Claude review)
+1921b79  c2cc902  README: judge's-test findings (plain sample output with COST and PAYPAL sections, tags moved out, .env note for the app, honest 'no keys' wording)
+5c7278b  529f785  fix G: failing tests - a buyer's stated change of price, payment days, shipping or discount still becomes a plan
+885f8bf  59813dc  fix G: a buyer's stated change of quantity, price, payment days, discount or shipping stops the plan; the seller decides
+c943185  f33c9f6  fix G: failing tests - money-losing choices are offered; early payment is offered after the seller already settled payment on receipt
+2882fc0  4d30deb  fix G: never offer a choice that loses money; early payment answers the payment terms already on the table, not an ask the seller already answered
+73f2042  05e8f3d  fix G: failing test - a second approval of a done run calls PayPal again
+35a9fec  f01b143  fix G: a second approval of a plan that already ran and was read back makes no PayPal call
+4c97aa7  eca9c81  fix G: gate outputs (test, proof, git log)
+38a22c7  74f9ab4  fix H: failing test - replay-only switch makes no network call on cache miss
+94ac7af  bc0bc84  fix H: add MARGINCHECK_REPLAY_ONLY switch to gemini client
+74ebcb0  65afe0b  fix H: failing tests - proof checks paypal, guard-only blocks, baseline floors, and replay isolation
+5d9c7ce  b66b9b0  fix I: failing tests - writer.Validate lets wording that offers terms and missing closing question slip through
+3421733  a40bd5c  fix H: proof scorecard checks paypal, enforces guard errors, baseline floors, and replay checks
+e64d1a7  cbe5590  fix I: reject wording that offers terms, unit words with one/a, concessions, currencies, split phrases, and enforce closing question
+9f995c9  65de5b6  fix I: failing test - Fill outputs choices in input blank order instead of number order 1, 2, 3
+ff13c2a  a375657  fix I: Fill writes choices in number order 1, 2, 3 whatever order the blanks appear
+182a0f8  6028243  fix I: failing test - fieldDiffs leaks unmasked email addresses in intercept messages
+b589dc2  5da4ebc  fix I: mask email addresses on both sides in fieldDiffs
+aa4babf  b210495  fix I: failing test - early-payment card lacks Plan B label line
+dcc9bbe  040e850  fix I: render Plan B disclosure line under early-payment choice on deal page
+9624ce8  3764e09  fix I: point samples test to step4-writer-samples-3.txt
+bcd9c7e  fb552d8  step 4 fix I: live samples report (4 of 4 replies accepted from the AI)
+30ef600  00c6aef  fix I: proof PASS gate report
+c19c7c8  fafa81e  fix H: proof PASS gate report
+be5a21e  c9f5b1c  README: security rows and honest limits reworded to exactly what the evidence shows (Argon D-1); ASI01 now backed by the changed-terms test
+8259146  362dce1  books audit: failing test - the Approve button doesn't say what it will do
+6fdcab2  26d3f73  books audit: the Approve button states exactly what it will create (terms built by code from the plan)
+2542d74  ef7b703  books audit: failing tests - no append-only decision log; a run can go ahead without a logged approval (seam only)
+a5c49ac  842f4a1  books audit: append-only decision log per deal; the approval is logged before PayPal is called, and no run happens without its log line
+1a72f44  2401765  docs: ENGINEERING.md (each principle from the literature, mapped to its proof; 22 checked claims) and DECISIONS.md (eight decisions with trade-offs); README links them
