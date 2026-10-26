@@ -93,3 +93,14 @@ func TestAnUnavailablePlannerFallsBackToTheCodePlan(t *testing.T) {
 		t.Errorf("by %q, note %q", pr.Plan.By, pr.Note)
 	}
 }
+
+func TestAnExplanationWithNumbersInAnyScriptIsReplaced(t *testing.T) {
+	_, e := sampleOptions(t)
+	for _, words := range []string{"Create a draft for ２０ boxes with", "Create a draft at ¥ with", "Create a draft with ½ off and"} {
+		reply := strings.Replace(goodEarly, "Create the draft with", words, 1)
+		pr := Propose(context.Background(), &fakePlanner{reply: reply}, "m", "deal-1", e, parties, invoiceDay)
+		if pr.Plan.Explanation != codeExplanation(e) {
+			t.Errorf("explanation %q kept; an explanation stating a number or a currency must be replaced", pr.Plan.Explanation)
+		}
+	}
+}

@@ -144,3 +144,24 @@ func TestValidate(t *testing.T) {
 		}
 	}
 }
+
+// A number is a number in any script: full-width digits, fractions and other digit sets must be rejected
+// like 0-9, and so must every currency sign, not only $, € and £.
+func TestValidateRejectsNumbersAndCurrencySignsInAnyScript(t *testing.T) {
+	cases := []struct{ text, want string }{
+		{"Only ２０ left {{OPTION_1}} {{OPTION_2}}", "digit"},
+		{"Take ½ off {{OPTION_1}} {{OPTION_2}}", "digit"},
+		{"Only ٥ left {{OPTION_1}} {{OPTION_2}}", "digit"},
+		{"Squared² {{OPTION_1}} {{OPTION_2}}", "digit"},
+		{"It costs ¥ {{OPTION_1}} {{OPTION_2}}", "currency"},
+		{"It costs ₾ {{OPTION_1}} {{OPTION_2}}", "currency"},
+		{"It costs ₹ {{OPTION_1}} {{OPTION_2}}", "currency"},
+		{"Take ％ off {{OPTION_1}} {{OPTION_2}}", "percent"},
+	}
+	for _, c := range cases {
+		probs := Validate(c.text, 2)
+		if !strings.Contains(strings.Join(probs, "; "), c.want) {
+			t.Errorf("%q: problems %v, want one mentioning %q", c.text, probs, c.want)
+		}
+	}
+}
