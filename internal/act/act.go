@@ -149,6 +149,18 @@ func Intercept(got, want Plan) []string {
 	return diffs
 }
 
+func isEmailField(k string) bool {
+	return strings.HasSuffix(k, "_email") || k == "email"
+}
+
+func maskEmail(e string) string {
+	at := strings.Index(e, "@")
+	if at < 1 {
+		return "***"
+	}
+	return e[:1] + "***" + e[at:]
+}
+
 func fieldDiffs(n int, g, w Call) []string {
 	gm, wm := map[string]any{}, map[string]any{}
 	gj, _ := json.Marshal(g)
@@ -164,7 +176,13 @@ func fieldDiffs(n int, g, w Call) []string {
 	var diffs []string
 	for k, wv := range wa {
 		if fmt.Sprint(ga[k]) != fmt.Sprint(wv) {
-			diffs = append(diffs, fmt.Sprintf("call %d %s: %s is %v, the offer requires %v", n, g.Tool, k, ga[k], wv))
+			gvStr := fmt.Sprint(ga[k])
+			wvStr := fmt.Sprint(wv)
+			if isEmailField(k) {
+				gvStr = maskEmail(gvStr)
+				wvStr = maskEmail(wvStr)
+			}
+			diffs = append(diffs, fmt.Sprintf("call %d %s: %s is %s, the offer requires %s", n, g.Tool, k, gvStr, wvStr))
 		}
 	}
 	for k := range ga {
