@@ -12,7 +12,7 @@ A spell-checker for profit: it catches giveaways in your sales emails and turns 
 ```bash
 go test ./...
 ```
-Runs all unit, integration, and security guardrail tests across all 17 internal packages.
+Runs every unit, integration and safety test in the repository.
 
 ### 2. Proof of safety (no keys needed)
 ```bash
@@ -116,7 +116,7 @@ The repository design is governed by eight formal architectural decision records
 |---|---|---|---|
 | ASI01: Goal Hijack | Yes | Unclear or changed customer replies never generate an action plan [C-42]. | `internal/flow`: `TestUnclearOrChangedRepliesNeverPlanAnything` |
 | ASI02: Tool Misuse | Yes | The agent toolkit limits tool access strictly to `--tools=invoices.create` [C-43]. | `internal/agenttools/toolkit.go`: `AllowedToolsArg` |
-| ASI03: Identity & Privilege Abuse | Yes | Minimal scoped sandbox credentials; actions restricted strictly to draft invoices without customer notification [C-44]. | `internal/paypal`: `TestSetDueDateNeverNotifiesAndKeepsTheRestOfTheDraft` |
+| ASI03: Identity & Privilege Abuse | Yes | Sandbox credentials only; PayPal's toolkit process receives just a short-lived sandbox access token, never the client secret or the Gemini key [C-44]. | `internal/agenttools`: `TestBuildMinimalSandboxEnvExcludesSecrets` |
 | ASI04: Agentic Supply Chain | Yes | Pinned versioning on npm MCP toolkit and Go dependencies [C-45]. | `internal/agenttools/call.go` pinned to `@paypal/mcp@1.8.1` |
 | ASI05: Unexpected Code Execution | No | Not applicable: the agent has no shell, eval, or code execution capabilities [C-46]. | Architecture constraint verified absent (`os/exec` absent from `internal/flow`) |
 | ASI06: Memory Poisoning | No | Not applicable: no persistent memory or state maintained across deals [C-47]. | Architecture constraint verified absent from `internal` |
