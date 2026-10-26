@@ -1,0 +1,4 @@
+366e691 step 4: writer gate outputs (vet, test, live samples)
+1b57d22 step 4: live samples runner for writer-v2
+b1c0cc2 step 4: writer-v2 with greeting rule and warm wording
+7572979 step 4: failing test - the reply must open with a greeting before the choices
