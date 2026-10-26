@@ -81,7 +81,8 @@ td.q{color:var(--muted);font-size:13px}.ok{color:var(--green);font-weight:600}.n
 <div class="cards">{{range .Offers.Options}}
   <div class="card"><div class="k">{{label .Kind}}</div><div class="s">{{.Summary}}</div>
   <div class="keep">You keep {{money .Profit.ProfitCents .Currency}}</div>
-  <div class="r">{{.Reason}}</div><div class="q">“{{.Question}}”</div></div>
+  <div class="r">{{.Reason}}</div><div class="q">“{{.Question}}”</div>
+  {{if eq (label .Kind) "Early payment"}}<p class="note" style="margin-top:10px">The discount is written on the invoice itself and the invoice is due in 7 days. PayPal's own early-payment rule isn't used, so the buyer keeps the discount even if they pay late.</p>{{end}}</div>
 {{end}}</div>
 {{range .Offers.Omitted}}<p class="note">Left out: {{.}}</p>{{end}}
 {{else}}<p class="note">{{.OffersNote}}</p>{{end}}
