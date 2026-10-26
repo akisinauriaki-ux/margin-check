@@ -1,0 +1,102 @@
+=== RUN   TestAll20ExamEmails
+=== RUN   TestAll20ExamEmails/Email_01
+=== RUN   TestAll20ExamEmails/Email_02
+=== RUN   TestAll20ExamEmails/Email_03
+=== RUN   TestAll20ExamEmails/Email_04
+=== RUN   TestAll20ExamEmails/Email_05
+=== RUN   TestAll20ExamEmails/Email_06
+=== RUN   TestAll20ExamEmails/Email_07
+=== RUN   TestAll20ExamEmails/Email_08
+=== RUN   TestAll20ExamEmails/Email_09
+=== RUN   TestAll20ExamEmails/Email_10
+=== RUN   TestAll20ExamEmails/Email_11
+=== RUN   TestAll20ExamEmails/Email_12
+=== RUN   TestAll20ExamEmails/Email_13
+=== RUN   TestAll20ExamEmails/Email_14
+=== RUN   TestAll20ExamEmails/Email_15
+=== RUN   TestAll20ExamEmails/Email_16
+=== RUN   TestAll20ExamEmails/Email_17
+=== RUN   TestAll20ExamEmails/Email_18
+=== RUN   TestAll20ExamEmails/Email_19
+=== RUN   TestAll20ExamEmails/Email_20
+--- PASS: TestAll20ExamEmails (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_01 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_02 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_03 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_04 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_05 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_06 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_07 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_08 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_09 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_10 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_11 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_12 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_13 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_14 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_15 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_16 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_17 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_18 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_19 (0.00s)
+    --- PASS: TestAll20ExamEmails/Email_20 (0.00s)
+=== RUN   TestEarlyPaymentAnchorCase
+--- PASS: TestEarlyPaymentAnchorCase (0.00s)
+=== RUN   TestEarlyPaymentAnchorPlusOrderSizeDiscount
+--- PASS: TestEarlyPaymentAnchorPlusOrderSizeDiscount (0.00s)
+=== RUN   TestEachOfTheEightLeaksAlone
+=== RUN   TestEachOfTheEightLeaksAlone/Leak1_OrderSizeDiscount
+=== RUN   TestEachOfTheEightLeaksAlone/Leak2_OtherDiscount
+=== RUN   TestEachOfTheEightLeaksAlone/Leak3_Rebate
+=== RUN   TestEachOfTheEightLeaksAlone/Leak4_FreeShipping
+=== RUN   TestEachOfTheEightLeaksAlone/Leak5_PaymentDays
+=== RUN   TestEachOfTheEightLeaksAlone/Leak6_EarlyPaymentDiscount
+=== RUN   TestEachOfTheEightLeaksAlone/Leak7_CoopAllowance
+=== RUN   TestEachOfTheEightLeaksAlone/Leak8_PayPalFee
+--- PASS: TestEachOfTheEightLeaksAlone (0.00s)
+    --- PASS: TestEachOfTheEightLeaksAlone/Leak1_OrderSizeDiscount (0.00s)
+    --- PASS: TestEachOfTheEightLeaksAlone/Leak2_OtherDiscount (0.00s)
+    --- PASS: TestEachOfTheEightLeaksAlone/Leak3_Rebate (0.00s)
+    --- PASS: TestEachOfTheEightLeaksAlone/Leak4_FreeShipping (0.00s)
+    --- PASS: TestEachOfTheEightLeaksAlone/Leak5_PaymentDays (0.00s)
+    --- PASS: TestEachOfTheEightLeaksAlone/Leak6_EarlyPaymentDiscount (0.00s)
+    --- PASS: TestEachOfTheEightLeaksAlone/Leak7_CoopAllowance (0.00s)
+    --- PASS: TestEachOfTheEightLeaksAlone/Leak8_PayPalFee (0.00s)
+=== RUN   TestAllEightLeaksTogether
+--- PASS: TestAllEightLeaksTogether (0.00s)
+=== RUN   TestDoubleDiscounting
+=== RUN   TestDoubleDiscounting/ExamEmail08
+=== RUN   TestDoubleDiscounting/BookExample_Pricing_p112
+--- PASS: TestDoubleDiscounting (0.00s)
+    --- PASS: TestDoubleDiscounting/ExamEmail08 (0.00s)
+    --- PASS: TestDoubleDiscounting/BookExample_Pricing_p112 (0.00s)
+=== RUN   TestRefusals
+=== RUN   TestRefusals/MixedCurrency_DealVsSeller
+=== RUN   TestRefusals/MixedCurrency_CoopVsDeal
+=== RUN   TestRefusals/NoCurrency
+=== RUN   TestRefusals/WhitespaceCurrency
+=== RUN   TestRefusals/NegativeCoopAllowance
+=== RUN   TestRefusals/InvalidQuantity
+=== RUN   TestRefusals/InvalidUnitPrice
+=== RUN   TestRefusals/MissingSellerValuesNamed
+--- PASS: TestRefusals (0.02s)
+    --- PASS: TestRefusals/MixedCurrency_DealVsSeller (0.00s)
+    --- PASS: TestRefusals/MixedCurrency_CoopVsDeal (0.00s)
+    --- PASS: TestRefusals/NoCurrency (0.00s)
+    --- PASS: TestRefusals/WhitespaceCurrency (0.00s)
+    --- PASS: TestRefusals/NegativeCoopAllowance (0.00s)
+    --- PASS: TestRefusals/InvalidQuantity (0.00s)
+    --- PASS: TestRefusals/InvalidUnitPrice (0.00s)
+    --- PASS: TestRefusals/MissingSellerValuesNamed (0.02s)
+=== RUN   TestPropertyTests
+=== RUN   TestPropertyTests/ConcessionNeverIncreasesProfit
+=== RUN   TestPropertyTests/NoLeakIsNegative
+=== RUN   TestPropertyTests/LinesAddUpExactly
+=== RUN   TestPropertyTests/OrderInvariant
+--- PASS: TestPropertyTests (0.04s)
+    --- PASS: TestPropertyTests/ConcessionNeverIncreasesProfit (0.01s)
+    --- PASS: TestPropertyTests/NoLeakIsNegative (0.01s)
+    --- PASS: TestPropertyTests/LinesAddUpExactly (0.01s)
+    --- PASS: TestPropertyTests/OrderInvariant (0.02s)
+PASS
+ok  	margincheck/internal/profit	1.244s
