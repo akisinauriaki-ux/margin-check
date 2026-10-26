@@ -195,7 +195,7 @@ func TestTheSellerConfirmsTheBuyersChoiceWithOneTap(t *testing.T) {
 		t.Fatal(err)
 	}
 	page := get(t, s.routes(), "/deal/"+deal.ID)
-	for _, want := range []string{`action="/deal/` + deal.ID + `/choose"`, "Option 1 (Standard)", "Option 2 (Quantity)", "the AI&#39;s reading"} {
+	for _, want := range []string{`action="/deal/` + deal.ID + `/choose"`, "Option 1 (Standard)", "Option 2 (Quantity)", "the AI's reading"} {
 		if !strings.Contains(page, want) {
 			t.Errorf("the page lacks %q", want)
 		}

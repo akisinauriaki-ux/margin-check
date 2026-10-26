@@ -141,6 +141,7 @@ func (s *server) routes() http.Handler {
 	mux.HandleFunc("GET /deal/{id}", s.show)
 	mux.HandleFunc("POST /deal/{id}/reply", s.post(s.reply))
 	mux.HandleFunc("POST /deal/{id}/approve", s.post(s.approve))
+	mux.HandleFunc("POST /deal/{id}/choose", s.post(s.choose))
 	return mux
 }
 
@@ -213,6 +214,17 @@ func (s *server) reply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.Redirect(w, r, "/deal/"+deal.ID+"#answer", http.StatusSeeOther)
+}
+
+// choose records the seller's one-tap confirmation (or correction) of which choice the buyer accepted.
+func (s *server) choose(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if _, err := s.deps.SellerChose(r.Context(), id, offer.Kind(r.PostFormValue("kind"))); err != nil {
+		d, _ := s.deps.Store.Load(id)
+		s.render(w, view{Deal: d, Error: "Nothing was changed: " + err.Error()})
+		return
+	}
+	http.Redirect(w, r, "/deal/"+id+"#answer", http.StatusSeeOther)
 }
 
 func (s *server) approve(w http.ResponseWriter, r *http.Request) {
