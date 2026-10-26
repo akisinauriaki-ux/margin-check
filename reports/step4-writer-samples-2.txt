@@ -1,0 +1,201 @@
+Live Writer Samples Report (Step 4, Fix C)
+==========================================
+Date: 2026-10-26T12:22:06Z
+Prompt version: writer-v2
+Model: gemini-3.5-flash-lite
+Rule: at most 8 live Gemini calls across all cases
+
+----------------------------------------------------------------------
+Case 1: Sample thread from cmd/app/main.go
+Identifier: sample
+Offered choices: 3
+  - Option 1 (Standard): 20 boxes at $40.00 each, shipping $36.00 at cost, payment on receipt
+    Reason: Our list price, with shipping charged at exactly what it costs us, and payment on receipt.
+  - Option 2 (Quantity): 30 boxes at $40.00 each with free shipping, payment on receipt
+    Reason: A larger order covers the cost of shipping, so the shipping is on us.
+  - Option 3 (Early payment): 20 boxes at $40.00 each with 1.5% off, shipping $36.00 at cost, payment within 7 days
+    Reason: Being paid sooner saves us the cost of waiting, and we pass that saving on to you.
+
+Thread text:
+  | Buyer:
+  | Hi, we want 20 boxes of stoneware mugs at $40 per box for our shop.
+  | We need free shipping and two months to pay.
+  | 
+  | Seller:
+  | Sure, happy to help! Free shipping and 60 days is fine for 20 boxes.
+
+Execution Details:
+  Attempts made: 1
+  Live API calls in this case: 1
+  Tokens consumed: 392
+  Used code template: false
+
+  [Attempt 1]
+    Tokens: 392
+    Raw Model Reply Text:
+      {"reply": "Thank you so much for reaching out to us today. {{OPTION_1}} {{OPTION_2}} {{OPTION_3}} What works best for you?"}
+    Validation: PASS (0 problems)
+
+Final Accepted Reply:
+--------------------
+Thank you so much for reaching out to us today.
+
+Option 1 (Standard): 20 boxes at $40.00 each, shipping $36.00 at cost, payment on receipt.
+Option 2 (Quantity): 30 boxes at $40.00 each with free shipping, payment on receipt.
+Option 3 (Early payment): 20 boxes at $40.00 each with 1.5% off, shipping $36.00 at cost, payment within 7 days.
+
+What works best for you?
+--------------------
+
+----------------------------------------------------------------------
+Case 2: Exam email 01 (testdata/emails/01.txt, wholesale mugs, 40 boxes at $40)
+Identifier: email-01
+Offered choices: 2
+  - Option 1 (Standard): 40 boxes at $40.00 each, shipping $66.00 at cost, payment on receipt
+    Reason: Our list price, with shipping charged at exactly what it costs us, and payment on receipt.
+  - Option 2 (Quantity): 50 boxes at $40.00 each with free shipping, payment on receipt
+    Reason: A larger order covers the cost of shipping, so the shipping is on us.
+  - Omitted: early_payment: the buyer did not ask for more than 7 days to pay
+
+Thread text:
+  | Buyer:
+  | Hello,
+  | We would like to order 40 boxes of ceramic mugs for our retail gift shop.
+  | Could you let us know your wholesale pricing and shipping details?
+  | 
+  | Seller:
+  | Hello,
+  | Our wholesale price is $40 per box for 40 boxes, shipping is $24, and payment is due on receipt.
+  | We have all 40 boxes in stock and ready to ship.
+  | 
+  | Buyer:
+  | That works for us.
+  | Please send over the invoice and we will settle it upon receipt.
+
+Execution Details:
+  Attempts made: 1
+  Live API calls in this case: 1
+  Tokens consumed: 353
+  Used code template: false
+
+  [Attempt 1]
+    Tokens: 353
+    Raw Model Reply Text:
+      {"reply": "Thank you so much for reaching out to us today. {{OPTION_1}} {{OPTION_2}} What would you like to do next?"}
+    Validation: PASS (0 problems)
+
+Final Accepted Reply:
+--------------------
+Thank you so much for reaching out to us today.
+
+Option 1 (Standard): 40 boxes at $40.00 each, shipping $66.00 at cost, payment on receipt.
+Option 2 (Quantity): 50 boxes at $40.00 each with free shipping, payment on receipt.
+
+What would you like to do next?
+--------------------
+
+----------------------------------------------------------------------
+Case 3: Exam email 05 (testdata/emails/05.txt, porcelain planters, 25 boxes at $42, net 60 asked)
+Identifier: email-05
+Offered choices: 3
+  - Option 1 (Standard): 25 boxes at $42.00 each, shipping $43.50 at cost, payment on receipt
+    Reason: Our list price, with shipping charged at exactly what it costs us, and payment on receipt.
+  - Option 2 (Quantity): 30 boxes at $42.00 each with free shipping, payment on receipt
+    Reason: A larger order covers the cost of shipping, so the shipping is on us.
+  - Option 3 (Early payment): 25 boxes at $42.00 each with 1.5% off, shipping $43.50 at cost, payment within 7 days
+    Reason: Being paid sooner saves us the cost of waiting, and we pass that saving on to you.
+
+Thread text:
+  | Buyer:
+  | Hi,
+  | We want to purchase 25 boxes of handmade porcelain planters at $42 per box.
+  | Can you extend payment terms of net 60 days so we have two months to pay?
+  | 
+  | Seller:
+  | Hi,
+  | We have 25 boxes of porcelain planters at $42 each.
+  | However, we cannot do net 60 days as waiting two months creates too much unpaid balance risk.
+  | The best we can offer is net 14 days, with $18 shipping.
+  | 
+  | Buyer:
+  | Fair enough, we understand.
+  | Net 14 days works for us on the 25 boxes at $42 each.
+  | Please send the bill.
+
+Execution Details:
+  Attempts made: 1
+  Live API calls in this case: 1
+  Tokens consumed: 394
+  Used code template: false
+
+  [Attempt 1]
+    Tokens: 394
+    Raw Model Reply Text:
+      {"reply": "Thank you so much for reaching out to us today. {{OPTION_1}} {{OPTION_2}} {{OPTION_3}} What works best for your current situation?"}
+    Validation: PASS (0 problems)
+
+Final Accepted Reply:
+--------------------
+Thank you so much for reaching out to us today.
+
+Option 1 (Standard): 25 boxes at $42.00 each, shipping $43.50 at cost, payment on receipt.
+Option 2 (Quantity): 30 boxes at $42.00 each with free shipping, payment on receipt.
+Option 3 (Early payment): 25 boxes at $42.00 each with 1.5% off, shipping $43.50 at cost, payment within 7 days.
+
+What works best for your current situation?
+--------------------
+
+----------------------------------------------------------------------
+Case 4: Exam email 12 (testdata/emails/12.txt, beeswax candles, 25 boxes at $30, 20% discount & net 60 asked)
+Identifier: email-12
+Offered choices: 3
+  - Option 1 (Standard): 25 boxes at $30.00 each, shipping $43.50 at cost, payment on receipt
+    Reason: Our list price, with shipping charged at exactly what it costs us, and payment on receipt.
+  - Option 2 (Quantity): 40 boxes at $30.00 each with free shipping, payment on receipt
+    Reason: A larger order covers the cost of shipping, so the shipping is on us.
+  - Option 3 (Early payment): 25 boxes at $30.00 each with 1.5% off, shipping $43.50 at cost, payment within 7 days
+    Reason: Being paid sooner saves us the cost of waiting, and we pass that saving on to you.
+
+Thread text:
+  | Buyer:
+  | > Hi,
+  | > We are preparing an order for 25 boxes of scented beeswax candles.
+  | > Your wholesale catalog lists them at $30 per box.
+  | > We would like a 20% discount, free shipping, and net 60 payment terms.
+  | 
+  | Seller:
+  | > Hi,
+  | > Yes, 25 boxes at $30 per box is available.
+  | > We can agree to a 20% discount, free shipping, and net 60 days payment terms.
+  | 
+  | Buyer:
+  | > Thank you, 25 boxes at $30 with 20% off, free shipping, and net 60 days works for us.
+  | > Please send the PayPal draft invoice.
+
+Execution Details:
+  Attempts made: 1
+  Live API calls in this case: 1
+  Tokens consumed: 393
+  Used code template: false
+
+  [Attempt 1]
+    Tokens: 393
+    Raw Model Reply Text:
+      {"reply": "Thank you so much for reaching out to us today. {{OPTION_1}} {{OPTION_2}} {{OPTION_3}} What works best for your needs?"}
+    Validation: PASS (0 problems)
+
+Final Accepted Reply:
+--------------------
+Thank you so much for reaching out to us today.
+
+Option 1 (Standard): 25 boxes at $30.00 each, shipping $43.50 at cost, payment on receipt.
+Option 2 (Quantity): 40 boxes at $30.00 each with free shipping, payment on receipt.
+Option 3 (Early payment): 25 boxes at $30.00 each with 1.5% off, shipping $43.50 at cost, payment within 7 days.
+
+What works best for your needs?
+--------------------
+
+==========================================
+Total live Gemini API calls across all cases: 4 (limit: <= 8)
+Accepted from AI: 4 / 4
+Fell back to template: 0 / 4
