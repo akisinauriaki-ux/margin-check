@@ -1,4 +1,11 @@
-﻿7cf9293 proof: gate outputs (vet, test, gitlog, run1, run2, latest)
+﻿1a5890a fix A: update proof gate reports (latest, run1, run2, test, gitlog)
+af7da6d fix A: meaningful reply attacks, whole-cent pretend paypal, and integer cost formatting
+6e8ef06 step 4: live samples runner updated for Fix C (step4-writer-samples-2.txt)
+c37b024 step 4: new greeting rule in Validate and reply layout in Fill
+4742e16 step 4: failing tests - new greeting rule in Validate and layout in Fill
+be7dca5 keep prompt and exam bytes identical on every OS so the saved replay answers always match (Windows clone made proof FAIL)
+aac1028 proof: update saved git log to include gate commit
+7cf9293 proof: gate outputs (vet, test, gitlog, run1, run2, latest)
 2893d0b proof: implement proof command with scorecard, safety checks, and baseline
 c9f915b docs: add judge README with security tables, failure register, and backed claims
 0365b79 proof: add tests and fixtures for proof scorecard (failing tests)
@@ -16,10 +23,3 @@ b7a3a24 proof: save fresh clone exam replay proof
 f84961f review: gate outputs (vet, test, race, sandbox actcheck, exam replay regression)
 6a9fb84 review fix: the screen's server has header, read, write and idle time limits
 424a15f review: failing test - the screen's server has no time limits (seam only: same behaviour as http.ListenAndServe)
-26fcaae review fix: a damaged deal date stops the deal with a plain message instead of becoming year 1
-deabfca review: failing test - a damaged deal date becomes year 1 on the plan
-f4f3e54 review fix: after any create failure, look the draft up by its exact invoice number instead of matching the word DUPLICATE
-839a5fa review: failing test - a repeat create whose toolkit error lacks the word DUPLICATE is reported as a failure
-9eb43ae review fix: the reply and plan checks reject any Unicode number, any currency sign and every percent sign
-0d99816 review: failing tests - the reply and plan checks miss full-width digits, fractions and other currency signs
-610a441 review fix: changes to one deal run one at a time; a started run ignores a closed tab but stops at a 3-minute limit
