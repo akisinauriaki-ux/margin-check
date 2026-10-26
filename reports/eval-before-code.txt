@@ -1,0 +1,5 @@
+Evaluation before the system: when the exam answers and the AI reader first entered the repository.
+$ git log --diff-filter=A --format='%h %ad %s' --date=iso -- testdata/answers.json
+e937fe1 2026-10-25 11:07:18 +0400 Add 20-email exam, answers.json, and seller profile
+$ git log --diff-filter=A --format='%h %ad %s' --date=iso -- internal/reader/reader.go
+544705c 2026-10-26 11:42:09 +0400 step 2 part A: implement gemini client, reader pipeline, reader-v1 prompt, and exam runner

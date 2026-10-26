@@ -84,6 +84,8 @@ A stranger setting up the repository needs the following prerequisites, each ava
 
 ## How it works
 
+**How it's engineered, principle by principle, each with its proof:** [docs/ENGINEERING.md](docs/ENGINEERING.md). **The design decisions and their trade-offs:** [docs/DECISIONS.md](docs/DECISIONS.md).
+
 The architecture implements the LLM-Modulo pattern: the AI proposes candidate readings, draft replies, and action plans, while external deterministic Go code verifies every number, quote, and tool argument before execution.
 
 - **Understand (Reading):** Reads untrusted email text with no external tools, extracting structured deal terms where two independent models must agree and every extracted number must trace back to an exact sentence quote in the email [C-17].
