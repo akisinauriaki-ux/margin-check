@@ -254,15 +254,30 @@ func Fill(text string, set offer.Set) string {
 	greeting := strings.TrimSpace(text[:locs[0][0]])
 	closing := strings.TrimSpace(text[locs[len(locs)-1][1]:])
 
-	choices := make([]string, len(locs))
-	for idx, loc := range locs {
+	seen := map[int]bool{}
+	for _, loc := range locs {
 		b := text[loc[0]:loc[1]]
 		m := blankRe.FindStringSubmatch(b)
-		i, _ := strconv.Atoi(m[1])
-		if i >= 1 && i <= len(set.Options) {
-			choices[idx] = fmt.Sprintf("Option %d (%s): %s.", i, Label(set.Options[i-1].Kind), set.Options[i-1].Summary)
-		} else {
-			choices[idx] = b
+		if len(m) > 1 {
+			i, _ := strconv.Atoi(m[1])
+			seen[i] = true
+		}
+	}
+
+	var choices []string
+	for i := 1; i <= len(set.Options); i++ {
+		if seen[i] {
+			choices = append(choices, fmt.Sprintf("Option %d (%s): %s.", i, Label(set.Options[i-1].Kind), set.Options[i-1].Summary))
+		}
+	}
+	for _, loc := range locs {
+		b := text[loc[0]:loc[1]]
+		m := blankRe.FindStringSubmatch(b)
+		if len(m) > 1 {
+			i, _ := strconv.Atoi(m[1])
+			if i < 1 || i > len(set.Options) {
+				choices = append(choices, b)
+			}
 		}
 	}
 
