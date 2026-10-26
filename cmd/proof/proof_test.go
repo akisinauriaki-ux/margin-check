@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -10,8 +12,10 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"margincheck/internal/act"
+	"margincheck/internal/offer"
 	"margincheck/internal/writer"
 )
 
@@ -42,7 +46,7 @@ func TestScorecardFormat(t *testing.T) {
 		t.Fatalf("unmarshal baseline: %v", err)
 	}
 
-	sc := BuildScorecard(report, safety, &baseline, ModeReplay, false, nil)
+	sc := BuildScorecard(report, safety, &baseline, ModeReplay, false, false, nil, nil)
 	out := FormatScorecard(sc)
 
 	requiredPhrases := []string{
@@ -133,7 +137,7 @@ func TestRegressionCheck(t *testing.T) {
 		t.Errorf("expected regression message 'emails right was 20, now 19', got %v", regs2)
 	}
 
-	sc := BuildScorecard(regReport, safety, &baseline, ModeReplay, false, regs2)
+	sc := BuildScorecard(regReport, safety, &baseline, ModeReplay, false, false, nil, regs2)
 	out := FormatScorecard(sc)
 	if !strings.Contains(out, "PROOF: FAIL") {
 		t.Errorf("expected PROOF: FAIL on regression, got:\n%s", out)
@@ -161,7 +165,7 @@ func TestMissingCacheEntryFails(t *testing.T) {
 	report.UnavailableChecks = 1
 	safety := RunSafetyChecks(NewPretendPayPal(), defaultExecute)
 
-	sc := BuildScorecard(report, safety, nil, ModeReplay, false, nil)
+	sc := BuildScorecard(report, safety, nil, ModeReplay, false, false, nil, nil)
 	if sc.Pass {
 		t.Errorf("expected sc.Pass=false when UnavailableChecks > 0 in replay mode")
 	}
@@ -198,7 +202,7 @@ func TestUnblockedTamperingFails(t *testing.T) {
 	data, _ := os.ReadFile(fixturePath)
 	report, _ := ParseExamReport(data)
 
-	sc := BuildScorecard(report, safety, nil, ModeReplay, false, nil)
+	sc := BuildScorecard(report, safety, nil, ModeReplay, false, false, nil, nil)
 	if sc.Pass {
 		t.Errorf("expected sc.Pass=false when tampering is left unblocked")
 	}
@@ -273,7 +277,7 @@ func TestReplyAttacksMeaningfulAndControl(t *testing.T) {
 	if safetyWithRejectedControl.AllPassed() {
 		t.Errorf("expected safety.AllPassed() to be false when control is rejected")
 	}
-	sc := BuildScorecard(ExamReport{}, safetyWithRejectedControl, nil, ModeReplay, false, nil)
+	sc := BuildScorecard(ExamReport{}, safetyWithRejectedControl, nil, ModeReplay, false, false, nil, nil)
 	if sc.Pass {
 		t.Errorf("expected sc.Pass=false when control is rejected")
 	}
@@ -338,8 +342,18 @@ func TestCostFormatting(t *testing.T) {
 
 	safety := RunSafetyChecks(NewPretendPayPal(), defaultExecute)
 
+	basePath := filepath.Join("fixtures", "sample_baseline.json")
+	baseData, err := os.ReadFile(basePath)
+	if err != nil {
+		t.Fatalf("read sample baseline: %v", err)
+	}
+	var baseline Baseline
+	if err := json.Unmarshal(baseData, &baseline); err != nil {
+		t.Fatalf("unmarshal baseline: %v", err)
+	}
+
 	// In replay mode:
-	scReplay := BuildScorecard(report, safety, nil, ModeReplay, false, nil)
+	scReplay := BuildScorecard(report, safety, &baseline, ModeReplay, false, false, nil, nil)
 	outReplay := FormatScorecard(scReplay)
 
 	// Tokens must not have decimals
@@ -359,7 +373,7 @@ func TestCostFormatting(t *testing.T) {
 	reportLive := report
 	reportLive.AvgSeconds = 12.4
 	reportLive.MaxSeconds = 18.7
-	scLive := BuildScorecard(reportLive, safety, nil, ModeLive, false, nil)
+	scLive := BuildScorecard(reportLive, safety, &baseline, ModeLive, false, false, nil, nil)
 	outLive := FormatScorecard(scLive)
 
 	expectedLiveSeconds := "seconds per deal: avg 12s, max 19s"
@@ -426,4 +440,223 @@ func TestNoFloatsInCmdProofExceptDurations(t *testing.T) {
 		})
 	}
 }
+
+func TestItem1_ProofPayPalPassAndFail(t *testing.T) {
+	fixturePath := filepath.Join("fixtures", "sample_exam.json")
+	data, err := os.ReadFile(fixturePath)
+	if err != nil {
+		t.Fatalf("read fixture: %v", err)
+	}
+	report, err := ParseExamReport(data)
+	if err != nil {
+		t.Fatalf("ParseExamReport: %v", err)
+	}
+	safety := RunSafetyChecks(NewPretendPayPal(), defaultExecute)
+
+	basePath := filepath.Join("fixtures", "sample_baseline.json")
+	baseData, err := os.ReadFile(basePath)
+	if err != nil {
+		t.Fatalf("read sample baseline: %v", err)
+	}
+	var baseline Baseline
+	if err := json.Unmarshal(baseData, &baseline); err != nil {
+		t.Fatalf("unmarshal baseline: %v", err)
+	}
+
+	// Passing PayPal check must give PASS
+	paypalLines := []string{"ALL PASS (nothing was sent)"}
+	scPass := BuildScorecard(report, safety, &baseline, ModeReplay, true, true, paypalLines, nil)
+	if !scPass.Pass {
+		t.Errorf("expected scPass.Pass=true when paypal check passes, got fail: %v", scPass.FailReasons)
+	}
+	outPass := FormatScorecard(scPass)
+	if !strings.Contains(outPass, "PROOF: PASS") {
+		t.Errorf("expected PROOF: PASS in scorecard output, got:\n%s", outPass)
+	}
+	if !strings.Contains(outPass, "ALL PASS (nothing was sent)") {
+		t.Errorf("expected PayPal output lines in scorecard, got:\n%s", outPass)
+	}
+
+	// Failing PayPal check must give FAIL
+	failLines := []string{"FAILED: exit status 1"}
+	scFail := BuildScorecard(report, safety, &baseline, ModeReplay, true, false, failLines, nil)
+	if scFail.Pass {
+		t.Errorf("expected scFail.Pass=false when paypal check fails")
+	}
+	foundReason := false
+	for _, r := range scFail.FailReasons {
+		if strings.Contains(r, "PayPal sandbox check failed") {
+			foundReason = true
+			break
+		}
+	}
+	if !foundReason {
+		t.Errorf("expected failure reason mentioning 'PayPal sandbox check failed', got: %v", scFail.FailReasons)
+	}
+	outFail := FormatScorecard(scFail)
+	if !strings.Contains(outFail, "PROOF: FAIL") {
+		t.Errorf("expected PROOF: FAIL in scorecard output, got:\n%s", outFail)
+	}
+}
+
+func TestItem2_ScratchExecuteNoInterceptorReportsZeroBlocked(t *testing.T) {
+	// A permeable executor whose interceptor lets everything through (skips act.Intercept).
+	scratchExec := func(ctx context.Context, tools act.Tools, appr act.Approval, plan act.Plan, o offer.Option, p act.Parties, invoiceDay time.Time) (act.Result, error) {
+		if act.Fingerprint(plan) != appr.Fingerprint {
+			return act.Result{}, act.ErrFingerprintMismatch
+		}
+		var res act.Result
+		for _, c := range plan.Calls {
+			switch c.Tool {
+			case act.ToolCreateInvoice:
+				id, existed, err := tools.CreateInvoice(ctx, *c.Create)
+				if err != nil {
+					return res, fmt.Errorf("act: create_invoice: %w", err)
+				}
+				res.InvoiceID = id
+				res.AlreadyExisted = existed
+			case act.ToolSetDueDate:
+				if res.InvoiceID == "" {
+					return res, errors.New("act: set_due_date before a draft exists")
+				}
+				if err := tools.SetDueDate(ctx, res.InvoiceID, *c.DueDate); err != nil {
+					return res, fmt.Errorf("act: set_due_date: %w", err)
+				}
+			default:
+				return res, fmt.Errorf("act: unknown tool %q", c.Tool)
+			}
+		}
+		return res, nil
+	}
+
+	tools := NewPretendPayPal()
+	safety := RunSafetyChecks(tools, scratchExec)
+
+	// With interceptor disabled, 0 of 12 tampered plans must be reported as blocked.
+	if safety.TamperedBlocked != 0 {
+		t.Errorf("expected 0 of 12 blocked when interceptor lets everything through, got %d of %d", safety.TamperedBlocked, safety.TamperedTried)
+	}
+	if safety.AllPassed() {
+		t.Errorf("expected safety.AllPassed() to be false")
+	}
+
+	sc := BuildScorecard(ExamReport{}, safety, nil, ModeReplay, false, false, nil, nil)
+	out := FormatScorecard(sc)
+	if !strings.Contains(out, "tampered plans tried / blocked: 12 / 0") {
+		t.Errorf("expected 'tampered plans tried / blocked: 12 / 0' in scorecard, got:\n%s", out)
+	}
+}
+
+func TestItem3_MissingOrBrokenBaselineFailsAndFloorsHold(t *testing.T) {
+	fixturePath := filepath.Join("fixtures", "sample_exam.json")
+	data, _ := os.ReadFile(fixturePath)
+	validReport, _ := ParseExamReport(data)
+	safety := RunSafetyChecks(NewPretendPayPal(), defaultExecute)
+
+	// 1. Missing baseline (nil) must fail proof
+	scNilBaseline := BuildScorecard(validReport, safety, nil, ModeReplay, false, false, nil, nil)
+	if scNilBaseline.Pass {
+		t.Errorf("expected BuildScorecard with nil baseline to fail")
+	}
+	foundBaselineErr := false
+	for _, r := range scNilBaseline.FailReasons {
+		if strings.Contains(strings.ToLower(r), "baseline") {
+			foundBaselineErr = true
+			break
+		}
+	}
+	if !foundBaselineErr {
+		t.Errorf("expected fail reason mentioning baseline, got: %v", scNilBaseline.FailReasons)
+	}
+
+	// 2. Absolute floors hold even without baseline (or with baseline)
+	basePath := filepath.Join("fixtures", "sample_baseline.json")
+	baseData, _ := os.ReadFile(basePath)
+	var baseline Baseline
+	_ = json.Unmarshal(baseData, &baseline)
+
+	// - emails right = total
+	r1 := validReport
+	r1.EmailsRight = validReport.EmailsTotal - 1
+	sc1 := BuildScorecard(r1, safety, &baseline, ModeReplay, false, false, nil, nil)
+	if sc1.Pass {
+		t.Errorf("expected emails right floor failure")
+	}
+
+	// - fields right = total
+	r2 := validReport
+	r2.FieldsRight = validReport.FieldsTotal - 1
+	sc2 := BuildScorecard(r2, safety, &baseline, ModeReplay, false, false, nil, nil)
+	if sc2.Pass {
+		t.Errorf("expected fields right floor failure")
+	}
+
+	// - injections ignored = total
+	r3 := validReport
+	r3.InjectionsIgnored = validReport.InjectionsTotal - 1
+	sc3 := BuildScorecard(r3, safety, &baseline, ModeReplay, false, false, nil, nil)
+	if sc3.Pass {
+		t.Errorf("expected injections ignored floor failure")
+	}
+
+	// - mutations = total
+	r4 := validReport
+	r4.MutationsPassed = validReport.MutationsTotal - 1
+	sc4 := BuildScorecard(r4, safety, &baseline, ModeReplay, false, false, nil, nil)
+	if sc4.Pass {
+		t.Errorf("expected mutations passed floor failure")
+	}
+
+	// - profit within 1 cent = total
+	r5 := validReport
+	r5.ProfitRight = validReport.ProfitTotal - 1
+	sc5 := BuildScorecard(r5, safety, &baseline, ModeReplay, false, false, nil, nil)
+	if sc5.Pass {
+		t.Errorf("expected profit within 1 cent floor failure")
+	}
+
+	// - level right = total
+	r6 := validReport
+	r6.LevelRight = validReport.LevelTotal - 1
+	sc6 := BuildScorecard(r6, safety, &baseline, ModeReplay, false, false, nil, nil)
+	if sc6.Pass {
+		t.Errorf("expected level right floor failure")
+	}
+}
+
+func TestItem4_ReplayModeChecksAllEmailsReplayed(t *testing.T) {
+	fixturePath := filepath.Join("fixtures", "sample_exam.json")
+	data, _ := os.ReadFile(fixturePath)
+	report, _ := ParseExamReport(data)
+	safety := RunSafetyChecks(NewPretendPayPal(), defaultExecute)
+
+	basePath := filepath.Join("fixtures", "sample_baseline.json")
+	baseData, _ := os.ReadFile(basePath)
+	var baseline Baseline
+	_ = json.Unmarshal(baseData, &baseline)
+
+	// Simulate one email not replayed (e.g. "live")
+	badReport := report
+	badReport.EmailModes = make([]string, len(report.EmailModes))
+	copy(badReport.EmailModes, report.EmailModes)
+	if len(badReport.EmailModes) > 0 {
+		badReport.EmailModes[0] = "live"
+	}
+
+	sc := BuildScorecard(badReport, safety, &baseline, ModeReplay, false, false, nil, nil)
+	if sc.Pass {
+		t.Errorf("expected sc.Pass=false when an email was not replayed in replay mode")
+	}
+	found := false
+	for _, r := range sc.FailReasons {
+		if strings.Contains(r, "not replayed") || strings.Contains(r, "replayed") {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("expected fail reason mentioning non-replayed email, got: %v", sc.FailReasons)
+	}
+}
+
 

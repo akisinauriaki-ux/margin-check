@@ -129,7 +129,7 @@ func main() {
 		fmt.Printf("Wrote new baseline to %s\n", *baselineFlag)
 	}
 
-	sc := BuildScorecard(examReport, safety, baseline, mode, *paypalFlag, regs)
+	sc := BuildScorecard(examReport, safety, baseline, mode, *paypalFlag, paypalPass, paypalLines, regs)
 	if *paypalFlag {
 		sc.PayPalPass = paypalPass
 		sc.PayPalLines = paypalLines

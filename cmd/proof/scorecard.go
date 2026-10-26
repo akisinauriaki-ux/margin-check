@@ -41,6 +41,8 @@ type ExamReport struct {
 	MaxTokens  int
 	AvgSeconds float64
 	MaxSeconds float64
+
+	EmailModes []string
 }
 
 type rawExamJSON struct {
@@ -139,13 +141,15 @@ type Scorecard struct {
 	Pass        bool
 }
 
-func BuildScorecard(r ExamReport, s SafetyResults, b *Baseline, m Mode, paypalRun bool, regs []string) Scorecard {
+func BuildScorecard(r ExamReport, s SafetyResults, b *Baseline, m Mode, paypalRun bool, paypalPass bool, paypalLines []string, regs []string) Scorecard {
 	sc := Scorecard{
 		Exam:        r,
 		Safety:      s,
 		Baseline:    b,
 		Mode:        m,
 		PayPalRun:   paypalRun,
+		PayPalPass:  false, // placeholder for failing test
+		PayPalLines: paypalLines,
 		Regressions: regs,
 		Pass:        true,
 	}
