@@ -215,7 +215,18 @@ func (d Deps) BuyerReplied(ctx context.Context, dealID, replyThread string) (*De
 	if deal.Offers == nil {
 		return nil, errors.New("this deal has no choices to accept yet")
 	}
-	res, err := d.Reader.Check(ctx, dealID+"-reply", replyThread)
+	// A short answer ("Option 2 please") only makes sense next to the choices we sent, so the reader gets them,
+	// written by the app, before the buyer's words, the way an email shows the earlier message. What proves
+	// acceptance, or a changed term, must still be the buyer's own words (fromBuyer).
+	readText := replyThread
+	if !strings.Contains(replyThread, "Option 1 (") {
+		readText = choicesContext(deal.Offers) + "\n" + replyThread
+	}
+	fromBuyer := func(quote string) bool {
+		q := flatten(quote)
+		return q != "" && strings.Contains(flatten(replyThread), q)
+	}
+	res, err := d.Reader.Check(ctx, dealID+"-reply", readText)
 	if err != nil {
 		return nil, err
 	}
@@ -224,6 +235,8 @@ func (d Deps) BuyerReplied(ctx context.Context, dealID, replyThread string) (*De
 
 	kind := offer.Kind(strings.ToLower(strings.TrimSpace(res.AcceptedOption.Value)))
 	switch {
+	case !fromBuyer(res.AcceptedOption.Quote):
+		deal.Next, deal.NextReason = NextAsk, "It isn't clear which choice the buyer accepted. Ask them; nothing is planned until it is."
 	case kind == "changed":
 		deal.Next, deal.NextReason = NextSellerDecides, "The buyer accepted but changed the terms, so it isn't one of your choices. You decide; nothing is planned."
 	case !res.AcceptedOption.Sure || res.AcceptedOption.Unknown || (kind != offer.Standard && kind != offer.Quantity && kind != offer.EarlyPayment):
@@ -233,9 +246,9 @@ func (d Deps) BuyerReplied(ctx context.Context, dealID, replyThread string) (*De
 		switch {
 		case !ok:
 			deal.Next, deal.NextReason = NextSellerDecides, "The buyer named a choice you didn't offer. You decide; nothing is planned."
-		case statedChange(res, opt, d.Offer) != "":
+		case statedChange(res, opt, d.Offer, fromBuyer) != "":
 			deal.Next, deal.NextReason = NextSellerDecides, fmt.Sprintf("The buyer accepted the %s choice but wrote %s. You decide; nothing is planned.",
-				writer.Label(kind), statedChange(res, opt, d.Offer))
+				writer.Label(kind), statedChange(res, opt, d.Offer, fromBuyer))
 		default:
 			day, err := deal.invoiceDay()
 			if err != nil {
@@ -315,10 +328,10 @@ func (d Deps) ApproveAndRun(ctx context.Context, dealID, shownFingerprint string
 }
 
 // statedChange describes the first term the buyer stated that differs from the choice, or returns "".
-// A term counts as stated when the reading is sure and quotes the buyer's sentence. An unstated term is fixed
-// by the choice itself, and the seller sees the plan before approving it.
-func statedChange(res reader.CheckResult, o offer.Option, c offer.Config) string {
-	statedInt := func(f reader.IntFieldResult) bool { return f.Sure && !f.Unknown && strings.TrimSpace(f.Quote) != "" }
+// A term counts as stated when the reading is sure and quotes the buyer's own sentence (fromBuyer). An unstated
+// term is fixed by the choice itself, and the seller sees the plan before approving it.
+func statedChange(res reader.CheckResult, o offer.Option, c offer.Config, fromBuyer func(string) bool) string {
+	statedInt := func(f reader.IntFieldResult) bool { return f.Sure && !f.Unknown && fromBuyer(f.Quote) }
 	switch {
 	case statedInt(res.Quantity) && res.Quantity.Value != o.Quantity:
 		return fmt.Sprintf("%d %s instead of %d", res.Quantity.Value, unitNoun(c), o.Quantity)
@@ -328,13 +341,28 @@ func statedChange(res reader.CheckResult, o offer.Option, c offer.Config) string
 		return fmt.Sprintf("payment in %d days instead of %s", res.PaymentDays.Value, dueWords(o.DueDays))
 	case statedInt(res.DiscountPercent) && res.DiscountPercent.Value*100 != o.DiscountBP:
 		return fmt.Sprintf("%s off instead of %s", offer.FormatPercent(res.DiscountPercent.Value*100), offer.FormatPercent(o.DiscountBP))
-	case res.FreeShipping.Sure && !res.FreeShipping.Unknown && strings.TrimSpace(res.FreeShipping.Quote) != "" && res.FreeShipping.Value != o.FreeShipping:
+	case res.FreeShipping.Sure && !res.FreeShipping.Unknown && fromBuyer(res.FreeShipping.Quote) && res.FreeShipping.Value != o.FreeShipping:
 		if res.FreeShipping.Value {
 			return "free shipping, which this choice doesn't include"
 		}
 		return "that they pay the shipping, while this choice ships free"
 	}
 	return ""
+}
+
+// choicesContext is the seller's message with the choices, as the app wrote it into the reply.
+func choicesContext(set *offer.Set) string {
+	var b strings.Builder
+	b.WriteString("Seller:\n")
+	for i, o := range set.Options {
+		fmt.Fprintf(&b, "> Option %d (%s): %s.\n", i+1, writer.Label(o.Kind), o.Summary)
+	}
+	return b.String()
+}
+
+// flatten makes quote matching ignore line breaks, spacing and email quote marks.
+func flatten(s string) string {
+	return strings.Join(strings.Fields(strings.ReplaceAll(s, ">", " ")), " ")
 }
 
 func dueWords(days int64) string {
