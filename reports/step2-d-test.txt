@@ -1,0 +1,11 @@
+﻿ok  	margincheck/cmd/exam	2.266s
+ok  	margincheck/cmd/sandboxcheck	3.635s
+ok  	margincheck/cmd/toolkitcheck	5.505s
+ok  	margincheck/internal/agenttools	3.317s
+ok  	margincheck/internal/check	1.106s
+ok  	margincheck/internal/gemini	3.216s
+ok  	margincheck/internal/normalize	0.766s
+ok  	margincheck/internal/paypal	3.288s
+ok  	margincheck/internal/profit	0.904s
+ok  	margincheck/internal/quote	0.743s
+ok  	margincheck/internal/reader	5.400s

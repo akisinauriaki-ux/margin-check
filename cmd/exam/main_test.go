@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 
+	"margincheck/internal/check"
+	"margincheck/internal/profit"
 	"margincheck/internal/reader"
 )
 
@@ -26,6 +28,19 @@ func TestScoringRules(t *testing.T) {
 			{Name: "quantity", Value: float64(20), By: "buyer", Status: "agreed"},
 			{Name: "free_shipping", Value: "UNKNOWN", By: "seller", Status: "offered"},
 		},
+		ExpectedLevel:       "silent",
+		ExpectedProfitCents: 61483,
+	}
+
+	seller := profit.Seller{
+		UnitCostCents:             2300,
+		ShippingCostCentsPerOrder: 600,
+		ShippingCostCentsPerBox:   150,
+		PayPalFeePercentBP:        349,
+		PayPalFixedFeeCents:       49,
+		YearlyCostOfMoneyBP:       1000,
+		UnderlineMinGiveawayBP:    200,
+		Currency:                  "USD",
 	}
 
 	// Case 1: All right (plus 1 unnecessary ask on rebate_percent -> still email right because UnnecessaryAsks <= 1)
@@ -44,7 +59,8 @@ func TestScoringRules(t *testing.T) {
 		},
 	}
 
-	es1, statusCounts := scoreEmail("04", key, resRight, false)
+	chk1 := check.Check(resRight, seller)
+	es1, statusCounts := scoreEmail("04", key, resRight, chk1, false)
 	if es1.WrongButSure != 0 {
 		t.Errorf("expected 0 WrongButSure, got %d", es1.WrongButSure)
 	}
@@ -63,6 +79,9 @@ func TestScoringRules(t *testing.T) {
 	if statusCounts["agreed"].Matched != 1 || statusCounts["offered"].Matched != 1 {
 		t.Errorf("unexpected term status counts: %+v", statusCounts)
 	}
+	if chk1.Outcome != check.OutcomeAsk {
+		t.Errorf("expected outcome ask on unsure free_shipping, got %s", chk1.Outcome)
+	}
 
 	// Case 2: Wrong-but-sure on UNKNOWN field and concrete field with both agreed
 	resWrong := resRight
@@ -74,7 +93,8 @@ func TestScoringRules(t *testing.T) {
 		"discount_percent": true,
 	}
 
-	es2, _ := scoreEmail("04", key, resWrong, false)
+	chk2 := check.Check(resWrong, seller)
+	es2, _ := scoreEmail("04", key, resWrong, chk2, false)
 	if es2.WrongButSure != 2 {
 		t.Errorf("expected 2 WrongButSure, got %d", es2.WrongButSure)
 	}
@@ -102,7 +122,8 @@ func TestScoringRules(t *testing.T) {
 		UnavailableReason:       reader.ReasonModelUnavailable,
 	}
 
-	es3, _ := scoreEmail("04", key, resUnav, true)
+	chk3 := check.Check(resUnav, seller)
+	es3, _ := scoreEmail("04", key, resUnav, chk3, true)
 	if !es3.EmailWrong {
 		t.Errorf("expected EmailWrong=true for unavailable check")
 	}
@@ -111,6 +132,39 @@ func TestScoringRules(t *testing.T) {
 	}
 	if es3.RightFields != 0 {
 		t.Errorf("unavailable check must NEVER be scored as right: got RightFields=%d", es3.RightFields)
+	}
+
+	// Case 4: False alarm detection on healthy deal (key says silent, but tool speaks underline/panel)
+	keyHealthy := AnswerEmail{
+		ExpectedLevel:       "silent",
+		ExpectedProfitCents: 62367,
+	}
+	mockAlarmResult := check.Result{
+		Outcome: check.OutcomeEvaluated,
+		Profit: &profit.Result{
+			Level:       "underline",
+			ProfitCents: 50000,
+		},
+	}
+	es4, _ := scoreEmail("01", keyHealthy, reader.CheckResult{}, mockAlarmResult, false)
+	if !es4.FalseAlarm {
+		t.Errorf("expected FalseAlarm=true when key is silent and tool spoke underline")
+	}
+	if !es4.EmailWrong {
+		t.Errorf("expected EmailWrong=true on false alarm")
+	}
+
+	// Case 5: Buyer reply action matching
+	keyAction := AnswerEmail{
+		ExpectedAction: "draft",
+	}
+	mockActionRes := check.Result{
+		Outcome: check.OutcomeEvaluated,
+		Action:  check.ActionDraft,
+	}
+	es5, _ := scoreEmail("17", keyAction, reader.CheckResult{}, mockActionRes, false)
+	if !es5.ActionMatched {
+		t.Errorf("expected ActionMatched=true for draft matching draft")
 	}
 }
 

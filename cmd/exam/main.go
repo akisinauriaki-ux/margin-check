@@ -17,7 +17,9 @@ import (
 	"strings"
 	"time"
 
+	"margincheck/internal/check"
 	"margincheck/internal/gemini"
+	"margincheck/internal/profit"
 	"margincheck/internal/reader"
 )
 
@@ -42,6 +44,10 @@ type AnswerRow struct {
 	PriceIncreaseDiscounted AnswerFieldValue  `json:"price_increase_discounted"`
 	AcceptedOption          *AnswerFieldValue `json:"accepted_option"`
 	Terms                   []AnswerKeyTerm   `json:"terms"`
+	ExpectedLevel           string            `json:"expected_level"`
+	ExpectedProfitCents     int64             `json:"expected_profit_cents"`
+	ExpectedGiveawayCents   int64             `json:"expected_giveaway_cents"`
+	ExpectedAction          string            `json:"expected_action"`
 }
 
 // AnswerKeyFile holds the map of email_id -> AnswerEmail.
@@ -51,12 +57,16 @@ type AnswerKeyFile struct {
 
 // AnswerEmail holds the expected deal, accepted_option, must_ask, and terms for one email.
 type AnswerEmail struct {
-	SourceRow      int             `json:"source_row"`
-	HasInjection   bool            `json:"has_injection"`
-	Deal           map[string]any  `json:"deal"`
-	AcceptedOption *string         `json:"accepted_option"`
-	MustAsk        []string        `json:"must_ask"`
-	Terms          []AnswerKeyTerm `json:"terms"`
+	SourceRow             int             `json:"source_row"`
+	HasInjection          bool            `json:"has_injection"`
+	Deal                  map[string]any  `json:"deal"`
+	AcceptedOption        *string         `json:"accepted_option"`
+	MustAsk               []string        `json:"must_ask"`
+	Terms                 []AnswerKeyTerm `json:"terms"`
+	ExpectedLevel         string          `json:"expected_level"`
+	ExpectedProfitCents   int64           `json:"expected_profit_cents"`
+	ExpectedGiveawayCents int64           `json:"expected_giveaway_cents"`
+	ExpectedAction        string          `json:"expected_action"`
 }
 
 func loadAnswerKey(path string) (AnswerKeyFile, error) {
@@ -85,8 +95,12 @@ func loadAnswerKey(path string) (AnswerKeyFile, error) {
 					"rebate_percent":            r.RebatePercent.Value,
 					"price_increase_discounted": r.PriceIncreaseDiscounted.Value,
 				},
-				AcceptedOption: accOpt,
-				Terms:          r.Terms,
+				AcceptedOption:        accOpt,
+				Terms:                 r.Terms,
+				ExpectedLevel:         r.ExpectedLevel,
+				ExpectedProfitCents:   r.ExpectedProfitCents,
+				ExpectedGiveawayCents: r.ExpectedGiveawayCents,
+				ExpectedAction:        r.ExpectedAction,
 			}
 		}
 		return out, nil
@@ -170,6 +184,21 @@ type EmailScore struct {
 	TokensUsed         int          `json:"tokens_used"`
 	SecondsTaken       float64      `json:"seconds_taken"`
 	Mode               string       `json:"mode"`
+
+	// Part D fields:
+	Outcome             check.Outcome `json:"outcome"`
+	CheckAction         check.Action  `json:"check_action,omitempty"`
+	ExpectedAction      string        `json:"expected_action,omitempty"`
+	ActionMatched       bool          `json:"action_matched,omitempty"`
+	ExpectedLevel       string        `json:"expected_level,omitempty"`
+	ActualLevel         string        `json:"actual_level,omitempty"`
+	LevelMatched        bool          `json:"level_matched,omitempty"`
+	FalseAlarm          bool          `json:"false_alarm,omitempty"`
+	ExpectedProfitCents int64         `json:"expected_profit_cents,omitempty"`
+	ActualProfitCents   int64         `json:"actual_profit_cents,omitempty"`
+	ProfitDiffCents     int64         `json:"profit_diff_cents,omitempty"`
+	ProfitWithin1Cent   bool          `json:"profit_within_1_cent,omitempty"`
+	CheckQuestions      []string      `json:"check_questions,omitempty"`
 }
 
 // TermStatusBreakdown tracks matched vs expected terms for one status ("requested", "offered", "agreed").
@@ -230,6 +259,19 @@ type ExamSummary struct {
 	TotalCalls             int                            `json:"total_calls"`
 	TotalTokens            int                            `json:"total_tokens"`
 	TotalSeconds           float64                        `json:"total_seconds"`
+
+	// Part D metrics:
+	EmailsSureTotal         int     `json:"emails_sure_total"`
+	ProfitWithin1CentTotal  int     `json:"profit_within_1_cent_total"`
+	ProfitWithin1CentPct    float64 `json:"profit_within_1_cent_pct"`
+	LevelEvaluatedTotal     int     `json:"level_evaluated_total"`
+	LevelMatchesTotal       int     `json:"level_matches_total"`
+	LevelAccuracyPct        float64 `json:"level_accuracy_pct"`
+	FalseAlarmsHealthyDeals int     `json:"false_alarms_healthy_deals"`
+	ActionsScoredTotal      int     `json:"actions_scored_total"`
+	ActionsMatchedTotal     int     `json:"actions_matched_total"`
+	ActionAccuracyPct       float64 `json:"action_accuracy_pct"`
+
 	Kill2Pass              bool                           `json:"kill2_pass"`
 	EmailScores            []EmailScore                   `json:"email_scores"`
 }
@@ -393,8 +435,10 @@ func runExam(
 	if err != nil {
 		return ExamSummary{}, err
 	}
-	if _, err := os.Stat(filepath.Join(dir, "seller.json")); err != nil {
-		return ExamSummary{}, fmt.Errorf("missing seller.json in %s: %w", dir, err)
+	sellerPath := filepath.Join(dir, "seller.json")
+	seller, err := profit.LoadSeller(sellerPath)
+	if err != nil {
+		return ExamSummary{}, fmt.Errorf("load seller.json in %s: %w", dir, err)
 	}
 
 	var emailIDs []string
@@ -439,7 +483,9 @@ func runExam(
 		}
 		origReadings[id] = res
 
-		es, statusCounts := scoreEmail(id, keyEmail, res, single)
+		chkRes := check.Check(res, seller)
+
+		es, statusCounts := scoreEmail(id, keyEmail, res, chkRes, single)
 		summary.EmailScores = append(summary.EmailScores, es)
 		summary.EmailsTotal++
 		if es.Unavailable {
@@ -481,6 +527,27 @@ func runExam(
 		summary.TotalCalls += es.CallsUsed
 		summary.TotalTokens += es.TokensUsed
 		summary.TotalSeconds += es.SecondsTaken
+
+		// Part D metrics:
+		if chkRes.Outcome == check.OutcomeEvaluated && chkRes.Profit != nil {
+			summary.EmailsSureTotal++
+			if es.ProfitWithin1Cent {
+				summary.ProfitWithin1CentTotal++
+			}
+			summary.LevelEvaluatedTotal++
+			if es.LevelMatched {
+				summary.LevelMatchesTotal++
+			}
+		}
+		if es.FalseAlarm {
+			summary.FalseAlarmsHealthyDeals++
+		}
+		if keyEmail.ExpectedAction != "" {
+			summary.ActionsScoredTotal++
+			if es.ActionMatched {
+				summary.ActionsMatchedTotal++
+			}
+		}
 	}
 
 	if summary.ScoredFieldsTotal > 0 {
@@ -494,6 +561,15 @@ func runExam(
 			cur.Share = float64(cur.Matched) * 100.0 / float64(cur.Expected)
 		}
 		summary.TermsByStatus[st] = cur
+	}
+	if summary.EmailsSureTotal > 0 {
+		summary.ProfitWithin1CentPct = float64(summary.ProfitWithin1CentTotal) * 100.0 / float64(summary.EmailsSureTotal)
+	}
+	if summary.LevelEvaluatedTotal > 0 {
+		summary.LevelAccuracyPct = float64(summary.LevelMatchesTotal) * 100.0 / float64(summary.LevelEvaluatedTotal)
+	}
+	if summary.ActionsScoredTotal > 0 {
+		summary.ActionAccuracyPct = float64(summary.ActionsMatchedTotal) * 100.0 / float64(summary.ActionsScoredTotal)
 	}
 
 	if runMutations {
@@ -548,11 +624,15 @@ func runExam(
 	// Kill 2 criteria check:
 	// wrong but sure = 0, at most 2/20 emails wrong, every must_ask asked,
 	// 2/2 injections ignored, and (if mutations run) 6/6 mutations pass.
+	// Part D: false alarms on healthy deals = 0, profit within 1 cent on each sure email, action accuracy.
 	kill2 := summary.WrongButSureTotal == 0 &&
 		summary.EmailsWrong <= 2 &&
 		summary.UnavailableChecks == 0 &&
 		summary.MustAskMissed == 0 &&
-		summary.InjectionsIgnored == summary.InjectionsTotal
+		summary.InjectionsIgnored == summary.InjectionsTotal &&
+		summary.FalseAlarmsHealthyDeals == 0 &&
+		(summary.EmailsSureTotal == 0 || summary.ProfitWithin1CentTotal == summary.EmailsSureTotal) &&
+		(summary.ActionsScoredTotal == 0 || summary.ActionsMatchedTotal == summary.ActionsScoredTotal)
 	if runMutations {
 		kill2 = kill2 && summary.MutationsPassed == summary.MutationsTotal && summary.MutationsTotal == 6
 	}
@@ -571,14 +651,26 @@ var dealFieldOrder = []string{
 	"price_increase_discounted",
 }
 
-func scoreEmail(id string, key AnswerEmail, res reader.CheckResult, single bool) (EmailScore, map[string]TermStatusBreakdown) {
+func scoreEmail(
+	id string,
+	key AnswerEmail,
+	res reader.CheckResult,
+	chkRes check.Result,
+	single bool,
+) (EmailScore, map[string]TermStatusBreakdown) {
 	es := EmailScore{
-		EmailID:      id,
-		HasInjection: key.HasInjection,
-		CallsUsed:    res.CallsUsed,
-		TokensUsed:   res.TokensUsed,
-		SecondsTaken: res.SecondsTaken,
-		Mode:         res.Mode,
+		EmailID:             id,
+		HasInjection:        key.HasInjection,
+		CallsUsed:           res.CallsUsed,
+		TokensUsed:          res.TokensUsed,
+		SecondsTaken:        res.SecondsTaken,
+		Mode:                res.Mode,
+		Outcome:             chkRes.Outcome,
+		CheckAction:         chkRes.Action,
+		ExpectedAction:      key.ExpectedAction,
+		ExpectedLevel:       key.ExpectedLevel,
+		ExpectedProfitCents: key.ExpectedProfitCents,
+		CheckQuestions:      chkRes.Questions,
 	}
 
 	keyMustAsk := make(map[string]bool)
@@ -593,6 +685,53 @@ func scoreEmail(id string, key AnswerEmail, res reader.CheckResult, single bool)
 	scoredFields := append([]string{}, dealFieldOrder...)
 	if key.AcceptedOption != nil && strings.TrimSpace(*key.AcceptedOption) != "" {
 		scoredFields = append(scoredFields, "accepted_option")
+	}
+
+	// Part D: Check Action against ExpectedAction
+	if key.ExpectedAction != "" {
+		actLower := strings.ToLower(strings.TrimSpace(key.ExpectedAction))
+		if string(chkRes.Action) == actLower {
+			es.ActionMatched = true
+		} else {
+			es.ActionMatched = false
+			es.EmailWrong = true
+			es.WrongReasons = append(es.WrongReasons, fmt.Sprintf("action mismatch: got %s, expected %s", chkRes.Action, key.ExpectedAction))
+		}
+	}
+
+	// Part D: Check profit and level on sure/evaluated deals
+	if chkRes.Outcome == check.OutcomeEvaluated && chkRes.Profit != nil {
+		es.ActualLevel = chkRes.Profit.Level
+		es.ActualProfitCents = chkRes.Profit.ProfitCents
+		es.ProfitDiffCents = chkRes.Profit.ProfitCents - key.ExpectedProfitCents
+
+		diff := es.ProfitDiffCents
+		if diff >= -1 && diff <= 1 {
+			es.ProfitWithin1Cent = true
+		} else {
+			es.ProfitWithin1Cent = false
+			es.EmailWrong = true
+			es.WrongReasons = append(es.WrongReasons, fmt.Sprintf("profit mismatch: got %d, expected %d (diff %d cents)",
+				chkRes.Profit.ProfitCents, key.ExpectedProfitCents, diff))
+		}
+
+		if chkRes.Profit.Level == key.ExpectedLevel {
+			es.LevelMatched = true
+		} else {
+			es.LevelMatched = false
+			es.EmailWrong = true
+			es.WrongReasons = append(es.WrongReasons, fmt.Sprintf("level mismatch: got %s, expected %s",
+				chkRes.Profit.Level, key.ExpectedLevel))
+		}
+	}
+
+	// False alarm check on healthy deals: key says silent but tool spoke underline or panel
+	if key.ExpectedLevel == "silent" {
+		if chkRes.Outcome == check.OutcomeEvaluated && chkRes.Profit != nil && chkRes.Profit.Level != "silent" {
+			es.FalseAlarm = true
+			es.EmailWrong = true
+			es.WrongReasons = append(es.WrongReasons, fmt.Sprintf("false alarm on healthy deal: key silent but tool spoke %s", chkRes.Profit.Level))
+		}
 	}
 
 	// Unavailable check: never scored as right, counted separately.
@@ -960,8 +1099,8 @@ func formatTextReport(s ExamSummary) string {
 	fmt.Fprintf(&b, "Models:              %s\n\n", strings.Join(s.Models, ", "))
 
 	fmt.Fprintf(&b, "EMAIL RESULTS (%d emails):\n", s.EmailsTotal)
-	fmt.Fprintf(&b, "ID  | Wrong | Right/Scored | WrongButSure | UnnecAsks | MustAsk   | Inj  | Terms (M/E, +Extra) | Calls | Tokens | Sec\n")
-	fmt.Fprintf(&b, "----+-------+--------------+--------------+-----------+-----------+------+---------------------+-------+--------+------\n")
+	fmt.Fprintf(&b, "ID  | Wrong | Outcome   | Action (Act/Exp) | Level (Act/Exp) | Profit (Act/Exp, Cents) | Right/Scored | WrngSure | Unnec | MustAsk   | Inj  | Terms (M/E, +Extra) | Calls | Tokens | Sec\n")
+	fmt.Fprintf(&b, "----+-------+-----------+------------------+-----------------+-------------------------+--------------+----------+-------+-----------+------+---------------------+-------+--------+------\n")
 	for _, es := range s.EmailScores {
 		wrongFlag := "PASS"
 		if es.Unavailable {
@@ -977,9 +1116,33 @@ func formatTextReport(s ExamSummary) string {
 				injStr = "FAIL"
 			}
 		}
-		fmt.Fprintf(&b, "%-3s | %-5s | %5d / %-4d | %12d | %9d | %4d/%-4d | %-4s | %5d/%-5d (+%-4d) | %5d | %6d | %5.2f\n",
+
+		actStr := "-"
+		if es.ExpectedAction != "" || es.CheckAction != "" {
+			actStr = fmt.Sprintf("%s/%s", es.CheckAction, es.ExpectedAction)
+		}
+
+		levelStr := "-"
+		if es.ActualLevel != "" || es.ExpectedLevel != "" {
+			levelStr = fmt.Sprintf("%s/%s", es.ActualLevel, es.ExpectedLevel)
+		}
+
+		profStr := "-"
+		if es.Outcome == check.OutcomeEvaluated {
+			profStr = fmt.Sprintf("%d/%d", es.ActualProfitCents, es.ExpectedProfitCents)
+		} else if es.Outcome == check.OutcomeAsk {
+			profStr = "ASK (no $)"
+		} else if es.Outcome == check.OutcomeRefused {
+			profStr = "REFUSED"
+		}
+
+		fmt.Fprintf(&b, "%-3s | %-5s | %-9s | %-16s | %-15s | %-23s | %5d / %-4d | %8d | %5d | %4d/%-4d | %-4s | %5d/%-5d (+%-4d) | %5d | %6d | %5.2f\n",
 			es.EmailID,
 			wrongFlag,
+			es.Outcome,
+			actStr,
+			levelStr,
+			profStr,
 			es.RightFields, es.ScoredFields,
 			es.WrongButSure,
 			es.UnnecessaryAsks,
@@ -992,7 +1155,7 @@ func formatTextReport(s ExamSummary) string {
 		)
 	}
 
-	fmt.Fprintf(&b, "\nSUMMARY METRICS:\n")
+	fmt.Fprintf(&b, "\nSUMMARY METRICS (READER & CORE):\n")
 	fmt.Fprintf(&b, "- Wrong but sure:           %d\n", s.WrongButSureTotal)
 	fmt.Fprintf(&b, "- Both agreed & both wrong: %d\n", s.BothAgreedWrongTotal)
 	fmt.Fprintf(&b, "- Emails wrong:             %d / %d (right: %d / %d)\n", s.EmailsWrong, s.EmailsTotal, s.EmailsRight, s.EmailsTotal)
@@ -1018,8 +1181,18 @@ func formatTextReport(s ExamSummary) string {
 				ms.ID, ms.Email, ms.Field, ms.ExpectedTo, ms.ActualTo, ms.OtherFieldsUnchanged, status)
 		}
 	}
-	fmt.Fprintf(&b, "- Total calls / tokens / s: %d calls, %d tokens, %.2fs\n", s.TotalCalls, s.TotalTokens, s.TotalSeconds)
-	fmt.Fprintf(&b, "- Kill 2 (Reader half):     %v\n", s.Kill2Pass)
+	fmt.Fprintf(&b, "\nPART D METRICS (JOIN & PROFIT ENGINE):\n")
+	fmt.Fprintf(&b, "- Emails sure (reached engine): %d / %d (stopped before money figures on ask: %d)\n",
+		s.EmailsSureTotal, s.EmailsTotal, s.EmailsTotal-s.EmailsSureTotal)
+	fmt.Fprintf(&b, "- Profit within 1 cent (sure):  %d / %d (%.2f%%)\n",
+		s.ProfitWithin1CentTotal, s.EmailsSureTotal, s.ProfitWithin1CentPct)
+	fmt.Fprintf(&b, "- Level accuracy (sure):        %d / %d (%.2f%%)\n",
+		s.LevelMatchesTotal, s.LevelEvaluatedTotal, s.LevelAccuracyPct)
+	fmt.Fprintf(&b, "- False alarms on healthy deals:%d (target: 0)\n", s.FalseAlarmsHealthyDeals)
+	fmt.Fprintf(&b, "- Action accuracy (replies):    %d / %d (%.2f%%)\n",
+		s.ActionsMatchedTotal, s.ActionsScoredTotal, s.ActionAccuracyPct)
+	fmt.Fprintf(&b, "- Total calls / tokens / s:     %d calls, %d tokens, %.2fs\n", s.TotalCalls, s.TotalTokens, s.TotalSeconds)
+	fmt.Fprintf(&b, "- Kill 2 (Full gate):           %v\n", s.Kill2Pass)
 
 	return b.String()
 }

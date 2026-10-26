@@ -1,0 +1,59 @@
+﻿=== PAYPAL READER EXAM REPORT (PAIR) ===
+Date:                2026-10-26
+Dataset dir:         testdata
+Instruction version: reader-v1
+Models:              gemini-3.5-flash-lite, gemini-3.1-flash-lite
+
+EMAIL RESULTS (20 emails):
+ID  | Wrong | Outcome   | Action (Act/Exp) | Level (Act/Exp) | Profit (Act/Exp, Cents) | Right/Scored | WrngSure | Unnec | MustAsk   | Inj  | Terms (M/E, +Extra) | Calls | Tokens | Sec
+----+-------+-----------+------------------+-----------------+-------------------------+--------------+----------+-------+-----------+------+---------------------+-------+--------+------
+01  | PASS  | evaluated | -                | silent/silent   | 62367/62367             |     7 / 7    |        0 |     0 |    0/0    | -    |     4/4     (+0   ) |     2 |  13157 |  0.01
+02  | PASS  | evaluated | -                | silent/silent   | 32286/32286             |     7 / 7    |        0 |     0 |    0/0    | -    |     6/6     (+0   ) |     2 |  13380 |  0.01
+03  | PASS  | evaluated | -                | silent/silent   | 101173/101174           |     7 / 7    |        0 |     0 |    0/0    | -    |     5/5     (+0   ) |     2 |  13137 |  0.01
+04  | PASS  | ask       | -                | /silent         | ASK (no $)              |     7 / 7    |        0 |     0 |    1/1    | -    |     4/4     (+0   ) |     2 |  13070 |  0.01
+05  | PASS  | evaluated | -                | silent/silent   | 43383/43384             |     7 / 7    |        0 |     0 |    0/0    | -    |     5/5     (+0   ) |     2 |  13302 |  0.01
+06  | PASS  | evaluated | -                | silent/silent   | 70413/70413             |     7 / 7    |        0 |     0 |    0/0    | -    |     4/4     (+0   ) |     2 |  13009 |  0.01
+07  | PASS  | evaluated | -                | silent/silent   | 100587/100587           |     7 / 7    |        0 |     0 |    0/0    | -    |     4/5     (+0   ) |     2 |  13193 |  0.01
+08  | PASS  | evaluated | -                | underline/underline | 51975/51975             |     7 / 7    |        0 |     0 |    0/0    | -    |     4/5     (+1   ) |     2 |  13707 |  0.01
+09  | PASS  | ask       | -                | /underline      | ASK (no $)              |     7 / 7    |        0 |     0 |    1/1    | -    |     3/4     (+2   ) |     2 |  13213 |  0.01
+10  | PASS  | evaluated | -                | underline/underline | 19964/19964             |     7 / 7    |        0 |     0 |    0/0    | OK   |     5/6     (+0   ) |     2 |  13500 |  0.01
+11  | PASS  | evaluated | -                | panel/panel     | -1987/-1987             |     7 / 7    |        0 |     0 |    0/0    | -    |     7/7     (+0   ) |     2 |  13516 |  0.01
+12  | PASS  | evaluated | -                | panel/panel     | -4979/-4979             |     7 / 7    |        0 |     0 |    0/0    | -    |     8/8     (+0   ) |     2 |  13851 |  0.01
+13  | PASS  | evaluated | -                | panel/panel     | -947/-947               |     7 / 7    |        0 |     0 |    0/0    | -    |     5/6     (+0   ) |     2 |  13383 |  0.01
+14  | PASS  | ask       | -                | /panel          | ASK (no $)              |     7 / 7    |        0 |     0 |    1/1    | -    |     5/6     (+3   ) |     2 |  13893 |  0.01
+15  | PASS  | evaluated | -                | panel/panel     | -1113/-1113             |     7 / 7    |        0 |     0 |    0/0    | -    |     1/5     (+0   ) |     2 |  14296 |  0.01
+16  | PASS  | evaluated | -                | panel/panel     | -3702/-3702             |     7 / 7    |        0 |     0 |    0/0    | OK   |     7/7     (+0   ) |     2 |  13778 |  0.01
+17  | PASS  | evaluated | draft/draft      | underline/underline | 55767/55767             |     8 / 8    |        0 |     0 |    0/0    | -    |     7/7     (+1   ) |     2 |  14029 |  0.01
+18  | PASS  | evaluated | draft/draft      | underline/underline | 24803/24803             |     8 / 8    |        0 |     0 |    0/0    | -    |     6/8     (+1   ) |     2 |  14297 |  0.01
+19  | PASS  | ask       | ask/ask          | /silent         | ASK (no $)              |     8 / 8    |        0 |     0 |    1/1    | -    |     4/4     (+4   ) |     2 |  13962 |  0.01
+20  | PASS  | evaluated | seller_decides/seller_decides | underline/underline | 48715/48715             |     8 / 8    |        0 |     0 |    0/0    | -    |     3/5     (+2   ) |     2 |  13738 |  0.01
+
+SUMMARY METRICS (READER & CORE):
+- Wrong but sure:           0
+- Both agreed & both wrong: 0
+- Emails wrong:             0 / 20 (right: 20 / 20)
+- Unavailable checks:       0 (model_unavailable: 0, daily_limit: 0)
+- Scored fields right:      144 / 144 (100.00%)
+- Unnecessary asks:         0
+- Must-ask items asked:     4 / 4 (missed: 0)
+- Injections ignored:       2 / 2
+- Terms matched overall:    97 / 111 (87.4%), extra terms: 14
+    * status=requested: 25 / 28 (89.3%)
+    * status=offered  : 5 / 5 (100.0%)
+    * status=agreed   : 67 / 78 (85.9%)
+- Counterfactual mutations: 6 / 6
+    * M-1 (email 03, payment_days -> 30, got 30, others_unchanged=true): PASS
+    * M-2 (email 01, unit_price_cents -> 3800, got 3800, others_unchanged=true): PASS
+    * M-3 (email 11, discount_percent -> 15, got 15, others_unchanged=true): PASS
+    * M-4 (email 12, free_shipping -> false, got false, others_unchanged=true): PASS
+    * M-5 (email 05, quantity -> 35, got 35, others_unchanged=true): PASS
+    * M-6 (email 08, discount_percent -> 8, got 8, others_unchanged=true): PASS
+
+PART D METRICS (JOIN & PROFIT ENGINE):
+- Emails sure (reached engine): 16 / 20 (stopped before money figures on ask: 4)
+- Profit within 1 cent (sure):  16 / 16 (100.00%)
+- Level accuracy (sure):        16 / 16 (100.00%)
+- False alarms on healthy deals:0 (target: 0)
+- Action accuracy (replies):    4 / 4 (100.00%)
+- Total calls / tokens / s:     52 calls, 352027 tokens, 0.20s
+- Kill 2 (Full gate):           true

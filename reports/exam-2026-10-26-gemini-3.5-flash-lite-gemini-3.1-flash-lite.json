@@ -59,7 +59,7 @@
       "passed": true,
       "calls_used": 2,
       "tokens_used": 13207,
-      "seconds_taken": 3.3443269
+      "seconds_taken": 0.0078287
     },
     {
       "id": "M-2",
@@ -72,7 +72,7 @@
       "passed": true,
       "calls_used": 2,
       "tokens_used": 13157,
-      "seconds_taken": 3.4352156
+      "seconds_taken": 0.0065251
     },
     {
       "id": "M-3",
@@ -85,7 +85,7 @@
       "passed": true,
       "calls_used": 2,
       "tokens_used": 13636,
-      "seconds_taken": 21.2579341
+      "seconds_taken": 0.0069819
     },
     {
       "id": "M-4",
@@ -98,7 +98,7 @@
       "passed": true,
       "calls_used": 2,
       "tokens_used": 13691,
-      "seconds_taken": 9.5196464
+      "seconds_taken": 0.005999
     },
     {
       "id": "M-5",
@@ -111,7 +111,7 @@
       "passed": true,
       "calls_used": 2,
       "tokens_used": 13351,
-      "seconds_taken": 3.9534161
+      "seconds_taken": 0.0070443
     },
     {
       "id": "M-6",
@@ -124,12 +124,22 @@
       "passed": true,
       "calls_used": 2,
       "tokens_used": 13574,
-      "seconds_taken": 2.6486825
+      "seconds_taken": 0.0094552
     }
   ],
   "total_calls": 52,
   "total_tokens": 352027,
-  "total_seconds": 44.2848617,
+  "total_seconds": 0.1950959,
+  "emails_sure_total": 16,
+  "profit_within_1_cent_total": 16,
+  "profit_within_1_cent_pct": 100,
+  "level_evaluated_total": 16,
+  "level_matches_total": 16,
+  "level_accuracy_pct": 100,
+  "false_alarms_healthy_deals": 0,
+  "actions_scored_total": 4,
+  "actions_matched_total": 4,
+  "action_accuracy_pct": 100,
   "kill2_pass": true,
   "email_scores": [
     {
@@ -215,8 +225,15 @@
       "terms_extra": 0,
       "calls_used": 2,
       "tokens_used": 13157,
-      "seconds_taken": 0.0043192,
-      "mode": "replayed"
+      "seconds_taken": 0.0079553,
+      "mode": "replayed",
+      "outcome": "evaluated",
+      "expected_level": "silent",
+      "actual_level": "silent",
+      "level_matched": true,
+      "expected_profit_cents": 62367,
+      "actual_profit_cents": 62367,
+      "profit_within_1_cent": true
     },
     {
       "email_id": "02",
@@ -301,8 +318,15 @@
       "terms_extra": 0,
       "calls_used": 2,
       "tokens_used": 13380,
-      "seconds_taken": 0.0061452,
-      "mode": "replayed"
+      "seconds_taken": 0.0053429,
+      "mode": "replayed",
+      "outcome": "evaluated",
+      "expected_level": "silent",
+      "actual_level": "silent",
+      "level_matched": true,
+      "expected_profit_cents": 32286,
+      "actual_profit_cents": 32286,
+      "profit_within_1_cent": true
     },
     {
       "email_id": "03",
@@ -387,8 +411,16 @@
       "terms_extra": 0,
       "calls_used": 2,
       "tokens_used": 13137,
-      "seconds_taken": 0.0053773,
-      "mode": "replayed"
+      "seconds_taken": 0.0055701,
+      "mode": "replayed",
+      "outcome": "evaluated",
+      "expected_level": "silent",
+      "actual_level": "silent",
+      "level_matched": true,
+      "expected_profit_cents": 101174,
+      "actual_profit_cents": 101173,
+      "profit_diff_cents": -1,
+      "profit_within_1_cent": true
     },
     {
       "email_id": "04",
@@ -474,8 +506,14 @@
       "terms_extra": 0,
       "calls_used": 2,
       "tokens_used": 13070,
-      "seconds_taken": 0.006567,
-      "mode": "replayed"
+      "seconds_taken": 0.0075485,
+      "mode": "replayed",
+      "outcome": "ask",
+      "expected_level": "silent",
+      "expected_profit_cents": 61483,
+      "check_questions": [
+        "free_shipping"
+      ]
     },
     {
       "email_id": "05",
@@ -560,8 +598,16 @@
       "terms_extra": 0,
       "calls_used": 2,
       "tokens_used": 13302,
-      "seconds_taken": 0.0040102,
-      "mode": "replayed"
+      "seconds_taken": 0.0069297,
+      "mode": "replayed",
+      "outcome": "evaluated",
+      "expected_level": "silent",
+      "actual_level": "silent",
+      "level_matched": true,
+      "expected_profit_cents": 43384,
+      "actual_profit_cents": 43383,
+      "profit_diff_cents": -1,
+      "profit_within_1_cent": true
     },
     {
       "email_id": "06",
@@ -646,8 +692,15 @@
       "terms_extra": 0,
       "calls_used": 2,
       "tokens_used": 13009,
-      "seconds_taken": 0.0076406,
-      "mode": "replayed"
+      "seconds_taken": 0.0052006,
+      "mode": "replayed",
+      "outcome": "evaluated",
+      "expected_level": "silent",
+      "actual_level": "silent",
+      "level_matched": true,
+      "expected_profit_cents": 70413,
+      "actual_profit_cents": 70413,
+      "profit_within_1_cent": true
     },
     {
       "email_id": "07",
@@ -732,8 +785,15 @@
       "terms_extra": 0,
       "calls_used": 2,
       "tokens_used": 13193,
-      "seconds_taken": 0.0057023,
-      "mode": "replayed"
+      "seconds_taken": 0.0056478,
+      "mode": "replayed",
+      "outcome": "evaluated",
+      "expected_level": "silent",
+      "actual_level": "silent",
+      "level_matched": true,
+      "expected_profit_cents": 100587,
+      "actual_profit_cents": 100587,
+      "profit_within_1_cent": true
     },
     {
       "email_id": "08",
@@ -818,8 +878,15 @@
       "terms_extra": 1,
       "calls_used": 2,
       "tokens_used": 13707,
-      "seconds_taken": 0.0085603,
-      "mode": "replayed"
+      "seconds_taken": 0.0068409,
+      "mode": "replayed",
+      "outcome": "evaluated",
+      "expected_level": "underline",
+      "actual_level": "underline",
+      "level_matched": true,
+      "expected_profit_cents": 51975,
+      "actual_profit_cents": 51975,
+      "profit_within_1_cent": true
     },
     {
       "email_id": "09",
@@ -905,8 +972,14 @@
       "terms_extra": 2,
       "calls_used": 2,
       "tokens_used": 13213,
-      "seconds_taken": 0.0064419,
-      "mode": "replayed"
+      "seconds_taken": 0.0061057,
+      "mode": "replayed",
+      "outcome": "ask",
+      "expected_level": "underline",
+      "expected_profit_cents": 29786,
+      "check_questions": [
+        "payment_days"
+      ]
     },
     {
       "email_id": "10",
@@ -991,8 +1064,15 @@
       "terms_extra": 0,
       "calls_used": 2,
       "tokens_used": 13500,
-      "seconds_taken": 0.0049633,
-      "mode": "replayed"
+      "seconds_taken": 0.0071237,
+      "mode": "replayed",
+      "outcome": "evaluated",
+      "expected_level": "underline",
+      "actual_level": "underline",
+      "level_matched": true,
+      "expected_profit_cents": 19964,
+      "actual_profit_cents": 19964,
+      "profit_within_1_cent": true
     },
     {
       "email_id": "11",
@@ -1077,8 +1157,15 @@
       "terms_extra": 0,
       "calls_used": 2,
       "tokens_used": 13516,
-      "seconds_taken": 0.005368,
-      "mode": "replayed"
+      "seconds_taken": 0.0080642,
+      "mode": "replayed",
+      "outcome": "evaluated",
+      "expected_level": "panel",
+      "actual_level": "panel",
+      "level_matched": true,
+      "expected_profit_cents": -1987,
+      "actual_profit_cents": -1987,
+      "profit_within_1_cent": true
     },
     {
       "email_id": "12",
@@ -1163,8 +1250,15 @@
       "terms_extra": 0,
       "calls_used": 2,
       "tokens_used": 13851,
-      "seconds_taken": 0.0081368,
-      "mode": "replayed"
+      "seconds_taken": 0.0080108,
+      "mode": "replayed",
+      "outcome": "evaluated",
+      "expected_level": "panel",
+      "actual_level": "panel",
+      "level_matched": true,
+      "expected_profit_cents": -4979,
+      "actual_profit_cents": -4979,
+      "profit_within_1_cent": true
     },
     {
       "email_id": "13",
@@ -1249,8 +1343,15 @@
       "terms_extra": 0,
       "calls_used": 2,
       "tokens_used": 13383,
-      "seconds_taken": 0.0073458,
-      "mode": "replayed"
+      "seconds_taken": 0.0065552,
+      "mode": "replayed",
+      "outcome": "evaluated",
+      "expected_level": "panel",
+      "actual_level": "panel",
+      "level_matched": true,
+      "expected_profit_cents": -947,
+      "actual_profit_cents": -947,
+      "profit_within_1_cent": true
     },
     {
       "email_id": "14",
@@ -1336,8 +1437,14 @@
       "terms_extra": 3,
       "calls_used": 2,
       "tokens_used": 13893,
-      "seconds_taken": 0.0060147,
-      "mode": "replayed"
+      "seconds_taken": 0.0081492,
+      "mode": "replayed",
+      "outcome": "ask",
+      "expected_level": "panel",
+      "expected_profit_cents": -3324,
+      "check_questions": [
+        "rebate_percent"
+      ]
     },
     {
       "email_id": "15",
@@ -1422,8 +1529,15 @@
       "terms_extra": 0,
       "calls_used": 2,
       "tokens_used": 14296,
-      "seconds_taken": 0.0086505,
-      "mode": "replayed"
+      "seconds_taken": 0.0090356,
+      "mode": "replayed",
+      "outcome": "evaluated",
+      "expected_level": "panel",
+      "actual_level": "panel",
+      "level_matched": true,
+      "expected_profit_cents": -1113,
+      "actual_profit_cents": -1113,
+      "profit_within_1_cent": true
     },
     {
       "email_id": "16",
@@ -1508,8 +1622,15 @@
       "terms_extra": 0,
       "calls_used": 2,
       "tokens_used": 13778,
-      "seconds_taken": 0.0050024,
-      "mode": "replayed"
+      "seconds_taken": 0.0109442,
+      "mode": "replayed",
+      "outcome": "evaluated",
+      "expected_level": "panel",
+      "actual_level": "panel",
+      "level_matched": true,
+      "expected_profit_cents": -3702,
+      "actual_profit_cents": -3702,
+      "profit_within_1_cent": true
     },
     {
       "email_id": "17",
@@ -1603,8 +1724,18 @@
       "terms_extra": 1,
       "calls_used": 2,
       "tokens_used": 14029,
-      "seconds_taken": 0.0053404,
-      "mode": "replayed"
+      "seconds_taken": 0.0071719,
+      "mode": "replayed",
+      "outcome": "evaluated",
+      "check_action": "draft",
+      "expected_action": "draft",
+      "action_matched": true,
+      "expected_level": "underline",
+      "actual_level": "underline",
+      "level_matched": true,
+      "expected_profit_cents": 55767,
+      "actual_profit_cents": 55767,
+      "profit_within_1_cent": true
     },
     {
       "email_id": "18",
@@ -1698,8 +1829,18 @@
       "terms_extra": 1,
       "calls_used": 2,
       "tokens_used": 14297,
-      "seconds_taken": 0.0063904,
-      "mode": "replayed"
+      "seconds_taken": 0.0077574,
+      "mode": "replayed",
+      "outcome": "evaluated",
+      "check_action": "draft",
+      "expected_action": "draft",
+      "action_matched": true,
+      "expected_level": "underline",
+      "actual_level": "underline",
+      "level_matched": true,
+      "expected_profit_cents": 24803,
+      "actual_profit_cents": 24803,
+      "profit_within_1_cent": true
     },
     {
       "email_id": "19",
@@ -1794,8 +1935,17 @@
       "terms_extra": 4,
       "calls_used": 2,
       "tokens_used": 13962,
-      "seconds_taken": 0.0073385,
-      "mode": "replayed"
+      "seconds_taken": 0.0136366,
+      "mode": "replayed",
+      "outcome": "ask",
+      "check_action": "ask",
+      "expected_action": "ask",
+      "action_matched": true,
+      "expected_level": "silent",
+      "expected_profit_cents": 23357,
+      "check_questions": [
+        "accepted_option"
+      ]
     },
     {
       "email_id": "20",
@@ -1889,8 +2039,18 @@
       "terms_extra": 2,
       "calls_used": 2,
       "tokens_used": 13738,
-      "seconds_taken": 0.0063253,
-      "mode": "replayed"
+      "seconds_taken": 0.0076714,
+      "mode": "replayed",
+      "outcome": "evaluated",
+      "check_action": "seller_decides",
+      "expected_action": "seller_decides",
+      "action_matched": true,
+      "expected_level": "underline",
+      "actual_level": "underline",
+      "level_matched": true,
+      "expected_profit_cents": 48715,
+      "actual_profit_cents": 48715,
+      "profit_within_1_cent": true
     }
   ]
 }
