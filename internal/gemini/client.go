@@ -41,6 +41,8 @@ var (
 	ErrDailyLimitReached = errors.New("daily limit reached")
 	// ErrToolsForbidden is returned if any caller attempts to include tools in a request.
 	ErrToolsForbidden = errors.New("gemini: tools and function declarations are forbidden in the reader")
+	// ErrReplayOnlyCacheMiss is returned when MARGINCHECK_REPLAY_ONLY=1 and the response is not in cache.
+	ErrReplayOnlyCacheMiss = errors.New("gemini: replay only mode, response not in cache")
 )
 
 // Client is a small REST client for Gemini generateContent.
@@ -60,7 +62,7 @@ type Client struct {
 // NewClient creates a Gemini REST client. The apiKey is sent only in the x-goog-api-key header.
 func NewClient(apiKey string, cacheDir string, noCache bool) (*Client, error) {
 	key := strings.TrimSpace(apiKey)
-	if key == "" {
+	if key == "" && os.Getenv("MARGINCHECK_REPLAY_ONLY") != "1" {
 		return nil, ErrMissingAPIKey
 	}
 	return &Client{
@@ -79,6 +81,9 @@ func NewClient(apiKey string, cacheDir string, noCache bool) (*Client, error) {
 func LoadAPIKey(dotenvPath string) (string, error) {
 	if v := strings.TrimSpace(os.Getenv("GEMINI_API_KEY")); v != "" {
 		return v, nil
+	}
+	if os.Getenv("MARGINCHECK_REPLAY_ONLY") == "1" {
+		return "replay-only", nil
 	}
 	if strings.TrimSpace(dotenvPath) == "" {
 		return "", ErrMissingAPIKey
@@ -258,6 +263,11 @@ func (c *Client) Generate(ctx context.Context, req Request) (Response, error) {
 				return resp, nil
 			}
 		}
+	}
+
+	// Replay-only mode returns an error at once without pacing and without network calls.
+	if os.Getenv("MARGINCHECK_REPLAY_ONLY") == "1" {
+		return Response{}, ErrReplayOnlyCacheMiss
 	}
 
 	// 2. Live call with pacing and at most 1 retry on a per-minute 429.
