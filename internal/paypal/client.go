@@ -365,12 +365,28 @@ type Link struct {
 	Method string `json:"method"`
 }
 
+// ShippingCost represents amount.breakdown.shipping on an invoice.
+type ShippingCost struct {
+	Amount *Money `json:"amount,omitempty"`
+}
+
+// AmountBreakdown represents amount.breakdown on an invoice.
+type AmountBreakdown struct {
+	Shipping *ShippingCost `json:"shipping,omitempty"`
+}
+
+// InvoiceAmount represents amount on an invoice (only the parts margin-check reads back).
+type InvoiceAmount struct {
+	Breakdown *AmountBreakdown `json:"breakdown,omitempty"`
+}
+
 // Invoice represents a PayPal Invoicing v2 invoice resource (always kept in DRAFT status).
 type Invoice struct {
 	ID             string               `json:"id"`
 	Status         string               `json:"status"`
 	Detail         InvoiceDetail        `json:"detail"`
 	Items          []InvoiceLineItem    `json:"items,omitempty"`
+	Amount         *InvoiceAmount       `json:"amount,omitempty"`
 	Configuration  InvoiceConfiguration `json:"configuration"`
 	Href           string               `json:"href,omitempty"`
 	Links          []Link               `json:"links,omitempty"`
