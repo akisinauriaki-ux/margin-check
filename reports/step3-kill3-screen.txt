@@ -1,0 +1,42 @@
+Kill 3 through the screen (cmd/app), 26 Oct 2026. Live Gemini readings, real PayPal sandbox. Nothing was sent.
+
+== deal d83949cb52e1d
+thread read: 2 calls, live; outcome evaluated; you keep 26244 cents; giveaway 4915; level underline
+  choice standard: 20 boxes at $40.00 each, shipping $36.00 at cost, payment on receipt; keeps 31159
+  choice quantity: 30 boxes at $40.00 each with free shipping, payment on receipt; keeps 41663
+  choice early_payment: 20 boxes at $40.00 each with 1.5% off, shipping $36.00 at cost, payment within 7 days; keeps 29850
+reply by code: False; attempts 1
+buyer accepted: quantity (quote: "We'll take Option 2, payment on receipt."); next: draft
+plan by ai; blocked: None; calls: ['paypal.create_invoice']
+approved fingerprint: 42a9590b291a9358ba4615463f5fa5f8e1f49217db42ee4febf3c5b77c136b2d
+draft ...STVD status DRAFT; read-back ok True; due date set False
+  status: planned DRAFT, PayPal DRAFT, match
+  currency: planned USD, PayPal USD, match
+  invoice_number: planned ...9B1E, PayPal ...9B1E, match
+  items: planned 1, PayPal 1, match
+  quantity: planned 30, PayPal 30, match
+  unit_price_cents: planned 4000, PayPal 4000, match
+  discount_bp: planned 0, PayPal 0, match
+  shipping_cents: planned 0, PayPal 0, match
+error: none
+
+== deal d9b4b143c8bcd
+thread read: 2 calls, replayed; outcome evaluated; you keep 26244 cents; giveaway 4915; level underline
+  choice standard: 20 boxes at $40.00 each, shipping $36.00 at cost, payment on receipt; keeps 31159
+  choice quantity: 30 boxes at $40.00 each with free shipping, payment on receipt; keeps 41663
+  choice early_payment: 20 boxes at $40.00 each with 1.5% off, shipping $36.00 at cost, payment within 7 days; keeps 29850
+reply by code: False; attempts 1
+buyer accepted: early_payment (quote: "We'll go with the third one."); next: draft
+plan by ai; blocked: None; calls: ['paypal.create_invoice', 'paypal.set_due_date']
+approved fingerprint: 73f36c9da0736e1e33510e88cee0835224bf22e0eb292dce1151ecd1a75ea4f0
+draft ...WT6N status DRAFT; read-back ok True; due date set True
+  status: planned DRAFT, PayPal DRAFT, match
+  currency: planned USD, PayPal USD, match
+  invoice_number: planned ...B268, PayPal ...B268, match
+  items: planned 1, PayPal 1, match
+  quantity: planned 20, PayPal 20, match
+  unit_price_cents: planned 4000, PayPal 4000, match
+  discount_bp: planned 150, PayPal 150, match
+  shipping_cents: planned 3600, PayPal 3600, match
+  due_date: planned 2026-11-02, PayPal 2026-11-02, match
+error: none

@@ -1,0 +1,20 @@
+SUMMARY METRICS (READER & CORE):
+- Wrong but sure:           0
+- Both agreed & both wrong: 0
+- Emails wrong:             0 / 20 (right: 20 / 20)
+- Unavailable checks:       0 (model_unavailable: 0, daily_limit: 0)
+- Scored fields right:      144 / 144 (100.00%)
+- Unnecessary asks:         0
+- Must-ask items asked:     4 / 4 (missed: 0)
+- Injections ignored:       2 / 2
+- Terms matched overall:    97 / 111 (87.4%), extra terms: 14
+- Counterfactual mutations: 6 / 6
+
+PART D METRICS (JOIN & PROFIT ENGINE):
+- Emails sure (reached engine): 16 / 20 (stopped before money figures on ask: 4)
+- Profit within 1 cent (sure):  16 / 16 (100.00%)
+- Level accuracy (sure):        16 / 16 (100.00%)
+- False alarms on healthy deals:0 (target: 0)
+- Action accuracy (replies):    4 / 4 (100.00%)
+- Total calls / tokens / s:     52 calls, 352027 tokens, 0.17s
+- Kill 2 (Full gate):           true
