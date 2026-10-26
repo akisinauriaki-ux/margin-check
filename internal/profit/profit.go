@@ -2,6 +2,7 @@ package profit
 
 import (
 	"fmt"
+	"strings"
 )
 
 // roundDiv divides n by d and rounds to the nearest integer, halves away from zero.
@@ -37,11 +38,23 @@ func formatCents(cents int64) string {
 // Evaluate computes the deal's list value, revenue, profit, giveaway,
 // pocket price waterfall leak lines, double discounting finding, and alert level.
 func Evaluate(deal Deal, seller Seller) (Result, error) {
+	// Refuse deal with no currency. Never assume.
+	if strings.TrimSpace(deal.Currency) == "" {
+		return Result{}, ErrNoCurrency
+	}
+
 	// Refuse mixed currencies
-	if deal.Currency != "" && seller.Currency != "" && deal.Currency != seller.Currency {
+	if seller.Currency != "" && deal.Currency != seller.Currency {
 		return Result{}, ErrMixedCurrency
 	}
-	if deal.CoopAllowance.Currency != "" && deal.Currency != "" && deal.CoopAllowance.Currency != deal.Currency {
+	if deal.CoopAllowance.Cents > 0 {
+		if strings.TrimSpace(deal.CoopAllowance.Currency) == "" {
+			return Result{}, ErrNoCurrency
+		}
+		if deal.CoopAllowance.Currency != deal.Currency {
+			return Result{}, ErrMixedCurrency
+		}
+	} else if deal.CoopAllowance.Currency != "" && deal.CoopAllowance.Currency != deal.Currency {
 		return Result{}, ErrMixedCurrency
 	}
 
@@ -60,6 +73,14 @@ func Evaluate(deal Deal, seller Seller) (Result, error) {
 	}
 	if deal.PaymentDays < 0 {
 		return Result{}, fmt.Errorf("profit: payment days cannot be negative, got %d", deal.PaymentDays)
+	}
+	if deal.EarlyPaymentDays < 0 {
+		return Result{}, fmt.Errorf("profit: early payment days cannot be negative, got %d", deal.EarlyPaymentDays)
+	}
+
+	// Refuse negative co-op allowance. The leak lines must never be negative.
+	if deal.CoopAllowance.Cents < 0 {
+		return Result{}, fmt.Errorf("profit: co-op allowance cannot be negative, got %d", deal.CoopAllowance.Cents)
 	}
 
 	listValue := deal.Quantity * deal.UnitPriceCents
@@ -195,32 +216,33 @@ func Evaluate(deal Deal, seller Seller) (Result, error) {
 	}, nil
 }
 
-// EarlyPaymentWorthIt compares the profit when paid in normalDays with no discount
-// against the profit when paid in earlyDays with discountBP. It returns whether
-// the discount is worth it, both profits, and the break-even discount (largest discount in steps of 10 BP keeping at least normal profit).
+// EarlyPaymentWorthIt compares the profit when paid in normalDays with no early-payment discount
+// against the profit when paid in earlyDays with discountBP. It keeps all existing terms of the deal
+// (e.g. order-size discount, other discount, rebate, freight, co-op allowance), changing only the
+// payment days, and putting the early-payment discount in EarlyPaymentDiscountBP and EarlyPaymentDays.
+// It returns whether the discount is worth it, both profits, and the break-even discount (largest
+// discount in steps of 10 BP keeping at least normal profit).
 func EarlyPaymentWorthIt(deal Deal, seller Seller, normalDays int64, earlyDays int64, discountBP int64) (EarlyPaymentResult, error) {
-	// Normal terms: paid in normalDays, no discount
+	if normalDays < 0 || earlyDays < 0 || discountBP < 0 {
+		return EarlyPaymentResult{}, fmt.Errorf("profit: payment days and discount cannot be negative")
+	}
+
+	// Normal terms: keep all existing deal terms, payment in normalDays, no early-payment discount
 	normalDeal := deal
 	normalDeal.PaymentDays = normalDays
-	normalDeal.OrderSizeDiscountBP = 0
-	normalDeal.OtherDiscountBP = 0
 	normalDeal.EarlyPaymentDiscountBP = 0
 	normalDeal.EarlyPaymentDays = 0
-	normalDeal.RebateBP = 0
 
 	resNormal, err := Evaluate(normalDeal, seller)
 	if err != nil {
 		return EarlyPaymentResult{}, fmt.Errorf("failed to evaluate normal terms: %w", err)
 	}
 
-	// Early terms: paid in earlyDays with discountBP
+	// Early terms: keep all existing deal terms, payment in earlyDays with early-payment discount
 	earlyDeal := deal
 	earlyDeal.PaymentDays = earlyDays
-	earlyDeal.OrderSizeDiscountBP = 0
-	earlyDeal.OtherDiscountBP = discountBP
-	earlyDeal.EarlyPaymentDiscountBP = 0
+	earlyDeal.EarlyPaymentDiscountBP = discountBP
 	earlyDeal.EarlyPaymentDays = earlyDays
-	earlyDeal.RebateBP = 0
 
 	resEarly, err := Evaluate(earlyDeal, seller)
 	if err != nil {
@@ -234,11 +256,8 @@ func EarlyPaymentWorthIt(deal Deal, seller Seller, normalDays int64, earlyDays i
 	for bp := int64(0); bp <= 10000; bp += 10 {
 		testDeal := deal
 		testDeal.PaymentDays = earlyDays
-		testDeal.OrderSizeDiscountBP = 0
-		testDeal.OtherDiscountBP = bp
-		testDeal.EarlyPaymentDiscountBP = 0
+		testDeal.EarlyPaymentDiscountBP = bp
 		testDeal.EarlyPaymentDays = earlyDays
-		testDeal.RebateBP = 0
 
 		testRes, err := Evaluate(testDeal, seller)
 		if err != nil {
