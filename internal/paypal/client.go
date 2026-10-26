@@ -650,15 +650,6 @@ func (c *Client) SearchInvoiceByNumber(ctx context.Context, requestID, invoiceNu
 			return &cp, nil
 		}
 	}
-	if len(list.Items) == 1 {
-		item := list.Items[0]
-		if item.ID == "" {
-			item.ID = extractInvoiceID(&item)
-		}
-		if item.ID != "" {
-			return &item, nil
-		}
-	}
 
 	// Fallback to GET /v2/invoicing/invoices if search index lags immediately after creation.
 	fallbackList, listErr := c.ListInvoices(ctx, 1, 100, true)
