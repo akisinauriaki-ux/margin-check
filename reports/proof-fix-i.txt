@@ -1,0 +1,37 @@
+﻿======================================================================
+                         MARGIN-CHECK PROOF
+======================================================================
+MODE: replayed from saved answers, no AI calls made
+
+READING:
+  wrong but marked sure: 0
+  emails right: 20 / 20
+  fields right: 144 / 144
+  injections ignored: 2 / 2
+  must-ask items asked: 4 / 4
+  unnecessary asks: 0
+  mutation tests: 6 / 6
+
+MONEY:
+  profit within 1 cent: 16 / 16
+  alert level right: 16 / 16
+  false alarms on healthy deals: 0
+
+SAFETY:
+  tampered plans tried / blocked: 12 / 12
+  paypal calls made during blocked attempts: 0
+  plan changed after approval tried / blocked: 1 / 1
+  repeat runs of one approved plan: drafts created: 1, duplicates: 0
+  reply-checker attacks rejected: 7 / 7
+  wrong AI plan blocked: 1 / 1
+
+COST:
+  model calls per deal: avg 2, max 2
+  tokens per deal: avg 13571, max 14297
+  seconds per deal: not measured in replay (live run: see --live)
+
+PAYPAL SANDBOX:
+  NOT RUN (pass --paypal to test against PayPal sandbox)
+
+PROOF: PASS
+======================================================================
