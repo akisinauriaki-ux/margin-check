@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>margin-check</title>
+<style>
+:root{--ink:#1b1f24;--muted:#5f6b7a;--line:#e3e7ec;--bg:#fbfbfa;--card:#fff;--red:#b42318;--redbg:#fef3f2;--amber:#b54708;--amberbg:#fffaeb;--green:#067647;--greenbg:#ecfdf3;--blue:#1d4ed8}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:980px;margin:0 auto;padding:24px 16px 80px}
+header{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:28px}
+header h1{font-size:20px;margin:0}header h1 a{color:inherit;text-decoration:none}.tag{color:var(--muted);font-size:13px}
+h2{font-size:15px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:40px 0 12px}
+textarea{width:100%;min-height:180px;font:14px/1.5 ui-monospace,Consolas,monospace;padding:12px;border:1px solid var(--line);border-radius:8px;background:#fff}
+button{font:600 15px system-ui,sans-serif;padding:10px 18px;border-radius:8px;border:0;background:var(--ink);color:#fff;cursor:pointer}
+button.approve{background:var(--green)}
+.err{background:var(--redbg);color:var(--red);padding:12px 14px;border-radius:8px;margin-bottom:16px}
+.thread{background:#fff;border:1px solid var(--line);border-radius:8px;padding:12px 14px;font:14px/1.6 ui-monospace,Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
+.thread .l{display:block;min-height:1.6em}.thread .m{text-decoration:underline wavy var(--red);text-underline-offset:4px;background:var(--redbg)}
+.thread .why{display:block;font:12px system-ui,sans-serif;color:var(--red);margin:0 0 4px}
+.hero{text-align:center;padding:56px 16px}
+.hero .big{font-size:clamp(44px,9vw,84px);font-weight:750;letter-spacing:-.02em;line-height:1.1}
+.hero .sub{color:var(--muted);margin-top:10px}
+.badge{display:inline-block;margin-top:16px;padding:6px 14px;border-radius:999px;font-weight:600;font-size:14px}
+.panel{background:var(--redbg);color:var(--red)}.underline{background:var(--amberbg);color:var(--amber)}.silent{background:var(--greenbg);color:var(--green)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px}
+.card .k{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}.card .s{font-weight:600;margin:6px 0 10px}
+.card .keep{font-size:26px;font-weight:700}.card .r{color:var(--muted);font-size:14px;margin-top:8px}.card .q{font-style:italic;font-size:14px;margin-top:8px}
+.note{color:var(--muted);font-size:14px}
+table{width:100%;border-collapse:collapse;font-size:14px;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted);font-weight:600;font-size:13px}
+td.q{color:var(--muted);font-size:13px}.ok{color:var(--green);font-weight:600}.no{color:var(--red);font-weight:600}.ask{color:var(--amber);font-weight:600}
+.plan{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px}
+.fp{font:12px ui-monospace,Consolas,monospace;color:var(--muted);overflow-wrap:anywhere}
+.blocked{background:var(--amberbg);color:var(--amber);padding:10px 12px;border-radius:8px;margin:10px 0;font-size:14px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+</style>
+</head>
+<body><main>
+<header>
+  <h1><a href="/">margin-check</a> <span class="tag">a spell-checker for profit</span></h1>
+  <span class="tag">PayPal sandbox · drafts only · nothing is ever sent</span>
+</header>
+{{if .Error}}<div class="err">{{.Error}}</div>{{end}}
+
+{{if not .Deal}}
+<form method="post" action="/check">
+  <input type="hidden" name="csrf" value="{{.CSRF}}">
+  <h2>Paste the email thread, with the reply you were about to send</h2>
+  <textarea name="thread" required>{{.Sample}}</textarea>
+  <div class="row"><button type="submit">Check the deal</button>
+  <span class="note">Read by two AI models ({{.Models}}); every number is checked by code. Seller numbers: {{.Seller}} (sample values).</span></div>
+</form>
+{{else}}{{with .Deal}}
+{{$cur := "USD"}}{{if .Check.Deal}}{{$cur = .Check.Deal.Currency}}{{end}}
+
+<h2>The thread</h2>
+<div class="thread">{{range lines .}}{{if .Mark}}<span class="why">▼ {{.Why}}</span><span class="l m">{{.Text}}</span>{{else}}<span class="l">{{.Text}}</span>{{end}}{{end}}</div>
+
+{{with .Check}}
+{{if eq .Outcome "evaluated"}}
+<section class="hero">
+  <div class="big">You keep {{money .Profit.ProfitCents $cur}}</div>
+  <div class="sub">from this order. At your list price, paid on receipt, you'd keep {{money (add .Profit.ProfitCents .Profit.GiveawayCents) $cur}}.</div>
+  {{if eq .Profit.Level "panel"}}<div class="badge panel">This deal loses money</div>
+  {{else if eq .Profit.Level "underline"}}<div class="badge underline">{{money .Profit.GiveawayCents $cur}} given away</div>
+  {{else}}<div class="badge silent">Looks healthy</div>{{end}}
+  {{if .Profit.DoubleDiscountFinding}}<div class="sub">{{.Profit.DoubleDiscountFinding}}</div>{{end}}
+</section>
+{{else if eq .Outcome "ask"}}
+<section class="hero"><div class="big" style="font-size:40px">Not sure yet</div>
+  <div class="sub">No money figure until these are clear: {{range $i, $q := .Questions}}{{if $i}}, {{end}}{{$q}}{{end}}.</div></section>
+{{else}}
+<section class="hero"><div class="big" style="font-size:40px">Can't check this deal</div><div class="sub">{{.RefusalReason}}</div></section>
+{{end}}
+{{end}}
+
+<h2>Three fair choices for the buyer</h2>
+{{if .Offers}}
+<div class="cards">{{range .Offers.Options}}
+  <div class="card"><div class="k">{{label .Kind}}</div><div class="s">{{.Summary}}</div>
+  <div class="keep">You keep {{money .Profit.ProfitCents .Currency}}</div>
+  <div class="r">{{.Reason}}</div><div class="q">“{{.Question}}”</div></div>
+{{end}}</div>
+{{range .Offers.Omitted}}<p class="note">Left out: {{.}}</p>{{end}}
+{{else}}<p class="note">{{.OffersNote}}</p>{{end}}
+
+{{with .Reply}}
+<h2>Your reply (edit it, then send it yourself)</h2>
+<textarea readonly>{{.Text}}</textarea>
+<p class="note">{{if .ByCode}}Written by code{{if .Problems}} after the AI's draft was rejected: {{range $i, $p := .Problems}}{{if $i}}; {{end}}{{$p}}{{end}}{{end}}.{{else}}Drafted by the AI around blanks; every number was filled in by code.{{end}}</p>
+{{end}}
+
+{{if .Offers}}
+<h2 id="answer">When the buyer answers</h2>
+<form method="post" action="/deal/{{.ID}}/reply">
+  <input type="hidden" name="csrf" value="{{$.CSRF}}">
+  <textarea name="reply" required placeholder="Paste the thread with the buyer's answer">{{.BuyerReply}}</textarea>
+  <div class="row"><button type="submit">Read the answer</button></div>
+</form>
+{{end}}
+
+{{if .Next}}
+<div class="plan" style="margin-top:16px">
+  <p><strong>{{.NextReason}}</strong>{{if .AcceptedQuote}}<br><span class="note">“{{.AcceptedQuote}}”</span>{{end}}</p>
+  {{with .Proposal}}
+  <p>{{.Plan.Explanation}} <span class="note">(plan {{if eq .Plan.By "ai"}}proposed by the AI and checked by code{{else}}built by code{{end}})</span></p>
+  {{if .Note}}<p class="note">{{.Note}}</p>{{end}}
+  {{if .Blocked}}<div class="blocked">The interceptor blocked the AI's plan: {{range $i, $b := .Blocked}}{{if $i}}; {{end}}{{$b}}{{end}}</div>{{end}}
+  <table><tr><th>#</th><th>Tool</th><th>Exactly what it will do</th></tr>
+  {{range $i, $c := .Plan.Calls}}<tr><td>{{inc $i}}</td><td>{{$c.Tool}}</td><td>
+    {{with $c.Create}}DRAFT invoice to {{mask .BuyerEmail}}: {{.Quantity}} × {{money .UnitPriceCents .Currency}}{{if .DiscountBP}}, {{pct .DiscountBP}} off{{end}}{{if .ShippingCents}}, shipping {{money .ShippingCents .Currency}}{{else}}, free shipping{{end}}, invoice date {{.InvoiceDate}}{{end}}
+    {{with $c.DueDate}}due date {{.DueDate}} (no notification sent){{end}}
+  </td></tr>{{end}}</table>
+  <p class="fp">Fingerprint of exactly these calls: {{fingerprint .Plan}}</p>
+  {{if not $.Deal.Result}}
+  <form method="post" action="/deal/{{$.Deal.ID}}/approve">
+    <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="fingerprint" value="{{fingerprint .Plan}}">
+    <div class="row"><button class="approve" type="submit">Approve and create the PayPal draft</button><span class="note">Runs only if the plan still has this fingerprint.</span></div>
+  </form>{{end}}
+  {{end}}
+</div>
+{{end}}
+
+{{with .Result}}
+<h2 id="result">The PayPal draft</h2>
+<div class="plan">
+  <p><strong>{{if .ReadBackOK}}Draft {{maskID .InvoiceID}} is ready in PayPal: status {{.Status}}.{{else}}The draft needs a look.{{end}}</strong>
+  {{if .AlreadyExisted}}<span class="note">It already existed, so nothing new was created.</span>{{end}}</p>
+  <table><tr><th>PayPal read-back</th><th>Planned</th><th>In PayPal</th><th></th></tr>
+  {{range .Checks}}<tr><td>{{.Field}}</td><td>{{.Want}}</td><td>{{.Got}}</td><td>{{if .OK}}<span class="ok">match</span>{{else}}<span class="no">differs</span>{{end}}</td></tr>{{end}}</table>
+  <p class="note">Open it in your PayPal sandbox, check it, and send it yourself.</p>
+</div>
+{{end}}
+{{if .ResultError}}<div class="err" style="margin-top:12px">{{.ResultError}}</div>{{end}}
+
+<h2>How it decided</h2>
+<table><tr><th>Value</th><th>Read as</th><th></th><th>From the sentence</th></tr>
+{{range fields .Reading}}<tr><td>{{.Field}}</td><td>{{.Value}}</td><td>{{if eq .Status "sure"}}<span class="ok">sure</span>{{else}}<span class="ask">ask</span> {{.Reason}}{{end}}</td><td class="q">{{.Quote}}</td></tr>{{end}}
+</table>
+<p class="note">"Sure" means both readings agreed, the sentence is really in the email, and the number parsed. The AI is never asked how sure it is.
+Reading: {{.Reading.CallsUsed}} model calls, {{.Reading.TokensUsed}} tokens, {{secs .Reading.SecondsTaken}}, {{.Reading.Mode}}.</p>
+{{with .ReplyReading}}
+<table style="margin-top:12px"><tr><th>Buyer's answer</th><th>Read as</th><th></th><th>From the sentence</th></tr>
+{{range fields .}}<tr><td>{{.Field}}</td><td>{{.Value}}</td><td>{{if eq .Status "sure"}}<span class="ok">sure</span>{{else}}<span class="ask">ask</span> {{.Reason}}{{end}}</td><td class="q">{{.Quote}}</td></tr>{{end}}
+</table>{{end}}
+{{end}}{{end}}
+</main></body></html>
