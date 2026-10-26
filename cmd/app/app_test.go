@@ -183,3 +183,37 @@ func TestTheApproveButtonNamesTheExactAction(t *testing.T) {
 		t.Error("the vague button label is still there")
 	}
 }
+
+// After the buyer's answer is read, the seller sees the three choices as buttons, the AI's reading marked, and
+// confirms or corrects it with one tap.
+func TestTheSellerConfirmsTheBuyersChoiceWithOneTap(t *testing.T) {
+	s, deal := testServer(t)
+	deal.BuyerReply = "Buyer: Option 2 please."
+	deal.ReplyReading = &reader.CheckResult{}
+	deal.AIPick = offer.Quantity
+	if err := s.deps.Store.Save(deal); err != nil {
+		t.Fatal(err)
+	}
+	page := get(t, s.routes(), "/deal/"+deal.ID)
+	for _, want := range []string{`action="/deal/` + deal.ID + `/choose"`, "Option 1 (Standard)", "Option 2 (Quantity)", "the AI&#39;s reading"} {
+		if !strings.Contains(page, want) {
+			t.Errorf("the page lacks %q", want)
+		}
+	}
+
+	form := url.Values{"csrf": {s.csrf}, "kind": {"standard"}}
+	req := httptest.NewRequest(http.MethodPost, "/deal/"+deal.ID+"/choose", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rec := httptest.NewRecorder()
+	s.routes().ServeHTTP(rec, req)
+	if rec.Code != http.StatusSeeOther {
+		t.Fatalf("POST choose: %d %s", rec.Code, rec.Body.String())
+	}
+	got, err := s.deps.Store.Load(deal.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Accepted != offer.Standard || got.Proposal == nil {
+		t.Errorf("accepted %q: the seller's tap must set the choice and its plan", got.Accepted)
+	}
+}
