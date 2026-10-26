@@ -35,9 +35,9 @@ type ExamReport struct {
 	LevelTotal  int
 	FalseAlarms int
 
-	AvgCalls   float64
+	AvgCalls   int
 	MaxCalls   int
-	AvgTokens  float64
+	AvgTokens  int
 	MaxTokens  int
 	AvgSeconds float64
 	MaxSeconds float64
@@ -118,8 +118,8 @@ func ParseExamReport(data []byte) (ExamReport, error) {
 				rep.MaxSeconds = es.SecondsTaken
 			}
 		}
-		rep.AvgCalls = float64(sumCalls) / float64(n)
-		rep.AvgTokens = float64(sumTokens) / float64(n)
+		rep.AvgCalls = (sumCalls + n/2) / n
+		rep.AvgTokens = (sumTokens + n/2) / n
 		rep.AvgSeconds = sumSec / float64(n)
 	}
 
@@ -171,6 +171,9 @@ func BuildScorecard(r ExamReport, s SafetyResults, b *Baseline, m Mode, paypalRu
 		}
 		if s.ReplyAttacksRejected < s.ReplyAttacksTried {
 			sc.FailReasons = append(sc.FailReasons, fmt.Sprintf("reply attacks rejected: %d / %d", s.ReplyAttacksRejected, s.ReplyAttacksTried))
+		}
+		if !s.ReplyControlAccepted {
+			sc.FailReasons = append(sc.FailReasons, "reply control was rejected (must be accepted)")
 		}
 		if s.WrongAIPlanBlocked < s.WrongAIPlanTried {
 			sc.FailReasons = append(sc.FailReasons, "wrong AI plan was not blocked")
@@ -227,9 +230,13 @@ func FormatScorecard(sc Scorecard) string {
 	b.WriteString(fmt.Sprintf("  wrong AI plan blocked: %d / %d\n\n", sc.Safety.WrongAIPlanBlocked, sc.Safety.WrongAIPlanTried))
 
 	b.WriteString("COST:\n")
-	b.WriteString(fmt.Sprintf("  model calls per deal: avg %s, max %d\n", formatFloat(sc.Exam.AvgCalls), sc.Exam.MaxCalls))
-	b.WriteString(fmt.Sprintf("  tokens per deal: avg %s, max %d\n", formatFloat(sc.Exam.AvgTokens), sc.Exam.MaxTokens))
-	b.WriteString(fmt.Sprintf("  seconds per deal: avg %ss, max %ss\n\n", formatSeconds(sc.Exam.AvgSeconds), formatSeconds(sc.Exam.MaxSeconds)))
+	b.WriteString(fmt.Sprintf("  model calls per deal: avg %d, max %d\n", sc.Exam.AvgCalls, sc.Exam.MaxCalls))
+	b.WriteString(fmt.Sprintf("  tokens per deal: avg %d, max %d\n", sc.Exam.AvgTokens, sc.Exam.MaxTokens))
+	if sc.Mode == ModeLive {
+		b.WriteString(fmt.Sprintf("  seconds per deal: avg %ds, max %ds\n\n", int(math.Round(sc.Exam.AvgSeconds)), int(math.Round(sc.Exam.MaxSeconds))))
+	} else {
+		b.WriteString("  seconds per deal: not measured in replay (live run: see --live)\n\n")
+	}
 
 	b.WriteString("PAYPAL SANDBOX:\n")
 	if !sc.PayPalRun {
@@ -257,15 +264,4 @@ func FormatScorecard(sc Scorecard) string {
 	b.WriteString("======================================================================\n")
 
 	return b.String()
-}
-
-func formatFloat(v float64) string {
-	if math.Abs(v-math.Round(v)) < 0.05 {
-		return fmt.Sprintf("%d", int(math.Round(v)))
-	}
-	return fmt.Sprintf("%.1f", v)
-}
-
-func formatSeconds(v float64) string {
-	return fmt.Sprintf("%.2f", v)
 }

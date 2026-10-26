@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -24,6 +25,7 @@ type SafetyResults struct {
 	RepeatDuplicates        int
 	ReplyAttacksTried       int
 	ReplyAttacksRejected    int
+	ReplyControlAccepted    bool
 	WrongAIPlanTried        int
 	WrongAIPlanBlocked      int
 }
@@ -82,10 +84,10 @@ func (p *PretendPayPal) CreateInvoice(ctx context.Context, a act.CreateInvoiceAr
 				Quantity: fmt.Sprintf("%d", a.Quantity),
 				UnitAmount: paypal.Money{
 					CurrencyCode: a.Currency,
-					Value:        fmt.Sprintf("%.2f", float64(a.UnitPriceCents)/100.0),
+					Value:        fmt.Sprintf("%d.%02d", a.UnitPriceCents/100, a.UnitPriceCents%100),
 				},
 				Discount: &paypal.ItemDiscount{
-					Percent: fmt.Sprintf("%.2f", float64(a.DiscountBP)/100.0),
+					Percent: fmt.Sprintf("%d.%02d", a.DiscountBP/100, a.DiscountBP%100),
 				},
 			},
 		},
@@ -96,7 +98,7 @@ func (p *PretendPayPal) CreateInvoice(ctx context.Context, a act.CreateInvoiceAr
 				Shipping: &paypal.ShippingCost{
 					Amount: &paypal.Money{
 						CurrencyCode: a.Currency,
-						Value:        fmt.Sprintf("%.2f", float64(a.ShippingCents)/100.0),
+						Value:        fmt.Sprintf("%d.%02d", a.ShippingCents/100, a.ShippingCents%100),
 					},
 				},
 			},
@@ -325,21 +327,41 @@ func RunSafetyChecks(tools *PretendPayPal, exec ExecuteFn) SafetyResults {
 	}
 
 	// Reply-checker attacks rejected through writer.Validate
-	attacks := []string{
-		"Hello 10 {{OPTION_1}} {{OPTION_2}} {{OPTION_3}}",
-		"Hello ２０ {{OPTION_1}} {{OPTION_2}} {{OPTION_3}}",
-		"Hello ½ {{OPTION_1}} {{OPTION_2}} {{OPTION_3}}",
-		"Hello two {{OPTION_1}} {{OPTION_2}} {{OPTION_3}}",
-		"Hello % {{OPTION_1}} {{OPTION_2}} {{OPTION_3}}",
-		"Hello ¥ {{OPTION_1}} {{OPTION_2}} {{OPTION_3}}",
-		"Hello split the difference {{OPTION_1}} {{OPTION_2}} {{OPTION_3}}",
+	replyAttacks := []struct {
+		name          string
+		attackText    string
+		wantedProblem string
+	}{
+		{name: "ASCII digit", attackText: "10", wantedProblem: "digit"},
+		{name: "full-width digit", attackText: "２０", wantedProblem: "digit"},
+		{name: "fraction", attackText: "½", wantedProblem: "digit"},
+		{name: "number word", attackText: "two", wantedProblem: "number word"},
+		{name: "percent", attackText: "%", wantedProblem: "percent"},
+		{name: "currency", attackText: "¥", wantedProblem: "currency"},
+		{name: "split", attackText: "split the difference", wantedProblem: "split"},
 	}
-	for _, atk := range attacks {
+
+	for _, atk := range replyAttacks {
 		sr.ReplyAttacksTried++
-		probs := writer.Validate(atk, 3)
-		if len(probs) > 0 {
+		fullReply := fmt.Sprintf("Thanks so much for asking.\n{{OPTION_1}}\n{{OPTION_2}}\n{{OPTION_3}}\nWhat works best? %s", atk.attackText)
+		probs := writer.Validate(fullReply, 3)
+		matched := false
+		for _, p := range probs {
+			if strings.Contains(p, atk.wantedProblem) {
+				matched = true
+				break
+			}
+		}
+		if matched {
 			sr.ReplyAttacksRejected++
 		}
+	}
+
+	// Clean valid reply control line
+	controlReply := "Thanks so much for asking.\n{{OPTION_1}}\n{{OPTION_2}}\n{{OPTION_3}}\nWhat works best?"
+	controlProbs := writer.Validate(controlReply, 3)
+	if len(controlProbs) == 0 {
+		sr.ReplyControlAccepted = true
 	}
 
 	// A wrong AI plan blocked through act.Propose
@@ -377,6 +399,7 @@ func (s SafetyResults) AllPassed() bool {
 		s.RepeatDuplicates == 0 &&
 		s.ReplyAttacksTried >= 7 &&
 		s.ReplyAttacksRejected == s.ReplyAttacksTried &&
+		s.ReplyControlAccepted &&
 		s.WrongAIPlanTried >= 1 &&
 		s.WrongAIPlanBlocked == s.WrongAIPlanTried
 }

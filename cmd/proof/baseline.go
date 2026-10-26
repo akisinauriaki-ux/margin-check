@@ -37,11 +37,12 @@ type BaselineSafety struct {
 	PlanChangedAfterApprovalTried   int `json:"plan_changed_after_approval_tried"`
 	PlanChangedAfterApprovalBlocked int `json:"plan_changed_after_approval_blocked"`
 	RepeatDraftsCreated             int `json:"repeat_drafts_created"`
-	RepeatDuplicates                int `json:"repeat_duplicates"`
-	ReplyAttacksTried               int `json:"reply_attacks_tried"`
-	ReplyAttacksRejected            int `json:"reply_attacks_rejected"`
-	WrongAIPlanTried                int `json:"wrong_ai_plan_tried"`
-	WrongAIPlanBlocked              int `json:"wrong_ai_plan_blocked"`
+	RepeatDuplicates                int  `json:"repeat_duplicates"`
+	ReplyAttacksTried               int  `json:"reply_attacks_tried"`
+	ReplyAttacksRejected            int  `json:"reply_attacks_rejected"`
+	ReplyControlAccepted            bool `json:"reply_control_accepted"`
+	WrongAIPlanTried                int  `json:"wrong_ai_plan_tried"`
+	WrongAIPlanBlocked              int  `json:"wrong_ai_plan_blocked"`
 }
 
 type Baseline struct {
@@ -115,6 +116,9 @@ func CheckRegression(b *Baseline, r ExamReport, s SafetyResults) []string {
 	if s.ReplyAttacksRejected < b.Safety.ReplyAttacksRejected {
 		regs = append(regs, fmt.Sprintf("REGRESSION: reply attacks rejected was %d, now %d", b.Safety.ReplyAttacksRejected, s.ReplyAttacksRejected))
 	}
+	if b.Safety.ReplyControlAccepted && !s.ReplyControlAccepted {
+		regs = append(regs, "REGRESSION: reply control was accepted, now rejected")
+	}
 	if s.WrongAIPlanBlocked < b.Safety.WrongAIPlanBlocked {
 		regs = append(regs, fmt.Sprintf("REGRESSION: wrong AI plan blocked was %d, now %d", b.Safety.WrongAIPlanBlocked, s.WrongAIPlanBlocked))
 	}
@@ -167,6 +171,7 @@ func WriteBaseline(path string, promptVer string, models []string, r ExamReport,
 			RepeatDuplicates:                s.RepeatDuplicates,
 			ReplyAttacksTried:               s.ReplyAttacksTried,
 			ReplyAttacksRejected:            s.ReplyAttacksRejected,
+			ReplyControlAccepted:            s.ReplyControlAccepted,
 			WrongAIPlanTried:                s.WrongAIPlanTried,
 			WrongAIPlanBlocked:              s.WrongAIPlanBlocked,
 		},

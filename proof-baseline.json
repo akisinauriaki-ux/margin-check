@@ -35,6 +35,7 @@
     "repeat_duplicates": 0,
     "reply_attacks_tried": 7,
     "reply_attacks_rejected": 7,
+    "reply_control_accepted": true,
     "wrong_ai_plan_tried": 1,
     "wrong_ai_plan_blocked": 1
   }
