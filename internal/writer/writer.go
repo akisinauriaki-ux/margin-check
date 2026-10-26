@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"margincheck/internal/gemini"
 	"margincheck/internal/offer"
@@ -154,13 +155,13 @@ func Validate(text string, n int) []string {
 		}
 	}
 	rest := anyBlank.ReplaceAllString(text, "")
-	if strings.ContainsAny(rest, "0123456789") {
+	if HasNumber(rest) {
 		probs = append(probs, "it contains a digit; numbers come only from the blanks")
 	}
-	if strings.ContainsAny(rest, "$€£") {
+	if HasCurrencySign(rest) {
 		probs = append(probs, "it contains a currency sign")
 	}
-	if strings.Contains(rest, "%") {
+	if HasPercentSign(rest) {
 		probs = append(probs, "it contains a percent sign")
 	}
 	if w := numberWordRe.FindString(rest); w != "" {
@@ -178,6 +179,18 @@ func Validate(text string, n int) []string {
 	}
 	return probs
 }
+
+// HasNumber reports whether s contains any character Unicode counts as a number: 0-9, but also full-width
+// digits, other scripts' digits, fractions such as ½ and superscripts. A fixed list of "bad" characters misses these.
+func HasNumber(s string) bool { return strings.IndexFunc(s, unicode.IsNumber) >= 0 }
+
+// HasCurrencySign reports whether s contains any currency sign ($, €, £, ¥, ₾, ₹, …).
+func HasCurrencySign(s string) bool {
+	return strings.IndexFunc(s, func(r rune) bool { return unicode.Is(unicode.Sc, r) }) >= 0
+}
+
+// HasPercentSign reports whether s contains a percent sign in any of its forms.
+func HasPercentSign(s string) bool { return strings.ContainsAny(s, "%％﹪‰‱") }
 
 // Fill replaces each blank with its choice's terms, written by code.
 func Fill(text string, set offer.Set) string {

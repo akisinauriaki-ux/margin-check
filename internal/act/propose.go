@@ -8,6 +8,7 @@ import (
 
 	"margincheck/internal/gemini"
 	"margincheck/internal/offer"
+	"margincheck/internal/writer"
 )
 
 // PlannerPromptVersion names the planner's instructions; bump it whenever they change (S5).
@@ -125,7 +126,7 @@ func Propose(ctx context.Context, gen Generator, model, dealID string, o offer.O
 		pr.Note = "the AI's plan was blocked by the interceptor; the plan below was built by code"
 		return pr
 	}
-	if ai.Explanation == "" || strings.ContainsAny(ai.Explanation, "0123456789$€£%") {
+	if ai.Explanation == "" || writer.HasNumber(ai.Explanation) || writer.HasCurrencySign(ai.Explanation) || writer.HasPercentSign(ai.Explanation) {
 		ai.Explanation = codeExplanation(o)
 		pr.Note = "the AI's explanation stated numbers, so the code's explanation is shown"
 	}
