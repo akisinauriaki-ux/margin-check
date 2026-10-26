@@ -92,6 +92,15 @@ func (d *Deal) Option(k offer.Kind) (offer.Option, bool) {
 	return offer.Option{}, false
 }
 
+// invoiceDay is the day the deal's draft is dated. A damaged value stops the deal instead of becoming year 1.
+func (d *Deal) invoiceDay() (time.Time, error) {
+	day, err := time.Parse("2006-01-02", d.InvoiceDay)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("this deal's date (%q) is damaged; start the check again", d.InvoiceDay)
+	}
+	return day, nil
+}
+
 func (d Deps) now() time.Time {
 	if d.Now != nil {
 		return d.Now().UTC()
@@ -203,10 +212,13 @@ func (d Deps) BuyerReplied(ctx context.Context, dealID, replyThread string) (*De
 			deal.Next, deal.NextReason = NextSellerDecides, fmt.Sprintf("The buyer accepted the %s choice but wrote %d %s instead of %d. You decide; nothing is planned.",
 				writer.Label(kind), res.Quantity.Value, unitNoun(d.Offer), opt.Quantity)
 		default:
+			day, err := deal.invoiceDay()
+			if err != nil {
+				return nil, err
+			}
 			deal.Accepted = kind
 			deal.Next = NextDraft
 			deal.NextReason = fmt.Sprintf("The buyer accepted the %s choice.", writer.Label(kind))
-			day, _ := time.Parse("2006-01-02", deal.InvoiceDay)
 			pr := act.Propose(ctx, d.Planner, d.PlannerModel, deal.ID, opt, d.Parties, day)
 			deal.Proposal = &pr
 		}
@@ -234,9 +246,12 @@ func (d Deps) ApproveAndRun(ctx context.Context, dealID, shownFingerprint string
 	if !ok {
 		return deal, errors.New("the accepted choice is missing from the deal")
 	}
+	day, err := deal.invoiceDay()
+	if err != nil {
+		return deal, err
+	}
 	appr := act.Approve(plan)
 	deal.Approval = &appr
-	day, _ := time.Parse("2006-01-02", deal.InvoiceDay)
 	runCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), RunTimeLimit)
 	defer cancel()
 	res, runErr := act.Execute(runCtx, d.Tools, appr, plan, opt, d.Parties, day)
