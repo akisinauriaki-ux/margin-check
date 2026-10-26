@@ -675,8 +675,11 @@ func (c *Client) SearchInvoiceByNumber(ctx context.Context, requestID, invoiceNu
 		}
 	}
 
-	return nil, errors.New("paypal: duplicate invoice_number reported but existing invoice not found")
+	return nil, ErrInvoiceNotFound
 }
+
+// ErrInvoiceNotFound means no invoice carries the searched invoice_number.
+var ErrInvoiceNotFound = errors.New("paypal: no invoice carries that invoice_number")
 
 func extractInvoiceID(inv *Invoice) string {
 	if m := invoiceIDInHrefRe.FindStringSubmatch(inv.Href); len(m) > 1 {
