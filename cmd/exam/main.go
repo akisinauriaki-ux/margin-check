@@ -308,6 +308,7 @@ func main() {
 		noCacheFlag   = flag.Bool("no-cache", false, "Bypass response cache")
 		maxCallsFlag  = flag.Int("max-calls", 0, "Maximum model calls allowed for this run (0 = default)")
 		promptFlag    = flag.String("prompt", "reader-v1", "Prompt version name in prompts/<name>.md or path")
+		reportDirFlag = flag.String("report-dir", "reports", "Directory to write exam reports (JSON and text)")
 	)
 	flag.Parse()
 
@@ -379,7 +380,7 @@ func main() {
 	txtReport := formatTextReport(summary)
 	fmt.Print(txtReport)
 
-	if err := saveReports("reports", summary, txtReport); err != nil {
+	if err := saveReports(*reportDirFlag, summary, txtReport); err != nil {
 		fmt.Fprintf(os.Stderr, "error saving reports: %v\n", err)
 		os.Exit(1)
 	}
@@ -1198,14 +1199,18 @@ func formatTextReport(s ExamSummary) string {
 }
 
 func saveReports(reportDir string, s ExamSummary, txtReport string) error {
-	if err := os.MkdirAll("reports", 0o755); err != nil {
+	dir := strings.TrimSpace(reportDir)
+	if dir == "" {
+		dir = "reports"
+	}
+	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err
 	}
 	modelSlug := strings.Join(s.Models, "-")
 	modelSlug = strings.ReplaceAll(modelSlug, "/", "-")
 	base := fmt.Sprintf("exam-%s-%s", s.Date, modelSlug)
-	txtPath := filepath.Join("reports", base+".txt")
-	jsonPath := filepath.Join("reports", base+".json")
+	txtPath := filepath.Join(dir, base+".txt")
+	jsonPath := filepath.Join(dir, base+".json")
 
 	if err := os.WriteFile(txtPath, []byte(txtReport), 0o644); err != nil {
 		return err
