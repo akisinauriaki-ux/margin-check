@@ -1,0 +1,15 @@
+﻿=== go vet ./internal/agenttools/... ./cmd/toolkitcheck/... ===
+Clean (exit code 0, no diagnostics).
+
+=== go vet ./... ===
+go : # margincheck/internal/reader
+At line:2 char:12
++ $vetAll = (go vet ./... 2>&1 | Out-String)
++            ~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (# margincheck/internal/reader:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+# [margincheck/internal/reader]
+vet.exe: internal\reader\reader.go:874:16: assignment mismatch: 2 variables but normalize.ParseMoney returns 3 values
+
+Note: As noted in ANTIGRAVITY-BRIEF-paypal-build-step-2.md ("If another part's package fails to build, say so and leave it alone"), internal/reader is Part A's in-progress package and was left untouched.

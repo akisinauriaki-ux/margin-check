@@ -1,0 +1,22 @@
+﻿=== RUN   TestHelperMCPServerProcess
+--- PASS: TestHelperMCPServerProcess (0.00s)
+=== RUN   TestNewPayPalMCPCommandPinsExactVersion
+--- PASS: TestNewPayPalMCPCommandPinsExactVersion (0.02s)
+=== RUN   TestBuildMinimalSandboxEnvExcludesSecrets
+--- PASS: TestBuildMinimalSandboxEnvExcludesSecrets (0.00s)
+=== RUN   TestVerifyDraftReadBackFieldByField
+--- PASS: TestVerifyDraftReadBackFieldByField (0.00s)
+=== RUN   TestInspectCreateInvoiceToolIdentifiesMissingPaymentTerms
+--- PASS: TestInspectCreateInvoiceToolIdentifiesMissingPaymentTerms (1.57s)
+=== RUN   TestRunDraftProofConnectsViaGoSDKAndVerifiesDraftViaRESTClient
+--- PASS: TestRunDraftProofConnectsViaGoSDKAndVerifiesDraftViaRESTClient (0.05s)
+PASS
+ok  	margincheck/internal/agenttools	6.203s
+=== RUN   TestHelperMCPServerProcess
+--- PASS: TestHelperMCPServerProcess (0.00s)
+=== RUN   TestToolkitCheckMissingEnvPrintsExactMessageAndStops
+--- PASS: TestToolkitCheckMissingEnvPrintsExactMessageAndStops (0.01s)
+=== RUN   TestRunToolkitProofWithFakeServersVerifiesReadBackAndDetectsMissingPaymentTerms
+--- PASS: TestRunToolkitProofWithFakeServersVerifiesReadBackAndDetectsMissingPaymentTerms (1.82s)
+PASS
+ok  	margincheck/cmd/toolkitcheck	6.498s

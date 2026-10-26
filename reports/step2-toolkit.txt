@@ -1,0 +1,410 @@
+PASS toolkit step 1 (mcp server start & list_tools): connected to @paypal/mcp@1.8.1 via Go SDK (github.com/modelcontextprotocol/go-sdk/mcp v1.8.0) with --tools=invoices.create, exposed_tools=[create_invoice]
+PASS toolkit step 2 (call create_invoice & verify REST read-back): invoice ...3DL9 verified via GET /v2/invoicing/invoices/{id}: status=DRAFT (verified), currency=USD (verified), invoice_number=...E860 (verified), quantity=40 (verified), unit_price_cents=1500 (verified) (never sent)
+FINDING toolkit step 3 (schema inspection): item discount is SUPPORTED (items[].discount.percent / items[].discount.amount); payment terms is MISSING (no payment_term, due_date, or term_type in create_invoice input schema)
+STOP toolkit step 4 (brief Part C.4): create_invoice cannot set payment terms or due_date; stopping run cleanly with no workaround
+
+=== Pinned MCP Server: @paypal/mcp@1.8.1 ===
+=== Tool: create_invoice Input Schema ===
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "allow_partial_payment": {
+      "description": "Whether the invoice allows a partial payment. If false, the invoice must be paid in full. If true, the invoice allows partial payments. Not available for users in India, Brazil, or Israel.",
+      "type": "boolean"
+    },
+    "allow_tip": {
+      "description": "Whether the payer can add a tip when paying. Not available in Hong Kong, Taiwan, India, or Japan.",
+      "type": "boolean"
+    },
+    "currency_code": {
+      "description": "The three-character ISO-4217 currency code for the invoice (for example, USD). Applies to every monetary amount on the invoice.",
+      "type": "string"
+    },
+    "enable_pay_by_bank": {
+      "description": "Whether to enable PAY_BY_BANK as a payment method for this invoice, letting the payer pay directly from their bank account. Available only for US-based merchants and invoices with USD currency.",
+      "type": "boolean"
+    },
+    "invoice_date": {
+      "description": "The invoice date in yyyy-MM-DD format.",
+      "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
+      "type": "string"
+    },
+    "invoice_number": {
+      "description": "The invoice number. If omitted, PayPal auto-increments from the last invoice number used.",
+      "type": "string"
+    },
+    "invoicer_address_line_1": {
+      "description": "The first line of the invoicer's address, for example, number and street.",
+      "type": "string"
+    },
+    "invoicer_address_line_2": {
+      "description": "The second line of the invoicer's address, for example, suite or apartment number.",
+      "type": "string"
+    },
+    "invoicer_business_name": {
+      "description": "The business name of the invoicer.",
+      "maxLength": 300,
+      "type": "string"
+    },
+    "invoicer_city": {
+      "description": "The city, town, or village of the invoicer's address.",
+      "type": "string"
+    },
+    "invoicer_country_code": {
+      "description": "The two-character ISO 3166-1 country code of the invoicer's address (for example, US or GB).",
+      "pattern": "^([A-Z]{2}|C2)$",
+      "type": "string"
+    },
+    "invoicer_email_address": {
+      "description": "The email address of the invoicer.",
+      "type": "string"
+    },
+    "invoicer_given_name": {
+      "description": "The first name of the invoicer.",
+      "type": "string"
+    },
+    "invoicer_postal_code": {
+      "description": "The postal code of the invoicer's address.",
+      "type": "string"
+    },
+    "invoicer_state": {
+      "description": "The state or province of the invoicer's address.",
+      "type": "string"
+    },
+    "invoicer_surname": {
+      "description": "The last name of the invoicer.",
+      "type": "string"
+    },
+    "invoicer_tax_id": {
+      "description": "The invoicer's tax ID.",
+      "type": "string"
+    },
+    "items": {
+      "description": "The line items on the invoice.",
+      "items": {
+        "additionalProperties": false,
+        "description": "invoice line item object",
+        "properties": {
+          "description": {
+            "description": "The description of the item.",
+            "type": "string"
+          },
+          "discount": {
+            "additionalProperties": false,
+            "description": "The discount for this line item, subtracted from the item total.",
+            "properties": {
+              "amount": {
+                "additionalProperties": false,
+                "description": "The discount as a fixed amount. Mutually exclusive with percent -- set only one.",
+                "properties": {
+                  "currency_code": {
+                    "description": "The three-character ISO-4217 currency code that identifies the currency.",
+                    "type": "string"
+                  },
+                  "value": {
+                    "description": "The amount, as a signed decimal string with up to 2 decimal places (e.g. '50.00').",
+                    "pattern": "^((-?[0-9]+)|(-?([0-9]+)?[.][0-9]+))$",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "currency_code",
+                  "value"
+                ],
+                "type": "object"
+              },
+              "percent": {
+                "description": "The discount as a percent value, from 0 to 100. Supports up to five decimal places. Mutually exclusive with amount -- set only one.",
+                "pattern": "^((-?[0-9]+)|(-?([0-9]+)?[.][0-9]+))$",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "item_date": {
+            "description": "The date, in yyyy-MM-DD format, when the item or service was provided.",
+            "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$",
+            "type": "string"
+          },
+          "name": {
+            "description": "The name of the item",
+            "type": "string"
+          },
+          "quantity": {
+            "description": "The quantity of the item that the invoicer provides to the payer. Value is from -1000000 to 1000000. Supports up to five decimal places. Cast to string",
+            "type": "string"
+          },
+          "tax": {
+            "additionalProperties": false,
+            "description": "tax object",
+            "properties": {
+              "name": {
+                "description": "The name of the tax applied on the item, for example 'Sales Tax'.",
+                "type": "string"
+              },
+              "percent": {
+                "description": "The tax rate, as a percent value from 0 to 100. Supports up to five decimal places.",
+                "pattern": "^((-?[0-9]+)|(-?([0-9]+)?[.][0-9]+))$",
+                "type": "string"
+              },
+              "tax_note": {
+                "description": "A note about the tax, used to track tax-related data.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "percent"
+            ],
+            "type": "object"
+          },
+          "unit_amount": {
+            "additionalProperties": false,
+            "description": "The unit price of the item. Does not include tax or discount.",
+            "properties": {
+              "currency_code": {
+                "description": "The three-character ISO-4217 currency code that identifies the currency.",
+                "type": "string"
+              },
+              "value": {
+                "description": "The amount, as a signed decimal string with up to 2 decimal places (e.g. '50.00').",
+                "pattern": "^((-?[0-9]+)|(-?([0-9]+)?[.][0-9]+))$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "currency_code",
+              "value"
+            ],
+            "type": "object"
+          },
+          "unit_of_measure": {
+            "description": "The unit of measure for the invoiced item",
+            "enum": [
+              "QUANTITY",
+              "HOURS",
+              "AMOUNT"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "quantity",
+          "unit_amount"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "minimum_partial_payment_amount": {
+      "description": "The minimum amount allowed for a partial payment, in the invoice's currency_code. Valid only when allow_partial_payment is true.",
+      "pattern": "^((-?[0-9]+)|(-?([0-9]+)?[.][0-9]+))$",
+      "type": "string"
+    },
+    "note": {
+      "description": "A note to the invoice recipient. Also appears on the invoice notification email.",
+      "type": "string"
+    },
+    "pay_by_bank_exclusive_above_threshold": {
+      "description": "When true, PAY_BY_BANK becomes the only available payment method once the invoice total exceeds PayPal's system-defined threshold ($1000), disabling all other payment methods above that threshold.",
+      "type": "boolean"
+    },
+    "primary_recipients": {
+      "description": "The recipients who will be billed for this invoice.",
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "billing_info": {
+            "additionalProperties": false,
+            "description": "The billing information of the invoice recipient",
+            "properties": {
+              "additional_info": {
+                "description": "Any additional information about the recipient.",
+                "maxLength": 40,
+                "type": "string"
+              },
+              "address": {
+                "additionalProperties": false,
+                "description": "The address of the invoice recipient.",
+                "properties": {
+                  "address_line_1": {
+                    "description": "The first line of the address, for example, number and street.",
+                    "type": "string"
+                  },
+                  "address_line_2": {
+                    "description": "The second line of the address, for example, suite or apartment number.",
+                    "type": "string"
+                  },
+                  "admin_area_1": {
+                    "description": "The highest-level sub-division in a country, such as a state or province.",
+                    "type": "string"
+                  },
+                  "admin_area_2": {
+                    "description": "A city, town, or village.",
+                    "type": "string"
+                  },
+                  "country_code": {
+                    "description": "The two-character ISO 3166-1 country code (for example, US or GB).",
+                    "pattern": "^([A-Z]{2}|C2)$",
+                    "type": "string"
+                  },
+                  "postal_code": {
+                    "description": "The postal code, which is the zip code or equivalent.",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "business_name": {
+                "description": "The business name of the invoice recipient.",
+                "type": "string"
+              },
+              "email_address": {
+                "description": "email address of the recipient",
+                "type": "string"
+              },
+              "language": {
+                "description": "The BCP-47 language tag used for the recipient's email notification (for example, 'en-US'). Only used when the recipient has no PayPal account.",
+                "pattern": "^[a-z]{2}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$",
+                "type": "string"
+              },
+              "name": {
+                "additionalProperties": false,
+                "description": "name of the recipient",
+                "properties": {
+                  "given_name": {
+                    "description": "The first name of the person.",
+                    "type": "string"
+                  },
+                  "surname": {
+                    "description": "The last name of the person.",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "phones": {
+                "description": "The invoice recipient's phone numbers.",
+                "items": {
+                  "additionalProperties": false,
+                  "description": "phone object",
+                  "properties": {
+                    "country_code": {
+                      "description": "The country calling code, in E.164 format (for example, '1' for the United States).",
+                      "type": "string"
+                    },
+                    "national_number": {
+                      "description": "The national number, in E.164 format.",
+                      "type": "string"
+                    },
+                    "phone_type": {
+                      "description": "The type of phone number.",
+                      "enum": [
+                        "FAX",
+                        "HOME",
+                        "MOBILE",
+                        "OTHER",
+                        "PAGER"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "country_code",
+                    "national_number",
+                    "phone_type"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          },
+          "shipping_info": {
+            "additionalProperties": false,
+            "description": "The shipping information of the invoice recipient.",
+            "properties": {
+              "address": {
+                "additionalProperties": false,
+                "description": "The shipping address.",
+                "properties": {
+                  "address_line_1": {
+                    "description": "The first line of the address, for example, number and street.",
+                    "type": "string"
+                  },
+                  "address_line_2": {
+                    "description": "The second line of the address, for example, suite or apartment number.",
+                    "type": "string"
+                  },
+                  "admin_area_1": {
+                    "description": "The highest-level sub-division in a country, such as a state or province.",
+                    "type": "string"
+                  },
+                  "admin_area_2": {
+                    "description": "A city, town, or village.",
+                    "type": "string"
+                  },
+                  "country_code": {
+                    "description": "The two-character ISO 3166-1 country code (for example, US or GB).",
+                    "pattern": "^([A-Z]{2}|C2)$",
+                    "type": "string"
+                  },
+                  "postal_code": {
+                    "description": "The postal code, which is the zip code or equivalent.",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "business_name": {
+                "description": "The business name for the shipping destination.",
+                "type": "string"
+              },
+              "name": {
+                "additionalProperties": false,
+                "description": "The name for the shipping destination.",
+                "properties": {
+                  "given_name": {
+                    "description": "The first name of the person.",
+                    "type": "string"
+                  },
+                  "surname": {
+                    "description": "The last name of the person.",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "reference": {
+      "description": "A reference value, such as a purchase order number.",
+      "type": "string"
+    },
+    "shipping_cost": {
+      "description": "The shipping cost for the invoice, in the invoice's currency_code.",
+      "pattern": "^((-?[0-9]+)|(-?([0-9]+)?[.][0-9]+))$",
+      "type": "string"
+    },
+    "theme_color": {
+      "description": "The primary color used to render the invoice, as a hex color code (e.g. #000000). If omitted, the default theme is used.",
+      "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "currency_code",
+    "primary_recipients",
+    "items"
+  ],
+  "type": "object"
+}
