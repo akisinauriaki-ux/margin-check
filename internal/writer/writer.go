@@ -67,6 +67,7 @@ var (
 	banned   = []string{"split the difference", "meet in the middle", "meet halfway", "meet you halfway", "halfway"}
 	// Numbers written as words. "one" is left out because it is everyday English ("one more thing").
 	numberWordRe = regexp.MustCompile(`(?i)\b(two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|dozen|half|percent|dollars?|euros?|cents?)\b`)
+	reThreeNewlines = regexp.MustCompile(`\n{3,}`)
 )
 
 // Write asks the AI for a reply around the blanks, checks it, retries once with the reasons, and falls back to
@@ -132,16 +133,20 @@ func Validate(text string, n int) []string {
 	if strings.TrimSpace(text) == "" {
 		return []string{"the reply is empty"}
 	}
-	for _, line := range strings.Split(text, "\n") {
-		trimmed := strings.TrimSpace(line)
-		if trimmed == "" {
-			continue
+	idx := strings.Index(text, "{{OPTION_")
+	wordsWithLetters := 0
+	if idx >= 0 {
+		prefix := strings.TrimSpace(text[:idx])
+		if !strings.HasPrefix(strings.ToLower(prefix), "option") {
+			for _, w := range strings.Fields(prefix) {
+				if strings.IndexFunc(w, unicode.IsLetter) >= 0 {
+					wordsWithLetters++
+				}
+			}
 		}
-		lowLine := strings.ToLower(trimmed)
-		if blankRe.MatchString(trimmed) || anyBlank.MatchString(trimmed) || strings.HasPrefix(lowLine, "option ") {
-			probs = append(probs, "the reply must open with a greeting before the choices")
-		}
-		break
+	}
+	if wordsWithLetters < 2 {
+		probs = append(probs, "the reply must open with a greeting before the choices")
 	}
 	counts := map[int]int{}
 	for _, m := range blankRe.FindAllStringSubmatch(text, -1) {
@@ -204,15 +209,44 @@ func HasCurrencySign(s string) bool {
 // HasPercentSign reports whether s contains a percent sign in any of its forms.
 func HasPercentSign(s string) bool { return strings.ContainsAny(s, "%％﹪‰‱") }
 
-// Fill replaces each blank with its choice's terms, written by code.
+// Fill replaces each blank with its choice's terms, written by code, and lays out the reply.
 func Fill(text string, set offer.Set) string {
-	return blankRe.ReplaceAllStringFunc(text, func(b string) string {
-		i, _ := strconv.Atoi(blankRe.FindStringSubmatch(b)[1])
-		if i < 1 || i > len(set.Options) {
-			return b
+	text = strings.ReplaceAll(text, "\r\n", "\n")
+	text = strings.ReplaceAll(text, "\r", "\n")
+	locs := blankRe.FindAllStringIndex(text, -1)
+	if len(locs) == 0 {
+		return text
+	}
+
+	greeting := strings.TrimSpace(text[:locs[0][0]])
+	closing := strings.TrimSpace(text[locs[len(locs)-1][1]:])
+
+	choices := make([]string, len(locs))
+	for idx, loc := range locs {
+		b := text[loc[0]:loc[1]]
+		m := blankRe.FindStringSubmatch(b)
+		i, _ := strconv.Atoi(m[1])
+		if i >= 1 && i <= len(set.Options) {
+			choices[idx] = fmt.Sprintf("Option %d (%s): %s.", i, Label(set.Options[i-1].Kind), set.Options[i-1].Summary)
+		} else {
+			choices[idx] = b
 		}
-		return fmt.Sprintf("Option %d (%s): %s.", i, Label(set.Options[i-1].Kind), set.Options[i-1].Summary)
-	})
+	}
+
+	var b strings.Builder
+	if greeting != "" {
+		b.WriteString(greeting)
+		b.WriteString("\n\n")
+	}
+	b.WriteString(strings.Join(choices, "\n"))
+	if closing != "" {
+		b.WriteString("\n\n")
+		b.WriteString(closing)
+	}
+
+	out := b.String()
+	out = reThreeNewlines.ReplaceAllString(out, "\n\n")
+	return out
 }
 
 // Template is the reply written entirely by code, used when the AI's reply can't be used.
