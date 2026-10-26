@@ -535,3 +535,36 @@ func TestRepeatCreateDraftInvoiceUsesDeterministicInvoiceNumberAndRecoversOn422D
 		}
 	}
 }
+
+// A search must only ever return the invoice that carries the searched number. Returning "the only result"
+// would let the act path set this deal's due date on another deal's draft.
+func TestSearchNeverReturnsAnInvoiceWithADifferentNumber(t *testing.T) {
+	const other = `{"id":"INV2-OTHR-OTHR-OTHR-0001","status":"DRAFT","detail":{"currency_code":"USD","invoice_number":"MC-SOMEONEELSE"}}`
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch {
+		case r.Method == http.MethodPost && r.URL.Path == "/v1/oauth2/token":
+			_, _ = w.Write([]byte(`{"access_token":"FAKE_TOKEN_SEARCH","token_type":"Bearer","expires_in":3600}`))
+		case r.Method == http.MethodPost && r.URL.Path == "/v2/invoicing/search-invoices":
+			_, _ = w.Write([]byte(`{"total_items":1,"total_pages":1,"items":[` + other + `]}`))
+		case r.Method == http.MethodGet && r.URL.Path == "/v2/invoicing/invoices":
+			_, _ = w.Write([]byte(`{"total_items":1,"total_pages":1,"items":[` + other + `]}`))
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer srv.Close()
+
+	client, err := NewClient(srv.URL, "FAKE_CLIENT_ID_SEARCH", "FAKE_SECRET_SEARCH", srv.Client())
+	if err != nil {
+		t.Fatalf("NewClient: %v", err)
+	}
+	inv, err := client.SearchInvoiceByNumber(context.Background(), "find-test", "MC-THISDEAL")
+	if !errors.Is(err, ErrInvoiceNotFound) {
+		id := ""
+		if inv != nil {
+			id = inv.ID + " (" + inv.Detail.InvoiceNumber + ")"
+		}
+		t.Fatalf("SearchInvoiceByNumber(MC-THISDEAL) = %s, %v; want ErrInvoiceNotFound", id, err)
+	}
+}
