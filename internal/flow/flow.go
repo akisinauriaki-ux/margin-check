@@ -245,6 +245,10 @@ func (d Deps) ApproveAndRun(ctx context.Context, dealID, shownFingerprint string
 	if act.Fingerprint(plan) != strings.TrimSpace(shownFingerprint) {
 		return deal, act.ErrFingerprintMismatch
 	}
+	// This exact plan already ran and PayPal's draft was read back: a second click changes nothing.
+	if deal.Result != nil && deal.Result.ReadBackOK && deal.Approval != nil && deal.Approval.Fingerprint == act.Fingerprint(plan) {
+		return deal, nil
+	}
 	opt, ok := deal.Option(deal.Accepted)
 	if !ok {
 		return deal, errors.New("the accepted choice is missing from the deal")
