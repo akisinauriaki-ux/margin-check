@@ -1,0 +1,6 @@
+35a9fec fix G: a second approval of a plan that already ran and was read back makes no PayPal call
+73f2042 fix G: failing test - a second approval of a done run calls PayPal again
+2882fc0 fix G: never offer a choice that loses money; early payment answers the payment terms already on the table, not an ask the seller already answered
+c943185 fix G: failing tests - money-losing choices are offered; early payment is offered after the seller already settled payment on receipt
+885f8bf fix G: a buyer's stated change of quantity, price, payment days, discount or shipping stops the plan; the seller decides
+5c7278b fix G: failing tests - a buyer's stated change of price, payment days, shipping or discount still becomes a plan

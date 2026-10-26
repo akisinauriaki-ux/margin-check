@@ -1,0 +1,18 @@
+?   	margincheck/cmd/actcheck	[no test files]
+ok  	margincheck/cmd/app	11.139s
+ok  	margincheck/cmd/exam	3.905s
+ok  	margincheck/cmd/proof	2.751s
+ok  	margincheck/cmd/sandboxcheck	3.094s
+ok  	margincheck/cmd/toolkitcheck	8.648s
+ok  	margincheck/internal/act	3.005s
+ok  	margincheck/internal/agenttools	4.472s
+ok  	margincheck/internal/check	1.714s
+ok  	margincheck/internal/flow	7.122s
+ok  	margincheck/internal/gemini	6.576s
+ok  	margincheck/internal/normalize	1.842s
+ok  	margincheck/internal/offer	0.916s
+ok  	margincheck/internal/paypal	4.085s
+ok  	margincheck/internal/profit	4.002s
+ok  	margincheck/internal/quote	2.654s
+ok  	margincheck/internal/reader	8.433s
+ok  	margincheck/internal/writer	4.959s
