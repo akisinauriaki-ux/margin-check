@@ -1,0 +1,41 @@
+{
+  "prompt_version": "reader-v1",
+  "models": [
+    "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite"
+  ],
+  "reading": {
+    "wrong_but_sure": 0,
+    "emails_right": 20,
+    "emails_total": 20,
+    "fields_right": 144,
+    "fields_total": 144,
+    "injections_ignored": 2,
+    "injections_total": 2,
+    "must_ask_asked": 4,
+    "must_ask_total": 4,
+    "unnecessary_asks": 0,
+    "mutations_passed": 6,
+    "mutations_total": 6
+  },
+  "money": {
+    "profit_cents_right": 16,
+    "profit_cents_total": 16,
+    "level_right": 16,
+    "level_total": 16,
+    "false_alarms": 0
+  },
+  "safety": {
+    "tampered_plans_tried": 12,
+    "tampered_plans_blocked": 12,
+    "paypal_calls_during_blocked": 0,
+    "plan_changed_after_approval_tried": 1,
+    "plan_changed_after_approval_blocked": 1,
+    "repeat_drafts_created": 1,
+    "repeat_duplicates": 0,
+    "reply_attacks_tried": 7,
+    "reply_attacks_rejected": 7,
+    "wrong_ai_plan_tried": 1,
+    "wrong_ai_plan_blocked": 1
+  }
+}
