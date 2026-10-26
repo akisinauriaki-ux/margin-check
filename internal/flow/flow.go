@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"margincheck/internal/act"
@@ -27,6 +28,10 @@ const (
 	NextAsk           = "ask"            // the answer is unclear: the seller asks the buyer
 	NextSellerDecides = "seller_decides" // the buyer changed the terms: the seller decides, nothing is planned
 )
+
+// RunTimeLimit bounds one approved run. Once started, a run is not stopped by the browser closing the request
+// (that could leave the draft made but its due date unset); it stops only at this limit.
+const RunTimeLimit = 3 * time.Minute
 
 // Reader reads one email thread (internal/reader satisfies it).
 type Reader interface {
@@ -168,6 +173,7 @@ func requestedInt(res reader.CheckResult, name string, scale int64) int64 {
 
 // BuyerReplied reads the buyer's answer. Only a sure, offered, unchanged choice leads to a plan (M8).
 func (d Deps) BuyerReplied(ctx context.Context, dealID, replyThread string) (*Deal, error) {
+	defer d.Store.lock(dealID)()
 	deal, err := d.Store.Load(dealID)
 	if err != nil {
 		return nil, err
@@ -209,8 +215,10 @@ func (d Deps) BuyerReplied(ctx context.Context, dealID, replyThread string) (*De
 }
 
 // ApproveAndRun records the seller's approval of the plan they were shown (its fingerprint) and runs it.
-// It refuses if the stored plan no longer has that fingerprint.
+// It refuses if the stored plan no longer has that fingerprint. Two approvals of one deal (a double click) run
+// one after the other, so the second finds the draft the first made.
 func (d Deps) ApproveAndRun(ctx context.Context, dealID, shownFingerprint string) (*Deal, error) {
+	defer d.Store.lock(dealID)()
 	deal, err := d.Store.Load(dealID)
 	if err != nil {
 		return nil, err
@@ -229,7 +237,9 @@ func (d Deps) ApproveAndRun(ctx context.Context, dealID, shownFingerprint string
 	appr := act.Approve(plan)
 	deal.Approval = &appr
 	day, _ := time.Parse("2006-01-02", deal.InvoiceDay)
-	res, runErr := act.Execute(ctx, d.Tools, appr, plan, opt, d.Parties, day)
+	runCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), RunTimeLimit)
+	defer cancel()
+	res, runErr := act.Execute(runCtx, d.Tools, appr, plan, opt, d.Parties, day)
 	deal.Result = &res
 	deal.ResultError = ""
 	if runErr != nil {
@@ -257,7 +267,28 @@ func newID() (string, error) {
 }
 
 // Store keeps deals as JSON files in one folder (margin-check/.data/deals, git-ignored).
-type Store struct{ dir string }
+type Store struct {
+	dir string
+
+	mu    sync.Mutex
+	deals map[string]*sync.Mutex // one lock per deal: changes to a deal happen one at a time
+}
+
+// lock waits until no other change to this deal is running, and returns the unlock.
+func (s *Store) lock(id string) func() {
+	s.mu.Lock()
+	if s.deals == nil {
+		s.deals = map[string]*sync.Mutex{}
+	}
+	m, ok := s.deals[id]
+	if !ok {
+		m = &sync.Mutex{}
+		s.deals[id] = m
+	}
+	s.mu.Unlock()
+	m.Lock()
+	return m.Unlock
+}
 
 var idRe = regexp.MustCompile(`^d[0-9a-f]{12}$`)
 
