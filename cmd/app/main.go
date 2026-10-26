@@ -19,6 +19,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"margincheck/internal/act"
 	"margincheck/internal/flow"
@@ -97,8 +98,18 @@ func main() {
 	log.Fatal(newHTTPServer(*addr, s.routes()).ListenAndServe())
 }
 
+// newHTTPServer is the screen's server, with time limits so a slow or stuck connection can't hold it forever.
+// The write limit leaves room for the slowest real step: an approved run (flow.RunTimeLimit), or reading an
+// email twice and drafting the reply.
 func newHTTPServer(addr string, h http.Handler) *http.Server {
-	return &http.Server{Addr: addr, Handler: h}
+	return &http.Server{
+		Addr:              addr,
+		Handler:           h,
+		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      flow.RunTimeLimit + 2*time.Minute,
+		IdleTimeout:       2 * time.Minute,
+	}
 }
 
 type server struct {
