@@ -163,21 +163,21 @@ func ExtractMoney(s string) []Value {
 		out = append(out, Value{Kind: KindMoney, Int: cents, Currency: curr})
 	}
 
-	for _, m := range reMoneySymbolPrefix.FindAllStringSubmatch(s, -1) {
+	for _, m := range matchesOutsideDecimals(reMoneySymbolPrefix, s) {
 		curr := symbolToCurrency(m[1])
 		cents, err := partsToCents(m[2], m[3], m[4] != "")
 		if err == nil && curr != "" {
 			addUnique(cents, curr)
 		}
 	}
-	for _, m := range reMoneyCodePrefix.FindAllStringSubmatch(s, -1) {
+	for _, m := range matchesOutsideDecimals(reMoneyCodePrefix, s) {
 		curr := wordToCurrency(m[1])
 		cents, err := partsToCents(m[2], m[3], m[4] != "")
 		if err == nil && curr != "" {
 			addUnique(cents, curr)
 		}
 	}
-	for _, m := range reMoneyCodeSuffix.FindAllStringSubmatch(s, -1) {
+	for _, m := range matchesOutsideDecimals(reMoneyCodeSuffix, s) {
 		curr := wordToCurrency(m[4])
 		cents, err := partsToCents(m[1], m[2], m[3] != "")
 		if err == nil && curr != "" {
@@ -202,6 +202,32 @@ func ExtractMoney(s string) []Value {
 
 	return out
 }
+
+// matchesOutsideDecimals is FindAllStringSubmatch without the matches that sit inside a decimal number.
+// Go's  treats "." as a boundary, so "2.5%" would otherwise yield "5%" and "40.125 dollars" "125 dollars".
+// A decimal the whole-number fields can't hold is left unread, so the value stays unsure.
+func matchesOutsideDecimals(re *regexp.Regexp, s string) [][]string {
+	var out [][]string
+	for _, loc := range re.FindAllStringSubmatchIndex(s, -1) {
+		start, end := loc[0], loc[1]
+		if start >= 2 && s[start-1] == '.' && isASCIIDigit(s[start-2]) {
+			continue // the digits after a decimal point
+		}
+		if end+1 < len(s) && s[end] == '.' && isASCIIDigit(s[end+1]) {
+			continue // the digits before more decimal places than the pattern takes
+		}
+		m := make([]string, len(loc)/2)
+		for i := range m {
+			if loc[2*i] >= 0 {
+				m[i] = s[loc[2*i]:loc[2*i+1]]
+			}
+		}
+		out = append(out, m)
+	}
+	return out
+}
+
+func isASCIIDigit(b byte) bool { return b >= '0' && b <= '9' }
 
 func symbolToCurrency(sym string) string {
 	switch sym {
@@ -312,7 +338,7 @@ func ExtractPercents(s string) []int64 {
 	if reHalfOff.MatchString(s) {
 		addUnique(50)
 	}
-	for _, m := range rePercentDigit.FindAllStringSubmatch(s, -1) {
+	for _, m := range matchesOutsideDecimals(rePercentDigit, s) {
 		v, err := strconv.ParseInt(m[1], 10, 64)
 		if err == nil {
 			addUnique(v)
@@ -374,17 +400,17 @@ func ExtractPaymentDays(s string) []int64 {
 	if reDueOnReceipt.MatchString(s) {
 		addUnique(0)
 	}
-	for _, m := range reNetDays.FindAllStringSubmatch(s, -1) {
+	for _, m := range matchesOutsideDecimals(reNetDays, s) {
 		if v, err := strconv.ParseInt(m[1], 10, 64); err == nil {
 			addUnique(v)
 		}
 	}
-	for _, m := range reWithinDays.FindAllStringSubmatch(s, -1) {
+	for _, m := range matchesOutsideDecimals(reWithinDays, s) {
 		if v, err := strconv.ParseInt(m[1], 10, 64); err == nil {
 			addUnique(v)
 		}
 	}
-	for _, m := range reNumberDays.FindAllStringSubmatch(s, -1) {
+	for _, m := range matchesOutsideDecimals(reNumberDays, s) {
 		if v, err := strconv.ParseInt(m[1], 10, 64); err == nil {
 			addUnique(v)
 		}
@@ -498,7 +524,7 @@ func ExtractQuantities(s string) []int64 {
 	}
 
 	// Dozen phrases ("a dozen", "two dozen")
-	for _, m := range reDozen.FindAllStringSubmatch(s, -1) {
+	for _, m := range matchesOutsideDecimals(reDozen, s) {
 		multWord := strings.ToLower(m[1])
 		var mult int64
 		if multWord == "a" || multWord == "an" {
@@ -514,7 +540,7 @@ func ExtractQuantities(s string) []int64 {
 	}
 
 	// Digit / k quantities followed by unit nouns ("40 boxes", "2.5k boxes", "60 units")
-	for _, m := range reUnitQuant.FindAllStringSubmatch(s, -1) {
+	for _, m := range matchesOutsideDecimals(reUnitQuant, s) {
 		raw := m[1]
 		if km := reKNumber.FindStringSubmatch(raw); km != nil {
 			if v, err := kPartsToInt(km[1], km[2]); err == nil {
