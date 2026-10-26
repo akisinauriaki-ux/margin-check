@@ -69,6 +69,7 @@ type Deal struct {
 
 	BuyerReply    string              `json:"buyer_reply,omitempty"`
 	ReplyReading  *reader.CheckResult `json:"reply_reading,omitempty"`
+	AIPick        offer.Kind          `json:"ai_pick,omitempty"` // the choice the AI read in the buyer's own words
 	Accepted      offer.Kind          `json:"accepted,omitempty"`
 	AcceptedQuote string              `json:"accepted_quote,omitempty"`
 	Next          string              `json:"next,omitempty"`
@@ -234,6 +235,12 @@ func (d Deps) BuyerReplied(ctx context.Context, dealID, replyThread string) (*De
 	deal.Accepted, deal.AcceptedQuote, deal.Proposal, deal.Approval, deal.Result, deal.ResultError = "", res.AcceptedOption.Quote, nil, nil, nil, ""
 
 	kind := offer.Kind(strings.ToLower(strings.TrimSpace(res.AcceptedOption.Value)))
+	deal.AIPick = ""
+	if fromBuyer(res.AcceptedOption.Quote) && res.AcceptedOption.Sure && !res.AcceptedOption.Unknown {
+		if _, offered := deal.Option(kind); offered {
+			deal.AIPick = kind // shown to the seller, who confirms or corrects it with one tap
+		}
+	}
 	switch {
 	case !fromBuyer(res.AcceptedOption.Quote):
 		deal.Next, deal.NextReason = NextAsk, "It isn't clear which choice the buyer accepted. Ask them; nothing is planned until it is."
@@ -275,9 +282,55 @@ func (d Deps) BuyerReplied(ctx context.Context, dealID, replyThread string) (*De
 	return deal, nil
 }
 
-// SellerChose records which choice the buyer accepted, picked by the seller. (Seam: not built yet.)
+// SellerChose records which choice the buyer accepted, as the seller confirms or corrects it with one tap after
+// reading the buyer's email. The same rules apply as when the AI reads it: a term the buyer stated differently
+// still goes to the seller to decide, and once a PayPal draft exists the choice can't be switched.
 func (d Deps) SellerChose(ctx context.Context, dealID string, kind offer.Kind) (*Deal, error) {
-	return d.Store.Load(dealID)
+	defer d.Store.lock(dealID)()
+	deal, err := d.Store.Load(dealID)
+	if err != nil {
+		return nil, err
+	}
+	if deal.Offers == nil || deal.ReplyReading == nil {
+		return deal, errors.New("read the buyer's answer first")
+	}
+	if deal.Result != nil {
+		return deal, errors.New("a PayPal draft was already made for this deal, so its choice can't be switched")
+	}
+	opt, ok := deal.Option(kind)
+	if !ok {
+		return deal, fmt.Errorf("%q isn't one of the choices you offered", kind)
+	}
+	fromBuyer := func(quote string) bool {
+		q := flatten(quote)
+		return q != "" && strings.Contains(flatten(deal.BuyerReply), q)
+	}
+	deal.Accepted, deal.Proposal, deal.Approval, deal.ResultError = "", nil, nil, ""
+	if change := statedChange(*deal.ReplyReading, opt, d.Offer, fromBuyer); change != "" {
+		deal.Next, deal.NextReason = NextSellerDecides, fmt.Sprintf("You chose the %s choice, but the buyer wrote %s. You decide; nothing is planned.",
+			writer.Label(kind), change)
+	} else {
+		day, err := deal.invoiceDay()
+		if err != nil {
+			return deal, err
+		}
+		deal.Accepted, deal.Next = kind, NextDraft
+		deal.NextReason = fmt.Sprintf("You confirmed it: the buyer accepted the %s choice.", writer.Label(kind))
+		pr := act.Propose(ctx, d.Planner, d.PlannerModel, deal.ID, opt, d.Parties, day)
+		deal.Proposal = &pr
+	}
+	if err := d.Store.Save(deal); err != nil {
+		return deal, err
+	}
+	if err := d.Store.record(deal.ID, "seller chose", fmt.Sprintf("%s (the AI read %q); next %s", kind, deal.AIPick, deal.Next)); err != nil {
+		return deal, err
+	}
+	if deal.Proposal != nil {
+		p := deal.Proposal
+		return deal, d.Store.record(deal.ID, "plan", fmt.Sprintf("by %s, %d call(s), fingerprint %s, AI plan blocked for %d difference(s)",
+			p.Plan.By, len(p.Plan.Calls), act.Fingerprint(p.Plan), len(p.Blocked)))
+	}
+	return deal, nil
 }
 
 // ApproveAndRun records the seller's approval of the plan they were shown (its fingerprint) and runs it.

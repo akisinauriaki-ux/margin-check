@@ -657,9 +657,16 @@ func TestTheSellerPicksWhenTheReplyIsUnclear(t *testing.T) {
 
 // The seller can correct the AI's reading with one tap; the plan follows the seller's choice.
 func TestTheSellerCanCorrectTheAIsReading(t *testing.T) {
+	const reply = "Buyer: Option 2 please." // states no numbers, so a corrected pick is not a changed term
+	r := readings()[askEmail]
+	r.AcceptedOption = reader.StringFieldResult{Value: "quantity", Sure: true, Quote: "Option 2 please."}
 	d := deps(t, &fakeTools{})
+	d.Reader.(fakeReader).byEmail[reply] = r
 	deal, _ := d.Start(context.Background(), askEmail)
-	deal, _ = d.BuyerReplied(context.Background(), deal.ID, replyYes) // the AI reads the quantity choice
+	deal, _ = d.BuyerReplied(context.Background(), deal.ID, reply) // the AI reads the quantity choice
+	if deal.AIPick != offer.Quantity {
+		t.Fatalf("setup: the AI's pick is %q", deal.AIPick)
+	}
 	deal, err := d.SellerChose(context.Background(), deal.ID, offer.Standard)
 	if err != nil {
 		t.Fatal(err)
