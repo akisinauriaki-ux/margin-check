@@ -121,7 +121,8 @@ func TestValidate(t *testing.T) {
 		text string
 		want string // a word expected in a problem, or "" for no problem
 	}{
-		{"Hi {{OPTION_1}} {{OPTION_2}}. What works for you?", ""},
+		{"Hi,\n{{OPTION_1}} {{OPTION_2}}. What works for you?", ""},
+		{"{{OPTION_1}} {{OPTION_2}}. What works for you?", "greeting"},
 		{"Hi {{OPTION_1}}. What works for you?", "missing"},
 		{"Hi {{OPTION_1}} {{OPTION_1}} {{OPTION_2}}", "more than once"},
 		{"Hi {{OPTION_1}} {{OPTION_2}} {{OPTION_9}}", "unknown blank"},
@@ -130,7 +131,7 @@ func TestValidate(t *testing.T) {
 		{"We could split the difference {{OPTION_1}} {{OPTION_2}}", "split"},
 		{"Take ten percent off {{OPTION_1}} {{OPTION_2}}", "number word"},
 		{"Forty boxes then {{OPTION_1}} {{OPTION_2}}", "number word"},
-		{"One more thing: {{OPTION_1}} {{OPTION_2}}", ""},
+		{"One more thing:\n{{OPTION_1}} {{OPTION_2}}", ""},
 		{"", "empty"},
 		{strings.Repeat("word ", 170) + "{{OPTION_1}} {{OPTION_2}}", "words"},
 	}

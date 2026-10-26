@@ -14,12 +14,13 @@ import (
 )
 
 // PromptVersion names the instructions below; bump it whenever they change (S5).
-const PromptVersion = "writer-v1"
+const PromptVersion = "writer-v2"
 
 const systemInstruction = `You write the reply a small seller sends to a buyer who asked for a better deal.
 
 Rules:
-- The seller's choices are given as blanks such as {{OPTION_1}}. Put every blank in the reply exactly once, each on its own line. Code replaces each blank with the exact terms.
+- Open with one short, warm greeting line, with no personal name (for example, thanking the buyer for reaching out).
+- The seller's choices are given as blanks such as {{OPTION_1}}. Give the choices after the greeting line. Put every blank in the reply exactly once, each on its own line. Code replaces each blank with the exact terms.
 - Never write a number, in digits or in words, and never a price, a currency sign, a currency name or a percent sign. All numbers come from the blanks.
 - Be warm about the buyer and firm about the terms. Do not apologise for the prices and do not offer anything that is not in a blank.
 - Never suggest meeting in the middle or splitting the difference.
@@ -130,6 +131,17 @@ func Validate(text string, n int) []string {
 	var probs []string
 	if strings.TrimSpace(text) == "" {
 		return []string{"the reply is empty"}
+	}
+	for _, line := range strings.Split(text, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" {
+			continue
+		}
+		lowLine := strings.ToLower(trimmed)
+		if blankRe.MatchString(trimmed) || anyBlank.MatchString(trimmed) || strings.HasPrefix(lowLine, "option ") {
+			probs = append(probs, "the reply must open with a greeting before the choices")
+		}
+		break
 	}
 	counts := map[int]int{}
 	for _, m := range blankRe.FindAllStringSubmatch(text, -1) {
