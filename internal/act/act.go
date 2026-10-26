@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -283,17 +284,17 @@ func compare(inv *paypal.Invoice, c *CreateInvoiceArgs, due *SetDueDateArgs) []R
 	}
 	out = add(out, "items", "1", itoa(int64(len(inv.Items))))
 	out = add(out, "quantity", itoa(c.Quantity), trimDecimal(item.Quantity))
-	out = add(out, "unit_price_cents", itoa(c.UnitPriceCents), itoa(parseCents(item.UnitAmount.Value)))
-	gotBP := int64(0)
+	out = add(out, "unit_price_cents", itoa(c.UnitPriceCents), readCents(item.UnitAmount.Value))
+	gotBP := "0"
 	if item.Discount != nil {
-		gotBP = parseBP(item.Discount.Percent)
+		gotBP = readBP(item.Discount.Percent)
 	}
-	out = add(out, "discount_bp", itoa(c.DiscountBP), itoa(gotBP))
-	gotShip := int64(0)
+	out = add(out, "discount_bp", itoa(c.DiscountBP), gotBP)
+	gotShip := "0"
 	if inv.Amount != nil && inv.Amount.Breakdown != nil && inv.Amount.Breakdown.Shipping != nil && inv.Amount.Breakdown.Shipping.Amount != nil {
-		gotShip = parseCents(inv.Amount.Breakdown.Shipping.Amount.Value)
+		gotShip = readCents(inv.Amount.Breakdown.Shipping.Amount.Value)
 	}
-	out = add(out, "shipping_cents", itoa(c.ShippingCents), itoa(gotShip))
+	out = add(out, "shipping_cents", itoa(c.ShippingCents), gotShip)
 	if due != nil {
 		got := ""
 		if inv.Detail.PaymentTerm != nil {
@@ -329,28 +330,64 @@ func trimDecimal(s string) string {
 	return s
 }
 
-// parseCents reads a decimal string such as "40", "40.5" or "40.00" into cents, without floats.
-func parseCents(s string) int64 { return parseScaled(s, 2) }
+// readCents reads a decimal string such as "40", "40.5" or "40.00" as whole cents, without floats. Anything
+// else (a sign, extra non-zero decimals, any other character) reads as "unreadable", which matches no plan.
+func readCents(s string) string { return readScaled(s, 2) }
 
-// parseBP reads a percent string such as "1.5" or "10.000" into basis points, without floats.
-func parseBP(s string) int64 { return parseScaled(s, 2) }
+// readBP reads a percent string such as "1.5" or "10.000" as basis points, the same way.
+func readBP(s string) string { return readScaled(s, 2) }
 
-func parseScaled(s string, places int) int64 {
-	s = strings.TrimSpace(s)
-	whole, frac, _ := strings.Cut(s, ".")
-	w, err := strconv.ParseInt(whole, 10, 64)
-	if err != nil {
-		return -1
+func readScaled(s string, places int) string {
+	if v, ok := parseScaled(s, places); ok {
+		return itoa(v)
+	}
+	return "unreadable " + strconv.Quote(s)
+}
+
+// parseScaled reads digits with an optional decimal part as a whole number of 1/10^places units. It refuses
+// signs, non-digits, non-zero digits beyond places, and values that would not fit in an int64.
+func parseScaled(s string, places int) (int64, bool) {
+	whole, frac, hasDot := strings.Cut(strings.TrimSpace(s), ".")
+	if !allDigits(whole) || (hasDot && !allDigits(frac)) {
+		return 0, false
+	}
+	if len(frac) > places {
+		if strings.Trim(frac[places:], "0") != "" {
+			return 0, false
+		}
+		frac = frac[:places]
 	}
 	for len(frac) < places {
 		frac += "0"
 	}
-	f, err := strconv.ParseInt(frac[:places], 10, 64)
+	w, err := strconv.ParseInt(whole, 10, 64)
 	if err != nil {
-		return -1
+		return 0, false
 	}
+	var f int64
+	if places > 0 {
+		if f, err = strconv.ParseInt(frac, 10, 64); err != nil {
+			return 0, false
+		}
+	}
+	scale := int64(1)
 	for i := 0; i < places; i++ {
-		w *= 10
+		scale *= 10
 	}
-	return w + f
+	if w > (math.MaxInt64-f)/scale {
+		return 0, false
+	}
+	return w*scale + f, true
+}
+
+func allDigits(s string) bool {
+	if s == "" {
+		return false
+	}
+	for i := 0; i < len(s); i++ {
+		if s[i] < '0' || s[i] > '9' {
+			return false
+		}
+	}
+	return true
 }
