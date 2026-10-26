@@ -132,6 +132,31 @@ func TestTheHomePageRenders(t *testing.T) {
 	}
 }
 
+func TestEarlyPaymentPlanBLabelRendersOnDealPage(t *testing.T) {
+	s, deal := testServer(t)
+	page := get(t, s.routes(), "/deal/"+deal.ID)
+	const planBLabel = "The discount is written on the invoice itself and the invoice is due in 7 days. PayPal's own early-payment rule isn't used, so the buyer keeps the discount even if they pay late."
+	if !strings.Contains(page, planBLabel) {
+		t.Errorf("early-payment choice rendered on page but lacks Plan B label %q", planBLabel)
+	}
+
+	// When early payment is omitted, line must not render
+	seller := profit.Seller{UnitCostCents: 2300, ShippingCostCentsPerOrder: 600, ShippingCostCentsPerBox: 150,
+		PayPalFeePercentBP: 349, PayPalFixedFeeCents: 49, YearlyCostOfMoneyBP: 1000, UnderlineMinGiveawayBP: 200, Currency: "USD"}
+	setNoEarly, err := offer.Build(offer.Request{Currency: "USD", Quantity: 20, UnitPriceCents: 4000, RequestedPaymentDays: 0}, seller, offer.Config{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	deal.Offers = &setNoEarly
+	if err := s.deps.Store.Save(deal); err != nil {
+		t.Fatal(err)
+	}
+	pageNoEarly := get(t, s.routes(), "/deal/"+deal.ID)
+	if strings.Contains(pageNoEarly, planBLabel) {
+		t.Errorf("early payment omitted but page still rendered Plan B label")
+	}
+}
+
 // The screen's server must not wait forever on a slow or stuck connection, but it must leave the slowest real
 // step (an approved run, or reading an email twice and drafting the reply) time to finish.
 func TestTheServerHasTimeLimits(t *testing.T) {
