@@ -85,7 +85,7 @@ func TestTheDealPageShowsEveryStation(t *testing.T) {
 		"The interceptor blocked", // a blocked AI plan is shown
 		"Fingerprint of exactly these calls",
 		act.Fingerprint(deal.Proposal.Plan),
-		"Approve and create the PayPal draft",
+		"Create the PayPal draft: ",
 		"b***@example.com", // addresses are masked
 		"How it decided",
 	} {

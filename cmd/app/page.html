@@ -118,7 +118,7 @@ td.q{color:var(--muted);font-size:13px}.ok{color:var(--green);font-weight:600}.n
   {{if not $.Deal.Result}}
   <form method="post" action="/deal/{{$.Deal.ID}}/approve">
     <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="fingerprint" value="{{fingerprint .Plan}}">
-    <div class="row"><button class="approve" type="submit">Approve and create the PayPal draft</button><span class="note">Runs only if the plan still has this fingerprint.</span></div>
+    <div class="row"><button class="approve" type="submit">{{action .Plan}}</button><span class="note">Runs only if the plan still has this fingerprint.</span></div>
   </form>{{end}}
   {{end}}
 </div>

@@ -127,7 +127,9 @@ func (s *server) init() error {
 		return err
 	}
 	s.csrf = hex.EncodeToString(b)
-	t, err := template.New("page.html").Funcs(funcs()).ParseFS(pageFS, "page.html")
+	fm := funcs()
+	fm["action"] = func(p act.Plan) string { return actionLine(p, s.deps.Offer.UnitNoun) }
+	t, err := template.New("page.html").Funcs(fm).ParseFS(pageFS, "page.html")
 	s.tmpl = t
 	return err
 }

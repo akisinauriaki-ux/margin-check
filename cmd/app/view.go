@@ -4,11 +4,44 @@ import (
 	"fmt"
 	"strings"
 
+	"margincheck/internal/act"
 	"margincheck/internal/flow"
 	"margincheck/internal/offer"
 	"margincheck/internal/quote"
 	"margincheck/internal/reader"
 )
+
+// actionLine is the Approve button's label: exactly what the plan will create, in the plan's own terms, built by
+// code from the calls that will run. A vague "create the draft" invites approving without reading.
+func actionLine(p act.Plan, unitNoun string) string {
+	if strings.TrimSpace(unitNoun) == "" {
+		unitNoun = "boxes"
+	}
+	var c *act.CreateInvoiceArgs
+	due := "due on receipt"
+	for _, call := range p.Calls {
+		if call.Create != nil {
+			c = call.Create
+		}
+		if call.DueDate != nil {
+			due = "due " + call.DueDate.DueDate
+		}
+	}
+	if c == nil {
+		return "Approve this plan"
+	}
+	terms := []string{fmt.Sprintf("%d %s at %s each", c.Quantity, unitNoun, offer.FormatMoney(c.UnitPriceCents, c.Currency))}
+	if c.DiscountBP > 0 {
+		terms = append(terms, offer.FormatPercent(c.DiscountBP)+" off")
+	}
+	if c.ShippingCents > 0 {
+		terms = append(terms, "shipping "+offer.FormatMoney(c.ShippingCents, c.Currency))
+	} else {
+		terms = append(terms, "free shipping")
+	}
+	terms = append(terms, due)
+	return "Create the PayPal draft: " + strings.Join(terms, ", ")
+}
 
 // Line is one line of the pasted thread, marked when it gives something away.
 type Line struct {
