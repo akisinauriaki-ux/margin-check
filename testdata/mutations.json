@@ -1,0 +1,56 @@
+[
+  {
+    "id": "M-1",
+    "email": "03",
+    "find": "net 15",
+    "replace": "net 30",
+    "field": "payment_days",
+    "from": 15,
+    "to": 30
+  },
+  {
+    "id": "M-2",
+    "email": "01",
+    "find": "$40 per box",
+    "replace": "$38 per box",
+    "field": "unit_price_cents",
+    "from": 4000,
+    "to": 3800
+  },
+  {
+    "id": "M-3",
+    "email": "11",
+    "find": "twenty percent",
+    "replace": "fifteen percent",
+    "field": "discount_percent",
+    "from": 20,
+    "to": 15
+  },
+  {
+    "id": "M-4",
+    "email": "12",
+    "find": "free shipping",
+    "replace": "standard shipping",
+    "field": "free_shipping",
+    "from": true,
+    "to": false
+  },
+  {
+    "id": "M-5",
+    "email": "05",
+    "find": "25 boxes",
+    "replace": "35 boxes",
+    "field": "quantity",
+    "from": 25,
+    "to": 35
+  },
+  {
+    "id": "M-6",
+    "email": "08",
+    "find": "5% discount",
+    "replace": "8% discount",
+    "field": "discount_percent",
+    "from": 5,
+    "to": 8
+  }
+]
