@@ -227,6 +227,30 @@ func TestFillLayout(t *testing.T) {
 	}
 }
 
+func TestFillWritesChoicesInNumberOrder(t *testing.T) {
+	set := sampleSet(t)
+	want := "Thank you for reaching out today.\n\n" +
+		"Option 1 (Standard): 20 boxes at $40.00 each, shipping $36.00 at cost, payment on receipt.\n" +
+		"Option 2 (Quantity): 30 boxes at $40.00 each with free shipping, payment on receipt.\n" +
+		"Option 3 (Early payment): 20 boxes at $40.00 each with 1.5% off, shipping $36.00 at cost, payment within 7 days.\n\n" +
+		"What works best for you?"
+
+	// Input has Option 2 before Option 1
+	reordered := "Thank you for reaching out today. {{OPTION_2}} {{OPTION_1}} {{OPTION_3}} What works best for you?"
+	got := Fill(reordered, set)
+	if got != want {
+		t.Errorf("Fill did not write choices in order 1, 2, 3:\nGOT:\n%s\n\nWANT:\n%s", got, want)
+	}
+
+	// Another order: 3, 1, 2
+	reordered2 := "Thank you for reaching out today. {{OPTION_3}} {{OPTION_1}} {{OPTION_2}} What works best for you?"
+	got2 := Fill(reordered2, set)
+	if got2 != want {
+		t.Errorf("Fill did not write choices in order 1, 2, 3:\nGOT:\n%s\n\nWANT:\n%s", got2, want)
+	}
+}
+
+
 func TestValidateRejectsArgonM5Bypasses(t *testing.T) {
 	cases := []struct {
 		name string
