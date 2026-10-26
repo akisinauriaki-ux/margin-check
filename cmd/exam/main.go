@@ -149,41 +149,41 @@ const (
 
 // FieldScore records the evaluation of one scored field on one email.
 type FieldScore struct {
-	Field          string       `json:"field"`
-	Expected       string       `json:"expected"`
-	Actual         string       `json:"actual"`
-	Sure           bool         `json:"sure"`
-	Reason         string       `json:"reason,omitempty"`
-	Outcome        FieldOutcome `json:"outcome"`
-	BothAgreed     bool         `json:"both_agreed"`
-	BothWrongAgreed bool        `json:"both_wrong_agreed"`
+	Field           string       `json:"field"`
+	Expected        string       `json:"expected"`
+	Actual          string       `json:"actual"`
+	Sure            bool         `json:"sure"`
+	Reason          string       `json:"reason,omitempty"`
+	Outcome         FieldOutcome `json:"outcome"`
+	BothAgreed      bool         `json:"both_agreed"`
+	BothWrongAgreed bool         `json:"both_wrong_agreed"`
 }
 
 // EmailScore records the evaluation of one email in the exam.
 type EmailScore struct {
-	EmailID            string       `json:"email_id"`
-	HasInjection       bool         `json:"has_injection"`
-	InjectionIgnored   bool         `json:"injection_ignored"`
-	EmailWrong         bool         `json:"email_wrong"`
-	Unavailable        bool         `json:"unavailable,omitempty"`
-	UnavailableReason  string       `json:"unavailable_reason,omitempty"`
-	WrongReasons       []string     `json:"wrong_reasons,omitempty"`
-	ScoredFields       int          `json:"scored_fields"`
-	RightFields        int          `json:"right_fields"`
-	WrongButSure       int          `json:"wrong_but_sure"`
-	BothAgreedWrong    int          `json:"both_agreed_wrong"`
-	UnnecessaryAsks    int          `json:"unnecessary_asks"`
-	MustAskTotal       int          `json:"must_ask_total"`
-	MustAskAsked       int          `json:"must_ask_asked"`
-	MustAskMissed      int          `json:"must_ask_missed"`
-	FieldScores        []FieldScore `json:"field_scores"`
-	TermsExpected      int          `json:"terms_expected"`
-	TermsMatched       int          `json:"terms_matched"`
-	TermsExtra         int          `json:"terms_extra"`
-	CallsUsed          int          `json:"calls_used"`
-	TokensUsed         int          `json:"tokens_used"`
-	SecondsTaken       float64      `json:"seconds_taken"`
-	Mode               string       `json:"mode"`
+	EmailID           string       `json:"email_id"`
+	HasInjection      bool         `json:"has_injection"`
+	InjectionIgnored  bool         `json:"injection_ignored"`
+	EmailWrong        bool         `json:"email_wrong"`
+	Unavailable       bool         `json:"unavailable,omitempty"`
+	UnavailableReason string       `json:"unavailable_reason,omitempty"`
+	WrongReasons      []string     `json:"wrong_reasons,omitempty"`
+	ScoredFields      int          `json:"scored_fields"`
+	RightFields       int          `json:"right_fields"`
+	WrongButSure      int          `json:"wrong_but_sure"`
+	BothAgreedWrong   int          `json:"both_agreed_wrong"`
+	UnnecessaryAsks   int          `json:"unnecessary_asks"`
+	MustAskTotal      int          `json:"must_ask_total"`
+	MustAskAsked      int          `json:"must_ask_asked"`
+	MustAskMissed     int          `json:"must_ask_missed"`
+	FieldScores       []FieldScore `json:"field_scores"`
+	TermsExpected     int          `json:"terms_expected"`
+	TermsMatched      int          `json:"terms_matched"`
+	TermsExtra        int          `json:"terms_extra"`
+	CallsUsed         int          `json:"calls_used"`
+	TokensUsed        int          `json:"tokens_used"`
+	SecondsTaken      float64      `json:"seconds_taken"`
+	Mode              string       `json:"mode"`
 
 	// Part D fields:
 	Outcome             check.Outcome `json:"outcome"`
@@ -210,18 +210,18 @@ type TermStatusBreakdown struct {
 
 // MutationScore records the outcome of one counterfactual mutation test.
 type MutationScore struct {
-	ID                  string   `json:"id"`
-	Email               string   `json:"email"`
-	Field               string   `json:"field"`
-	ExpectedTo          string   `json:"expected_to"`
-	ActualTo            string   `json:"actual_to"`
-	TargetChangedRight  bool     `json:"target_changed_right"`
-	OtherFieldsUnchanged bool    `json:"other_fields_unchanged"`
-	ChangedOtherFields  []string `json:"changed_other_fields,omitempty"`
-	Passed              bool     `json:"passed"`
-	CallsUsed           int      `json:"calls_used"`
-	TokensUsed          int      `json:"tokens_used"`
-	SecondsTaken        float64  `json:"seconds_taken"`
+	ID                   string   `json:"id"`
+	Email                string   `json:"email"`
+	Field                string   `json:"field"`
+	ExpectedTo           string   `json:"expected_to"`
+	ActualTo             string   `json:"actual_to"`
+	TargetChangedRight   bool     `json:"target_changed_right"`
+	OtherFieldsUnchanged bool     `json:"other_fields_unchanged"`
+	ChangedOtherFields   []string `json:"changed_other_fields,omitempty"`
+	Passed               bool     `json:"passed"`
+	CallsUsed            int      `json:"calls_used"`
+	TokensUsed           int      `json:"tokens_used"`
+	SecondsTaken         float64  `json:"seconds_taken"`
 }
 
 // ExamSummary is the top-level JSON report saved to margin-check/reports/.
@@ -272,14 +272,14 @@ type ExamSummary struct {
 	ActionsMatchedTotal     int     `json:"actions_matched_total"`
 	ActionAccuracyPct       float64 `json:"action_accuracy_pct"`
 
-	Kill2Pass              bool                           `json:"kill2_pass"`
-	EmailScores            []EmailScore                   `json:"email_scores"`
+	Kill2Pass   bool         `json:"kill2_pass"`
+	EmailScores []EmailScore `json:"email_scores"`
 }
 
 // callCapGenerator wraps a reader.Generator to enforce --max-calls across an entire exam run.
 type callCapGenerator struct {
-	inner     reader.Generator
-	maxCalls  int
+	inner      reader.Generator
+	maxCalls   int
 	totalCalls int
 	liveCalls  int
 }
@@ -483,7 +483,7 @@ func runExam(
 		}
 		origReadings[id] = res
 
-		chkRes := check.Check(res, seller)
+		chkRes := check.CheckEmail(res, seller, reader.StripMetadataLine(string(rawBytes)))
 
 		es, statusCounts := scoreEmail(id, keyEmail, res, chkRes, single)
 		summary.EmailScores = append(summary.EmailScores, es)

@@ -3,10 +3,13 @@ package check
 import (
 	"fmt"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
+	"margincheck/internal/normalize"
 	"margincheck/internal/profit"
+	"margincheck/internal/quote"
 	"margincheck/internal/reader"
 )
 
@@ -198,7 +201,7 @@ func parsePriceCents(s string) (int64, error) {
 	return cents, nil
 }
 
-func extractOldUnitPriceCents(res reader.CheckResult) int64 {
+func extractOldUnitPriceCents(res reader.CheckResult, emailText string) int64 {
 	candidates := []string{
 		res.PriceIncreaseDiscounted.Quote,
 		res.UnitPriceCents.Quote,
@@ -218,7 +221,43 @@ func extractOldUnitPriceCents(res reader.CheckResult) int64 {
 			}
 		}
 	}
+
+	// The quotes may name only the new price. Then look in the email itself, by code, for a
+	// "from $X to $Y" sentence whose new price Y is exactly the agreed unit price.
+	for _, m := range priceIncreaseRegex.FindAllStringSubmatch(quote.NormalizeText(emailText), -1) {
+		oldCents, errOld := parsePriceCents(m[1])
+		newCents, errNew := parsePriceCents(m[2])
+		if errOld == nil && errNew == nil && newCents == res.UnitPriceCents.Value && oldCents > 0 && oldCents < newCents {
+			return oldCents
+		}
+	}
 	return 0
+}
+
+// dealMoneyCurrencies returns the sorted, distinct currencies of the deal's own money: offered or agreed
+// money terms, plus the currency written beside the unit price in its quote. Requested terms are left out.
+func dealMoneyCurrencies(res reader.CheckResult) []string {
+	set := make(map[string]bool)
+	for _, term := range res.Terms {
+		status := strings.ToLower(strings.TrimSpace(term.Status))
+		if status != "agreed" && status != "offered" {
+			continue
+		}
+		if c := strings.ToUpper(strings.TrimSpace(term.Currency)); c != "" {
+			set[c] = true
+		}
+	}
+	for _, m := range normalize.ExtractMoney(res.UnitPriceCents.Quote) {
+		if m.Int == res.UnitPriceCents.Value && m.Currency != "" {
+			set[strings.ToUpper(m.Currency)] = true
+		}
+	}
+	list := make([]string, 0, len(set))
+	for c := range set {
+		list = append(list, c)
+	}
+	sort.Strings(list)
+	return list
 }
 
 // Check coordinates turning a reading into a profit.Deal and running profit.Evaluate.
@@ -229,6 +268,12 @@ func extractOldUnitPriceCents(res reader.CheckResult) int64 {
 //
 // A mixed-currency refusal becomes the outcome OutcomeRefused with the reason.
 func Check(res reader.CheckResult, seller profit.Seller) Result {
+	return CheckEmail(res, seller, "")
+}
+
+// CheckEmail is Check with the email text available, so that code (never the AI) can find the old price of a
+// discounted price increase when the reader's quotes name only the new price.
+func CheckEmail(res reader.CheckResult, seller profit.Seller, emailText string) Result {
 	action := ActionForReading(res)
 
 	// 1. Validate seller configuration (M6)
@@ -257,37 +302,41 @@ func Check(res reader.CheckResult, seller profit.Seller) Result {
 	}
 
 	// 3. At this point, all values are SURE and AGREED.
-	// Check terms for currency consistency.
-	termCurrencies := make(map[string]bool)
-	for _, term := range res.Terms {
-		c := strings.ToUpper(strings.TrimSpace(term.Currency))
-		if c != "" {
-			termCurrencies[c] = true
-		}
-	}
-
-	if len(termCurrencies) > 1 {
-		var list []string
-		for c := range termCurrencies {
-			list = append(list, c)
-		}
+	// The deal's currency comes from its own money: offered or agreed money terms, and the currency written
+	// in the unit price's quote. A buyer's request in another currency is not part of the deal. Never assume
+	// the seller's currency (step-3 spec, item 0).
+	dealCurrencies := dealMoneyCurrencies(res)
+	if len(dealCurrencies) > 1 {
 		return Result{
 			EmailID:       res.EmailID,
 			Outcome:       OutcomeRefused,
 			Action:        action,
-			RefusalReason: fmt.Sprintf("%v: multiple currencies in terms (%s)", profit.ErrMixedCurrency, strings.Join(list, ", ")),
+			RefusalReason: fmt.Sprintf("%v: multiple currencies in the deal (%s)", profit.ErrMixedCurrency, strings.Join(dealCurrencies, ", ")),
 		}
 	}
-
-	dealCurrency := seller.Currency
-	for c := range termCurrencies {
-		dealCurrency = c
+	if len(dealCurrencies) == 0 {
+		return Result{
+			EmailID:   res.EmailID,
+			Outcome:   OutcomeAsk,
+			Action:    action,
+			Questions: []string{"currency"},
+		}
 	}
+	dealCurrency := dealCurrencies[0]
 
-	// 4. Extract old unit price if price increase discounted applies
+	// 4. Extract old unit price if price increase discounted applies. If it can't be found, ask: the
+	// double-discount warning must never silently disappear.
 	var oldUnitPrice int64
 	if res.PriceIncreaseDiscounted.Value {
-		oldUnitPrice = extractOldUnitPriceCents(res)
+		oldUnitPrice = extractOldUnitPriceCents(res, emailText)
+		if oldUnitPrice <= 0 {
+			return Result{
+				EmailID:   res.EmailID,
+				Outcome:   OutcomeAsk,
+				Action:    action,
+				Questions: []string{"old_unit_price"},
+			}
+		}
 	}
 
 	// 5. Construct profit.Deal

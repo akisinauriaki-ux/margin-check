@@ -91,3 +91,25 @@ func TestDiscountedPriceIncreaseWithoutOldPriceAsks(t *testing.T) {
 		t.Errorf("questions %v, want \"old_unit_price\"", res.Questions)
 	}
 }
+
+func TestOldPriceIsFoundInTheEmailWhenQuotesNameOnlyTheNewPrice(t *testing.T) {
+	reading := baseSureResult()
+	reading.Quantity.Value = 30
+	reading.UnitPriceCents.Value = 4400
+	reading.UnitPriceCents.Quote = "We will apply a 5% discount to the new $44 price for your 30 boxes."
+	reading.DiscountPercent.Value = 5
+	reading.PriceIncreaseDiscounted.Value = true
+	reading.PriceIncreaseDiscounted.Quote = reading.UnitPriceCents.Quote
+	email := "Seller:\n> Our price per box increases from $40 to $44 starting this week.\n" +
+		"An older note said prices went from $30 to $35 last year.\n"
+	res := check.CheckEmail(reading, sampleSeller(), email)
+	if res.Outcome != check.OutcomeEvaluated {
+		t.Fatalf("outcome %s, questions %v", res.Outcome, res.Questions)
+	}
+	if res.Deal.OldUnitPriceCents != 4000 {
+		t.Errorf("old price %d, want 4000 (the increase that ends at the agreed $44, not the $30 one)", res.Deal.OldUnitPriceCents)
+	}
+	if res.Profit.DoubleDiscountCents != 600 {
+		t.Errorf("double discount %d cents, want 600", res.Profit.DoubleDiscountCents)
+	}
+}

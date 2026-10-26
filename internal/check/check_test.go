@@ -102,9 +102,9 @@ func TestCheckStopsOnUnsureDealFields(t *testing.T) {
 	seller := sampleSeller()
 
 	cases := []struct {
-		name     string
-		modify   func(*reader.CheckResult)
-		wantQ    string
+		name   string
+		modify func(*reader.CheckResult)
+		wantQ  string
 	}{
 		{
 			name: "unsure quantity",
@@ -367,11 +367,11 @@ func TestBuyerReplyActions(t *testing.T) {
 }
 
 type examAnswerKeyItem struct {
-	EmailID               string `json:"email_id"`
-	ExpectedLevel         string `json:"expected_level"`
-	ExpectedProfitCents   int64  `json:"expected_profit_cents"`
-	ExpectedGiveawayCents int64  `json:"expected_giveaway_cents"`
-	ExpectedAction        string `json:"expected_action"`
+	EmailID               string   `json:"email_id"`
+	ExpectedLevel         string   `json:"expected_level"`
+	ExpectedProfitCents   int64    `json:"expected_profit_cents"`
+	ExpectedGiveawayCents int64    `json:"expected_giveaway_cents"`
+	ExpectedAction        string   `json:"expected_action"`
 	MustAsk               []string `json:"must_ask"`
 }
 
@@ -449,7 +449,11 @@ func TestAll20ExamEmailsIntegration(t *testing.T) {
 				return
 			}
 
-			chk := check.Check(res, seller)
+			emailBytes, err := os.ReadFile(filepath.Join("..", "..", "testdata", "emails", a.EmailID+".txt"))
+			if err != nil {
+				t.Fatalf("read email %s: %v", a.EmailID, err)
+			}
+			chk := check.CheckEmail(res, seller, reader.StripMetadataLine(string(emailBytes)))
 
 			// If answer key has must_ask items (04, 09, 14, 19):
 			if len(a.MustAsk) > 0 {
