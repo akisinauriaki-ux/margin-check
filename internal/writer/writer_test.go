@@ -121,7 +121,7 @@ func TestValidate(t *testing.T) {
 		text string
 		want string // a word expected in a problem, or "" for no problem
 	}{
-		{"Hi,\n{{OPTION_1}} {{OPTION_2}}. What works for you?", ""},
+		{"Hi there,\n{{OPTION_1}} {{OPTION_2}}. What works for you?", ""},
 		{"{{OPTION_1}} {{OPTION_2}}. What works for you?", "greeting"},
 		{"Hi {{OPTION_1}}. What works for you?", "missing"},
 		{"Hi {{OPTION_1}} {{OPTION_1}} {{OPTION_2}}", "more than once"},
@@ -168,18 +168,24 @@ func TestValidateRejectsNumbersAndCurrencySignsInAnyScript(t *testing.T) {
 }
 
 func TestValidateGreetingRule(t *testing.T) {
-	// The reply must open with a greeting before the choices (risk 2):
-	// code checks that the first non-empty line contains no choice.
+	// The text before the first {{OPTION_ blank, trimmed, must contain at least two words with letters.
 	cases := []struct {
 		text string
 		want string
 	}{
-		{"{{OPTION_1}}\n{{OPTION_2}}\nWhat works best?", "the reply must open with a greeting before the choices"},
+		// a one-line reply with greeting, blanks and question, which passes
+		{"Thank you for thinking of us. {{OPTION_1}} {{OPTION_2}} What works best for you?", ""},
+		// a reply that starts with a blank, which fails
+		{"{{OPTION_1}} {{OPTION_2}} What works best for you?", "the reply must open with a greeting before the choices"},
 		{"\n\n{{OPTION_1}}\n{{OPTION_2}}\nWhat works best?", "the reply must open with a greeting before the choices"},
+		// a reply that starts with "Option", which fails
+		{"Option 1: {{OPTION_1}} {{OPTION_2}} What works best?", "the reply must open with a greeting before the choices"},
 		{"Option 1 (Standard): 20 boxes.\nOption 2: 40 boxes.\nWhat works best?", "the reply must open with a greeting before the choices"},
+		{"Option {{OPTION_1}} {{OPTION_2}} What works best?", "the reply must open with a greeting before the choices"},
+		// other greeting cases
 		{"Hi {{OPTION_1}} {{OPTION_2}}. What works for you?", "the reply must open with a greeting before the choices"},
+		{"Hi,\n{{OPTION_1}}\n{{OPTION_2}}\nWhat works best for you?", "the reply must open with a greeting before the choices"},
 		{"Thank you for thinking of us. Here is what we can do:\n\n{{OPTION_1}}\n{{OPTION_2}}\n\nWhat works best for you?", ""},
-		{"Hi,\n{{OPTION_1}}\n{{OPTION_2}}\nWhat works best for you?", ""},
 	}
 	for _, c := range cases {
 		probs := Validate(c.text, 2)
@@ -196,6 +202,28 @@ func TestValidateGreetingRule(t *testing.T) {
 		if c.want == "" && hasProb {
 			t.Errorf("%q: unexpected greeting problem: %v", c.text, probs)
 		}
+	}
+}
+
+func TestFillLayout(t *testing.T) {
+	set := sampleSet(t)
+	// a one-line AI reply becomes greeting, blank line, three choice lines, blank line, question.
+	oneLine := "Thank you for reaching out today. {{OPTION_1}} {{OPTION_2}} {{OPTION_3}} What works best for you?"
+	got := Fill(oneLine, set)
+	want := "Thank you for reaching out today.\n\n" +
+		"Option 1 (Standard): 20 boxes at $40.00 each, shipping $36.00 at cost, payment on receipt.\n" +
+		"Option 2 (Quantity): 30 boxes at $40.00 each with free shipping, payment on receipt.\n" +
+		"Option 3 (Early payment): 20 boxes at $40.00 each with 1.5% off, shipping $36.00 at cost, payment within 7 days.\n\n" +
+		"What works best for you?"
+	if got != want {
+		t.Errorf("Fill layout mismatch:\nGOT:\n%q\n\nWANT:\n%q", got, want)
+	}
+
+	// Collapse 3 or more newlines into 2
+	multiLine := "Thank you for reaching out today.\n\n\n\n{{OPTION_1}} {{OPTION_2}} {{OPTION_3}}\n\n\nWhat works best for you?"
+	gotMulti := Fill(multiLine, set)
+	if gotMulti != want {
+		t.Errorf("Fill multi-newline collapse mismatch:\nGOT:\n%q\n\nWANT:\n%q", gotMulti, want)
 	}
 }
 
