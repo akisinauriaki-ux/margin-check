@@ -1,4 +1,5 @@
-﻿2893d0b proof: implement proof command with scorecard, safety checks, and baseline
+﻿7cf9293 proof: gate outputs (vet, test, gitlog, run1, run2, latest)
+2893d0b proof: implement proof command with scorecard, safety checks, and baseline
 c9f915b docs: add judge README with security tables, failure register, and backed claims
 0365b79 proof: add tests and fixtures for proof scorecard (failing tests)
 ea3f986 step 4: saved git log of the writer commits
@@ -22,4 +23,3 @@ f4f3e54 review fix: after any create failure, look the draft up by its exact inv
 9eb43ae review fix: the reply and plan checks reject any Unicode number, any currency sign and every percent sign
 0d99816 review: failing tests - the reply and plan checks miss full-width digits, fractions and other currency signs
 610a441 review fix: changes to one deal run one at a time; a started run ignores a closed tab but stops at a 3-minute limit
-5cc3026 review: failing tests - two approvals at once both create and collide on save; a closed tab cancels a started run
