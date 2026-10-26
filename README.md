@@ -112,25 +112,25 @@ The repository design is governed by eight formal architectural decision records
 | Risk | Applies? | Defence | Proof Test / Verification |
 |---|---|---|---|
 | LLM01: Prompt Injection | Yes | Injections ignored in proof [C-32]; actor planner never sees raw email [C-19]. | `reports/proof-latest.txt` |
-| LLM02: Sensitive Information | Yes | Secrets stored only in `.env`; credentials never logged; IDs masked to last 4 characters [C-33]. | `internal/paypal`: `TestTokenAndSecretNeverAppearInErrorsOrLogs` |
+| LLM02: Sensitive Information | Yes | Access tokens and secrets are scrubbed from every PayPal error and log line; invoice IDs are shown by their last 4 characters [C-33]. | `internal/paypal`: `TestTokenAndSecretNeverAppearInErrorsOrLogs` |
 | LLM03: Supply Chain | Yes | Dependencies pinned in `go.sum` and PayPal MCP server pinned to exact version [C-34]. | `internal/agenttools`: `TestNewPayPalMCPCommandPinsExactVersion` |
 | LLM04: Data & Model Poisoning | No | Not applicable: no model training or fine-tuning [C-35]. | Architecture constraint verified absent from `internal` |
-| LLM05: Improper Output Handling | Yes | Model outputs constrained to strict Go schemas rejecting unknown fields [C-36]. | `internal/reader/reader.go`: `dec.DisallowUnknownFields()` |
+| LLM05: Improper Output Handling | Yes | The reader's output must match a strict schema that rejects unknown fields; the reply and the plan are checked by code before use [C-36]. | `internal/reader/reader.go`: `dec.DisallowUnknownFields()` |
 | LLM06: Excessive Agency | Yes | Only 2 tools permitted; plan interceptor blocks deviations; fingerprinted human approval required; drafts only [C-37]. | `internal/act`: `TestAnApprovedButWrongPlanIsStillBlockedAtExecution` |
 | LLM07: System Prompt Leakage | Yes | The reader loads its prompt from `prompts/` which is public in the repository, so there is nothing secret to leak [C-38]. | `cmd/app/main.go`: loads prompt from `prompts/reader-v1.md` |
 | LLM08: Vector Weaknesses | No | Not applicable: no vector database or retrieval embeddings used [C-39]. | Architecture constraint verified absent from `internal` |
-| LLM09: Misinformation | Yes | Every extracted number must match an exact quote in the email; dual model consensus required; math in code [C-40]. | `internal/quote`: `TestQuoteTable` |
-| LLM10: Unbounded Consumption | Yes | Flow execution bounds run duration to prevent runaway execution [C-41]. | `internal/flow`: `TestARunIsNotCutOffWhenTheTabCloses` |
+| LLM09: Misinformation | Yes | Every extracted value must be backed by an exact quote from the email [C-40]. | `internal/quote`: `TestQuoteTable` |
+| LLM10: Unbounded Consumption | Yes | An approved run has its own 3-minute limit; each reading has a call and token budget [C-41]. | `internal/flow`: `TestARunIsNotCutOffWhenTheTabCloses` |
 
 ### OWASP Agentic Top 10 (ASI)
 
 | Risk | Applies? | Defence | Proof Test / Verification |
 |---|---|---|---|
-| ASI01: Goal Hijack | Yes | Unclear or changed customer replies never generate an action plan [C-42]. | `internal/flow`: `TestUnclearOrChangedRepliesNeverPlanAnything` |
+| ASI01: Goal Hijack | Yes | An unclear reply, or one where the buyer states a different quantity, price, payment term, discount or shipping, never generates an action plan [C-42]. | `internal/flow`: `TestAStatedChangedTermStopsThePlan` |
 | ASI02: Tool Misuse | Yes | The agent toolkit limits tool access strictly to `--tools=invoices.create` [C-43]. | `internal/agenttools/toolkit.go`: `AllowedToolsArg` |
 | ASI03: Identity & Privilege Abuse | Yes | Sandbox credentials only; PayPal's toolkit process receives just a short-lived sandbox access token, never the client secret or the Gemini key [C-44]. | `internal/agenttools`: `TestBuildMinimalSandboxEnvExcludesSecrets` |
-| ASI04: Agentic Supply Chain | Yes | Pinned versioning on npm MCP toolkit and Go dependencies [C-45]. | `internal/agenttools/call.go` pinned to `@paypal/mcp@1.8.1` |
-| ASI05: Unexpected Code Execution | No | Not applicable: the agent has no shell, eval, or code execution capabilities [C-46]. | Architecture constraint verified absent (`os/exec` absent from `internal/flow`) |
+| ASI04: Agentic Supply Chain | Yes | PayPal's toolkit is started at one exact pinned version [C-45]. | `internal/agenttools/toolkit.go`: `PinnedPayPalMCPPackage` |
+| ASI05: Unexpected Code Execution | No | Not applicable: the AI has no shell or code tool. The only program the app starts is PayPal's pinned toolkit, limited to creating invoices [C-46]. | `internal/agenttools/toolkit.go`: the one `exec.CommandContext` call |
 | ASI06: Memory Poisoning | No | Not applicable: no persistent memory or state maintained across deals [C-47]. | Architecture constraint verified absent from `internal` |
 | ASI07: Insecure Inter-Agent Comm | No | Not applicable: single-agent pipeline with no inter-agent messaging [C-48]. | Architecture constraint verified absent from `internal` |
 | ASI08: Cascading Failures | Yes | An unavailable model ends one check cleanly with ask fields instead of cascading failures [C-49]. | `internal/reader`: `TestUnavailableModelFakeServer` |
@@ -145,10 +145,10 @@ The repository design is governed by eight formal architectural decision records
 | FM-1.3: Step Repetition | 15.7% | Single bounded retry on extraction error; reply drafting falls back to deterministic template [C-53]. | `internal/writer`: `TestTwoBadRepliesFallBackToTheTemplate` |
 | FM-1.5: Unaware of Termination | 12.4% | Deterministic five-station pipeline halts cleanly at defined endpoints (draft created or asked) [C-54]. | `internal/flow`: `TestAnUnsureDealShowsNoMoneyAndNoChoices` |
 | FM-2.2: Fail to Ask for Clarification | 6.8% | Extraction disagreement or missing seller cost parameters prompts the seller instead of guessing [C-55]. | `internal/check`: `TestCheckStopsOnUnsureDealFields` |
-| FM-2.3: Task Derailment | 7.4% | Narrow task prompts and objective decision criteria prevent goal drift across conversational turns [C-56]. | `internal/offer`: `TestEveryChoiceHasAFairReasonAndAHowOrWhatQuestion` |
+| FM-2.3: Task Derailment | 7.4% | The choices are built by code, each with a fixed, objective reason; the AI only words the reply around them [C-56]. | `internal/offer`: `TestEveryChoiceHasAFairReasonAndAHowOrWhatQuestion` |
 | FM-2.6: Reasoning-Action Mismatch | 13.2% | Interceptor validates AI-generated execution plan against exact offer terms before execution [C-57]. | `internal/act`: `TestAWrongAIPlanIsBlockedAndTheCodePlanOffered` |
 | FM-3.2: No or Incomplete Verification | 8.2% | Multi-level verifiers check quotes, whole-cent math, tool parameters, and PayPal draft read-backs [C-58]. | `internal/act`: `TestAReadBackMismatchIsReported` |
-| FM-3.3: Incorrect Verification | 9.1% | Verification performed by deterministic Go code and property tests rather than unreliable AI critics [C-59]. | `internal/profit`: `TestPropertyTests` |
+| FM-3.3: Incorrect Verification | 9.1% | The checks are deterministic Go code, not another AI; the profit engine is also property-tested [C-59]. | `internal/profit`: `TestPropertyTests` |
 
 ## Failure register
 
@@ -170,7 +170,7 @@ The failure register records defects encountered during iterative development, t
 2. **Pasted threads:** The workflow operates on pasted negotiation email threads without direct Gmail or mail provider inbox integrations [C-75].
 3. **Early-payment discount structure:** The early-payment option is structured as an upfront item discount on a draft due in 7 days (Decision 0020), rather than PayPal's native early-payment conditional rule.
 4. **Anonymized demo emails:** Demonstration emails are based on real public seller posts from online negotiation threads, with names and personal identifiers anonymized.
-5. **Currency configuration:** Built and tested with USD and US sandbox accounts; the application currency is a configurable setting.
+5. **Currency:** Built and tested with USD and US sandbox accounts. The seller's currency comes from `seller.json`; the reader recognises USD, EUR and GBP, and a deal in another currency stops with a question.
 
 ## Licence
 
