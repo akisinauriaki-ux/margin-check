@@ -7,7 +7,19 @@ import (
 var (
 	// ErrMixedCurrency is returned when a deal contains multiple currencies or differs from the seller's currency.
 	ErrMixedCurrency = errors.New("profit: mixed or mismatched currency")
+	// ErrNoCurrency is returned when a deal has no currency specified.
+	ErrNoCurrency error = noCurrencyErr{}
 )
+
+type noCurrencyErr struct{}
+
+func (noCurrencyErr) Error() string {
+	return "profit: deal has no currency"
+}
+
+func (noCurrencyErr) Is(target error) bool {
+	return target == ErrNoCurrency || target == ErrMixedCurrency
+}
 
 // Money represents a monetary amount in whole cents and its currency code.
 type Money struct {

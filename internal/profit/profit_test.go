@@ -218,7 +218,8 @@ func TestEarlyPaymentAnchorCase(t *testing.T) {
 
 	// Verify profit at break-even 1.5% (150 BP) >= normal profit
 	deal15 := deal
-	deal15.OtherDiscountBP = 150
+	deal15.EarlyPaymentDiscountBP = 150
+	deal15.EarlyPaymentDays = earlyDays
 	deal15.PaymentDays = earlyDays
 	res15, err := Evaluate(deal15, seller)
 	if err != nil {
@@ -230,7 +231,8 @@ func TestEarlyPaymentAnchorCase(t *testing.T) {
 
 	// Verify profit at 1.6% (160 BP) < normal profit
 	deal16 := deal
-	deal16.OtherDiscountBP = 160
+	deal16.EarlyPaymentDiscountBP = 160
+	deal16.EarlyPaymentDays = earlyDays
 	deal16.PaymentDays = earlyDays
 	res16, err := Evaluate(deal16, seller)
 	if err != nil {
@@ -238,6 +240,98 @@ func TestEarlyPaymentAnchorCase(t *testing.T) {
 	}
 	if res16.ProfitCents != 44684 {
 		t.Errorf("profit at 1.6%%: got %d, want 44684 ($446.84)", res16.ProfitCents)
+	}
+}
+
+func TestEarlyPaymentAnchorPlusOrderSizeDiscount(t *testing.T) {
+	seller := defaultTestSeller()
+	// Anchor deal plus a 5% order-size discount (500 BP)
+	deal := Deal{
+		Currency:            "USD",
+		Quantity:            30,
+		UnitPriceCents:      4000,
+		OrderSizeDiscountBP: 500,
+		FreeShipping:        false,
+	}
+
+	normalDays := int64(60)
+	earlyDays := int64(7)
+	discountBP := int64(200) // 2.0%
+
+	res, err := EarlyPaymentWorthIt(deal, seller, normalDays, earlyDays, discountBP)
+	if err != nil {
+		t.Fatalf("EarlyPaymentWorthIt failed: %v", err)
+	}
+
+	// Normal profit: 30 boxes * $40 = $1,200 list value.
+	// 5% order-size discount = $60, Net revenue = $1,140 (114,000 cents).
+	// Base unit cost = 30 * $23 = $690 (69,000 cents).
+	// Waiting cost (60 days) = roundDiv(114000 * 1000 * 60, 3650000) = 1,874 cents ($18.74).
+	// PayPal fee = roundDiv(114000 * 349, 10000) + 49 = 3,979 + 49 = 4,028 cents ($40.28).
+	// Total costs = 69000 + 1874 + 4028 = 74,902 cents ($749.02).
+	// Normal profit must equal $390.98 (39098 cents).
+	if res.NormalProfitCents != 39098 {
+		t.Errorf("normal profit with 5%% order-size discount: got %d, want 39098 ($390.98)", res.NormalProfitCents)
+	}
+
+	// Early profit with 2% early-payment discount:
+	// Early discount on $1,140 = roundDiv(114000 * 200, 10000) = $22.80 (2,280 cents).
+	// Net revenue = 114,000 - 2,280 = $1,117.20 (111,720 cents).
+	// Base unit cost = $690 (69,000 cents).
+	// Waiting cost (7 days) = roundDiv(111720 * 1000 * 7, 3650000) = 214 cents ($2.14).
+	// PayPal fee = roundDiv(111720 * 349, 10000) + 49 = 3,899 + 49 = 3,948 cents ($39.48).
+	// Total costs = 69000 + 214 + 3948 = 73,162 cents ($731.62).
+	// Early profit must equal $385.58 (38558 cents).
+	if res.EarlyProfitCents != 38558 {
+		t.Errorf("early profit with 2%% early discount: got %d, want 38558 ($385.58)", res.EarlyProfitCents)
+	}
+
+	// 2% is not worth it ($385.58 < $390.98)
+	if res.WorthIt {
+		t.Errorf("expected 2%% early discount to NOT be worth it, got true")
+	}
+
+	// Break-even discount must equal 150 BP (1.5%)
+	if res.BreakEvenDiscountBP != 150 {
+		t.Errorf("break-even discount: got %d BP, want 150 BP (1.5%%)", res.BreakEvenDiscountBP)
+	}
+
+	// Verify profit at break-even 1.5% (150 BP) >= normal profit:
+	// Early discount = roundDiv(114000 * 150, 10000) = 1,710 cents ($17.10).
+	// Net revenue = 112,290 cents ($1,122.90).
+	// Waiting cost (7 days) = 215 cents ($2.15).
+	// PayPal fee = 3,919 + 49 = 3,968 cents ($39.68).
+	// Total costs = 69000 + 215 + 3968 = 73,183 cents ($731.83).
+	// Profit at 150 BP = 112,290 - 73,183 = 39,107 cents ($391.07) >= 39,098 cents.
+	deal15 := deal
+	deal15.EarlyPaymentDiscountBP = 150
+	deal15.EarlyPaymentDays = earlyDays
+	deal15.PaymentDays = earlyDays
+	res15, err := Evaluate(deal15, seller)
+	if err != nil {
+		t.Fatalf("Evaluate at 1.5%% failed: %v", err)
+	}
+	if res15.ProfitCents != 39107 {
+		t.Errorf("profit at 1.5%% break-even: got %d, want 39107 ($391.07)", res15.ProfitCents)
+	}
+
+	// Verify profit at 1.6% (160 BP) < normal profit:
+	// Early discount = roundDiv(114000 * 160, 10000) = 1,824 cents ($18.24).
+	// Net revenue = 112,176 cents ($1,121.76).
+	// Waiting cost (7 days) = 215 cents ($2.15).
+	// PayPal fee = 3,915 + 49 = 3,964 cents ($39.64).
+	// Total costs = 69000 + 215 + 3964 = 73,179 cents ($731.79).
+	// Profit at 160 BP = 112,176 - 73,179 = 38,997 cents ($389.97) < 39,098 cents.
+	deal16 := deal
+	deal16.EarlyPaymentDiscountBP = 160
+	deal16.EarlyPaymentDays = earlyDays
+	deal16.PaymentDays = earlyDays
+	res16, err := Evaluate(deal16, seller)
+	if err != nil {
+		t.Fatalf("Evaluate at 1.6%% failed: %v", err)
+	}
+	if res16.ProfitCents != 38997 {
+		t.Errorf("profit at 1.6%%: got %d, want 38997 ($389.97)", res16.ProfitCents)
 	}
 }
 
@@ -525,6 +619,49 @@ func TestRefusals(t *testing.T) {
 		_, err := Evaluate(deal, seller)
 		if !errors.Is(err, ErrMixedCurrency) {
 			t.Errorf("expected ErrMixedCurrency, got: %v", err)
+		}
+	})
+
+	t.Run("NoCurrency", func(t *testing.T) {
+		deal := Deal{
+			Currency:       "",
+			Quantity:       10,
+			UnitPriceCents: 3000,
+		}
+		_, err := Evaluate(deal, seller)
+		if err == nil {
+			t.Error("expected error for empty currency, got nil")
+		}
+		if !errors.Is(err, ErrNoCurrency) && !errors.Is(err, ErrMixedCurrency) {
+			t.Errorf("expected ErrNoCurrency or ErrMixedCurrency, got: %v", err)
+		}
+	})
+
+	t.Run("WhitespaceCurrency", func(t *testing.T) {
+		deal := Deal{
+			Currency:       "   ",
+			Quantity:       10,
+			UnitPriceCents: 3000,
+		}
+		_, err := Evaluate(deal, seller)
+		if err == nil {
+			t.Error("expected error for whitespace currency, got nil")
+		}
+		if !errors.Is(err, ErrNoCurrency) && !errors.Is(err, ErrMixedCurrency) {
+			t.Errorf("expected ErrNoCurrency or ErrMixedCurrency, got: %v", err)
+		}
+	})
+
+	t.Run("NegativeCoopAllowance", func(t *testing.T) {
+		deal := Deal{
+			Currency:       "USD",
+			Quantity:       10,
+			UnitPriceCents: 3000,
+			CoopAllowance:  Money{Cents: -500, Currency: "USD"},
+		}
+		_, err := Evaluate(deal, seller)
+		if err == nil {
+			t.Error("expected error for negative co-op allowance, got nil")
 		}
 	})
 
