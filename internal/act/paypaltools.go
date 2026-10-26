@@ -3,7 +3,6 @@ package act
 import (
 	"context"
 	"errors"
-	"strings"
 
 	"margincheck/internal/agenttools"
 	"margincheck/internal/paypal"
@@ -54,13 +53,15 @@ func (t PayPalTools) CreateInvoice(ctx context.Context, a CreateInvoiceArgs) (st
 	}
 	secrets := append([]string{a.SellerEmail, a.BuyerEmail}, t.Secrets...)
 	id, err := agenttools.CallCreateInvoice(ctx, t.Factory, token, args, secrets...)
-	if err != nil && strings.Contains(strings.ToUpper(err.Error()), "DUPLICATE") {
-		// Created by an earlier, interrupted run: find it instead of failing.
-		if inv, ferr := t.Client.SearchInvoiceByNumber(ctx, "find2-"+a.InvoiceNumber, a.InvoiceNumber); ferr == nil {
+	if err != nil {
+		// If a draft now carries this invoice number, it is this deal's draft, made by an earlier, interrupted run:
+		// use it instead of failing. PayPal itself is asked, so the wording of the toolkit's error doesn't matter.
+		if inv, ferr := t.Client.SearchInvoiceByNumber(ctx, "find2-"+a.InvoiceNumber, a.InvoiceNumber); ferr == nil && inv.Detail.InvoiceNumber == a.InvoiceNumber {
 			return inv.ID, true, nil
 		}
+		return "", false, err
 	}
-	return id, false, err
+	return id, false, nil
 }
 
 // SetDueDate sets the draft's due date through our REST client (the toolkit can't, step-2 finding).
