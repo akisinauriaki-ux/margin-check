@@ -1,0 +1,7 @@
+deal k3-1026094412, invoice date 2026-10-26, request: 20 boxes at $40.00, 60 days asked
+PASS execute quantity (30 boxes at $40.00 each with free shipping, payment on receipt): 1 call(s), fingerprint ...982a51bc, draft ...7CVE, status DRAFT, due date set false; read-back: status=DRAFT ok, currency=USD ok, invoice_number=...B2E9 ok, items=1 ok, quantity=30 ok, unit_price_cents=4000 ok, discount_bp=0 ok, shipping_cents=0 ok
+PASS execute early_payment (20 boxes at $40.00 each with 1.5% off, shipping $36.00 at cost, payment within 7 days): 2 call(s), fingerprint ...79857684, draft ...GBUD, status DRAFT, due date set true; read-back: status=DRAFT ok, currency=USD ok, invoice_number=...6E7A ok, items=1 ok, quantity=20 ok, unit_price_cents=4000 ok, discount_bp=150 ok, shipping_cents=3600 ok, due_date=2026-11-02 ok
+PASS repeat early_payment: draft ...GBUD, already existed true, same draft true
+PASS plan changed after approval: act: the plan differs from the approved plan; nothing was run
+PASS tampered plan, even when approved: act: the plan does not match the offer; nothing was run: call 1 paypal.create_invoice: discount_bp is 5000, the offer requires 150
+ALL PASS (nothing was sent)
