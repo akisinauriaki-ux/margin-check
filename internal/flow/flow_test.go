@@ -353,3 +353,34 @@ func TestARunIsNotCutOffWhenTheTabCloses(t *testing.T) {
 		t.Errorf("the run's time limit is %v; want a limit of at most 3m", tools.deadline)
 	}
 }
+
+// A damaged invoice day must stop the deal, never become 1 January of year 1 on a plan or a PayPal draft.
+func TestADamagedDealDateStopsTheDeal(t *testing.T) {
+	tools := &fakeTools{}
+	d := deps(t, tools)
+	deal, _ := d.Start(context.Background(), askEmail)
+
+	deal.InvoiceDay = "not-a-date"
+	if err := d.Store.Save(deal); err != nil {
+		t.Fatal(err)
+	}
+	got, err := d.BuyerReplied(context.Background(), deal.ID, replyYes)
+	if err == nil || (got != nil && got.Proposal != nil) {
+		t.Errorf("err %v: a plan was made from a damaged date", err)
+	}
+
+	// Also when the date is damaged after the plan was made.
+	deal, _ = d.Start(context.Background(), askEmail)
+	deal, _ = d.BuyerReplied(context.Background(), deal.ID, replyYes)
+	shown := act.Fingerprint(deal.Proposal.Plan)
+	deal.InvoiceDay = "not-a-date"
+	if err := d.Store.Save(deal); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := d.ApproveAndRun(context.Background(), deal.ID, shown); err == nil || !strings.Contains(err.Error(), "date") {
+		t.Errorf("err %v, want a refusal naming the date", err)
+	}
+	if tools.calls != 0 {
+		t.Errorf("PayPal was called %d times with a damaged date", tools.calls)
+	}
+}
