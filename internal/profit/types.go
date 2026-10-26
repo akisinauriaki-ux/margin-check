@@ -70,18 +70,3 @@ type EarlyPaymentResult struct {
 	EarlyProfitCents    int64 `json:"early_profit_cents"`
 	BreakEvenDiscountBP int64 `json:"break_even_discount_bp"`
 }
-
-// LoadSeller reads seller.json and validates all required fields without defaulting.
-func LoadSeller(path string) (Seller, error) {
-	return Seller{}, errors.New("not implemented")
-}
-
-// Evaluate computes profit, giveaway, pocket price waterfall leaks, and level.
-func Evaluate(deal Deal, seller Seller) (Result, error) {
-	return Result{}, errors.New("not implemented")
-}
-
-// EarlyPaymentWorthIt evaluates if an early-payment discount keeps at least normal profit.
-func EarlyPaymentWorthIt(deal Deal, seller Seller, normalDays int64, earlyDays int64, discountBP int64) (EarlyPaymentResult, error) {
-	return EarlyPaymentResult{}, errors.New("not implemented")
-}
