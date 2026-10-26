@@ -208,9 +208,9 @@ func (d Deps) BuyerReplied(ctx context.Context, dealID, replyThread string) (*De
 		switch {
 		case !ok:
 			deal.Next, deal.NextReason = NextSellerDecides, "The buyer named a choice you didn't offer. You decide; nothing is planned."
-		case res.Quantity.Sure && !res.Quantity.Unknown && res.Quantity.Value != opt.Quantity:
-			deal.Next, deal.NextReason = NextSellerDecides, fmt.Sprintf("The buyer accepted the %s choice but wrote %d %s instead of %d. You decide; nothing is planned.",
-				writer.Label(kind), res.Quantity.Value, unitNoun(d.Offer), opt.Quantity)
+		case statedChange(res, opt, d.Offer) != "":
+			deal.Next, deal.NextReason = NextSellerDecides, fmt.Sprintf("The buyer accepted the %s choice but wrote %s. You decide; nothing is planned.",
+				writer.Label(kind), statedChange(res, opt, d.Offer))
 		default:
 			day, err := deal.invoiceDay()
 			if err != nil {
@@ -264,6 +264,36 @@ func (d Deps) ApproveAndRun(ctx context.Context, dealID, shownFingerprint string
 		return deal, err
 	}
 	return deal, runErr
+}
+
+// statedChange describes the first term the buyer stated that differs from the choice, or returns "".
+// A term counts as stated when the reading is sure and quotes the buyer's sentence. An unstated term is fixed
+// by the choice itself, and the seller sees the plan before approving it.
+func statedChange(res reader.CheckResult, o offer.Option, c offer.Config) string {
+	statedInt := func(f reader.IntFieldResult) bool { return f.Sure && !f.Unknown && strings.TrimSpace(f.Quote) != "" }
+	switch {
+	case statedInt(res.Quantity) && res.Quantity.Value != o.Quantity:
+		return fmt.Sprintf("%d %s instead of %d", res.Quantity.Value, unitNoun(c), o.Quantity)
+	case statedInt(res.UnitPriceCents) && res.UnitPriceCents.Value != o.UnitPriceCents:
+		return fmt.Sprintf("%s a box instead of %s", offer.FormatMoney(res.UnitPriceCents.Value, o.Currency), offer.FormatMoney(o.UnitPriceCents, o.Currency))
+	case statedInt(res.PaymentDays) && res.PaymentDays.Value != o.DueDays:
+		return fmt.Sprintf("payment in %d days instead of %s", res.PaymentDays.Value, dueWords(o.DueDays))
+	case statedInt(res.DiscountPercent) && res.DiscountPercent.Value*100 != o.DiscountBP:
+		return fmt.Sprintf("%s off instead of %s", offer.FormatPercent(res.DiscountPercent.Value*100), offer.FormatPercent(o.DiscountBP))
+	case res.FreeShipping.Sure && !res.FreeShipping.Unknown && strings.TrimSpace(res.FreeShipping.Quote) != "" && res.FreeShipping.Value != o.FreeShipping:
+		if res.FreeShipping.Value {
+			return "free shipping, which this choice doesn't include"
+		}
+		return "that they pay the shipping, while this choice ships free"
+	}
+	return ""
+}
+
+func dueWords(days int64) string {
+	if days == 0 {
+		return "on receipt"
+	}
+	return fmt.Sprintf("within %d days", days)
 }
 
 func unitNoun(c offer.Config) string {

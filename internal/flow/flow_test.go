@@ -392,7 +392,7 @@ func TestAStatedChangedTermStopsThePlan(t *testing.T) {
 	base := readings()[replyYes] // the buyer accepts the quantity choice: 30 boxes, free shipping, $40, on receipt
 	cases := []struct {
 		name, reply, want string
-		edit            func(*reader.CheckResult)
+		edit              func(*reader.CheckResult)
 	}{
 		{"unit price", "Buyer: Option 2 works, 30 boxes at $30 each.", "$30.00",
 			func(r *reader.CheckResult) { r.UnitPriceCents = sure(3000, "Option 2 works, 30 boxes at $30 each.") }},
