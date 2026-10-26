@@ -16,6 +16,7 @@ import (
 	"margincheck/internal/paypal"
 	"margincheck/internal/profit"
 	"margincheck/internal/reader"
+	"margincheck/internal/why"
 )
 
 // --- stand-ins -------------------------------------------------------------------------------------------
@@ -701,5 +702,59 @@ func TestNoPickAfterTheDraftExists(t *testing.T) {
 	}
 	if _, err := d.SellerChose(context.Background(), deal.ID, offer.Standard); err == nil {
 		t.Fatal("the choice was switched after the draft was made")
+	}
+}
+
+// whyModel answers the why call with one guess and refuses the writer, so the reply is the code template.
+type whyModel struct{ seen *[]gemini.Request }
+
+func (m whyModel) Generate(_ context.Context, req gemini.Request) (gemini.Response, error) {
+	*m.seen = append(*m.seen, req)
+	if req.InstructionVersion != why.PromptVersion {
+		return gemini.Response{}, errors.New("no writer in this test")
+	}
+	return gemini.Response{Text: `{"guesses":[{"interest":"The buyer may need to sell the mugs before paying.","quote":"we need free shipping and two months to pay."}]}`, Source: "live"}, nil
+}
+
+// The buyer's why is a note for the seller only: it is read from the thread, kept on the deal and logged, but the
+// reply writer never sees it, so it can never reach the buyer.
+func TestTheBuyersWhyIsANoteForTheSellerOnly(t *testing.T) {
+	var seen []gemini.Request
+	d := deps(t, &fakeTools{})
+	d.Writer = whyModel{seen: &seen}
+	deal, err := d.Start(context.Background(), askEmail)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if deal.Why == nil || len(deal.Why.Guesses) != 1 {
+		t.Fatalf("why note %+v", deal.Why)
+	}
+	guess := deal.Why.Guesses[0].Interest
+	if deal.Reply == nil || strings.Contains(deal.Reply.Text, guess) {
+		t.Fatal("the guess reached the reply")
+	}
+	for _, r := range seen {
+		if r.InstructionVersion != why.PromptVersion && strings.Contains(r.UserText, guess) {
+			t.Fatal("the reply writer was given the guess")
+		}
+	}
+	log, _ := d.Store.Log(deal.ID)
+	if !strings.Contains(log, `"step":"why"`) {
+		t.Errorf("the why note is not in the decision log:\n%s", log)
+	}
+}
+
+// With no model the deal goes on as before: choices and a reply, and a note that shows nothing.
+func TestNoWhyModelStillGivesTheChoices(t *testing.T) {
+	d := deps(t, &fakeTools{})
+	deal, err := d.Start(context.Background(), askEmail)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if deal.Offers == nil || deal.Reply == nil {
+		t.Fatal("the deal stopped because the why note failed")
+	}
+	if deal.Why == nil || len(deal.Why.Guesses) != 0 {
+		t.Fatalf("why note %+v", deal.Why)
 	}
 }

@@ -20,6 +20,7 @@ import (
 	"margincheck/internal/paypal"
 	"margincheck/internal/profit"
 	"margincheck/internal/reader"
+	"margincheck/internal/why"
 	"margincheck/internal/writer"
 )
 
@@ -66,6 +67,7 @@ type Deal struct {
 	Offers     *offer.Set         `json:"offers,omitempty"`
 	OffersNote string             `json:"offers_note,omitempty"`
 	Reply      *writer.Draft      `json:"reply,omitempty"`
+	Why        *why.Note          `json:"why,omitempty"` // the AI's guess why the buyer is asking; for the seller only
 
 	BuyerReply    string              `json:"buyer_reply,omitempty"`
 	ReplyReading  *reader.CheckResult `json:"reply_reading,omitempty"`

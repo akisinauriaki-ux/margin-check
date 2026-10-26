@@ -14,6 +14,7 @@ import (
 	"margincheck/internal/offer"
 	"margincheck/internal/profit"
 	"margincheck/internal/reader"
+	"margincheck/internal/why"
 	"margincheck/internal/writer"
 )
 
@@ -215,5 +216,32 @@ func TestTheSellerConfirmsTheBuyersChoiceWithOneTap(t *testing.T) {
 	}
 	if got.Accepted != offer.Standard || got.Proposal == nil {
 		t.Errorf("accepted %q: the seller's tap must set the choice and its plan", got.Accepted)
+	}
+}
+
+// The AI's guess about why the buyer is asking is shown to the seller as a guess, with the buyer's words it
+// rests on, and says that it is never put in the reply. With no guess, the page says the AI couldn't tell.
+func TestTheBuyersWhyIsShownAsAGuessForTheSellerOnly(t *testing.T) {
+	s, deal := testServer(t)
+	deal.Why = &why.Note{Guesses: []why.Guess{{Interest: "The buyer may need to sell the mugs before paying.", Quote: "We need free shipping and two months to pay."}}}
+	if err := s.deps.Store.Save(deal); err != nil {
+		t.Fatal(err)
+	}
+	page := get(t, s.routes(), "/deal/"+deal.ID)
+	for _, want := range []string{"Why the buyer may be asking", "The buyer may need to sell the mugs before paying.",
+		"“We need free shipping and two months to pay.”", "a guess", "never put in your reply"} {
+		if !strings.Contains(page, want) {
+			t.Errorf("the deal page lacks %q", want)
+		}
+	}
+	if strings.Index(page, "Why the buyer may be asking") > strings.Index(page, "Three fair choices") {
+		t.Error("the buyer's why should come before the choices: understand first, then offer")
+	}
+	deal.Why = &why.Note{}
+	if err := s.deps.Store.Save(deal); err != nil {
+		t.Fatal(err)
+	}
+	if page := get(t, s.routes(), "/deal/"+deal.ID); !strings.Contains(page, "couldn't tell why") {
+		t.Error("with no guess the page should say the AI couldn't tell why")
 	}
 }
