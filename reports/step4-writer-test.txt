@@ -1,0 +1,17 @@
+?   	margincheck/cmd/actcheck	[no test files]
+ok  	margincheck/cmd/app	(cached)
+ok  	margincheck/cmd/exam	(cached)
+ok  	margincheck/cmd/sandboxcheck	(cached)
+ok  	margincheck/cmd/toolkitcheck	(cached)
+ok  	margincheck/internal/act	(cached)
+ok  	margincheck/internal/agenttools	(cached)
+ok  	margincheck/internal/check	(cached)
+ok  	margincheck/internal/flow	(cached)
+ok  	margincheck/internal/gemini	(cached)
+ok  	margincheck/internal/normalize	(cached)
+ok  	margincheck/internal/offer	(cached)
+ok  	margincheck/internal/paypal	(cached)
+ok  	margincheck/internal/profit	(cached)
+ok  	margincheck/internal/quote	(cached)
+ok  	margincheck/internal/reader	(cached)
+ok  	margincheck/internal/writer	2.229s
