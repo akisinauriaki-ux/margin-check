@@ -186,7 +186,7 @@ func Fill(text string, set offer.Set) string {
 		if i < 1 || i > len(set.Options) {
 			return b
 		}
-		return fmt.Sprintf("%d. %s.", i, upperFirst(set.Options[i-1].Summary))
+		return fmt.Sprintf("Option %d (%s): %s.", i, Label(set.Options[i-1].Kind), set.Options[i-1].Summary)
 	})
 }
 
@@ -195,15 +195,21 @@ func Template(set offer.Set) string {
 	var b strings.Builder
 	b.WriteString("Thank you for the order. Here is what we can do:\n\n")
 	for i, o := range set.Options {
-		fmt.Fprintf(&b, "%d. %s. %s\n", i+1, upperFirst(o.Summary), o.Reason)
+		fmt.Fprintf(&b, "Option %d (%s): %s. %s\n", i+1, Label(o.Kind), o.Summary, o.Reason)
 	}
 	b.WriteString("\nWhat works best for you?")
 	return b.String()
 }
 
-func upperFirst(s string) string {
-	if s == "" {
-		return s
+// Label names a choice the way the reader expects to find it in the buyer's reply.
+func Label(k offer.Kind) string {
+	switch k {
+	case offer.Standard:
+		return "Standard"
+	case offer.Quantity:
+		return "Quantity"
+	case offer.EarlyPayment:
+		return "Early payment"
 	}
-	return strings.ToUpper(s[:1]) + s[1:]
+	return string(k)
 }
