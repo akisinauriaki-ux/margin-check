@@ -632,3 +632,67 @@ func TestOurOwnChoicesAreNotTheBuyersStatedTerms(t *testing.T) {
 		t.Fatalf("next %q (%s): a quantity quoted from our own Option 1 is not the buyer changing the deal", deal.Next, deal.NextReason)
 	}
 }
+
+// When the AI can't tell which choice the buyer meant, the seller (who read the email) picks it with one tap,
+// and the plan follows exactly as if the AI had read it.
+func TestTheSellerPicksWhenTheReplyIsUnclear(t *testing.T) {
+	d := deps(t, &fakeTools{})
+	deal, _ := d.Start(context.Background(), askEmail)
+	deal, _ = d.BuyerReplied(context.Background(), deal.ID, replyMaybe)
+	if deal.Next != NextAsk {
+		t.Fatalf("setup: next %q", deal.Next)
+	}
+	deal, err := d.SellerChose(context.Background(), deal.ID, offer.Quantity)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if deal.Next != NextDraft || deal.Proposal == nil || deal.Proposal.Plan.Calls[0].Create.Quantity != 30 {
+		t.Fatalf("next %q, proposal %+v: the seller's pick must give the quantity plan", deal.Next, deal.Proposal)
+	}
+	log, _ := d.Store.Log(deal.ID)
+	if !strings.Contains(log, `"step":"seller chose"`) {
+		t.Error("the seller's pick must be in the decision log")
+	}
+}
+
+// The seller can correct the AI's reading with one tap; the plan follows the seller's choice.
+func TestTheSellerCanCorrectTheAIsReading(t *testing.T) {
+	d := deps(t, &fakeTools{})
+	deal, _ := d.Start(context.Background(), askEmail)
+	deal, _ = d.BuyerReplied(context.Background(), deal.ID, replyYes) // the AI reads the quantity choice
+	deal, err := d.SellerChose(context.Background(), deal.ID, offer.Standard)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if deal.Accepted != offer.Standard || deal.Proposal == nil || deal.Proposal.Plan.Option != offer.Standard {
+		t.Fatalf("accepted %q: the plan must follow the seller's pick", deal.Accepted)
+	}
+}
+
+// A pick doesn't override a term the buyer stated differently: that still goes to the seller to decide.
+func TestASellerPickStillRespectsAChangedTerm(t *testing.T) {
+	d := deps(t, &fakeTools{})
+	deal, _ := d.Start(context.Background(), askEmail)
+	deal, _ = d.BuyerReplied(context.Background(), deal.ID, replyWrongQ) // "Option 2 please, 35 boxes."
+	deal, err := d.SellerChose(context.Background(), deal.ID, offer.Quantity)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if deal.Next != NextSellerDecides || deal.Proposal != nil {
+		t.Fatalf("next %q: the buyer wrote 35 boxes, so nothing may be planned for 30", deal.Next)
+	}
+}
+
+// Once a PayPal draft exists, the choice can't be switched.
+func TestNoPickAfterTheDraftExists(t *testing.T) {
+	tools := &fakeTools{}
+	d := deps(t, tools)
+	deal, _ := d.Start(context.Background(), askEmail)
+	deal, _ = d.BuyerReplied(context.Background(), deal.ID, replyYes)
+	if _, err := d.ApproveAndRun(context.Background(), deal.ID, act.Fingerprint(deal.Proposal.Plan)); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := d.SellerChose(context.Background(), deal.ID, offer.Standard); err == nil {
+		t.Fatal("the choice was switched after the draft was made")
+	}
+}

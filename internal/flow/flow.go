@@ -275,6 +275,11 @@ func (d Deps) BuyerReplied(ctx context.Context, dealID, replyThread string) (*De
 	return deal, nil
 }
 
+// SellerChose records which choice the buyer accepted, picked by the seller. (Seam: not built yet.)
+func (d Deps) SellerChose(ctx context.Context, dealID string, kind offer.Kind) (*Deal, error) {
+	return d.Store.Load(dealID)
+}
+
 // ApproveAndRun records the seller's approval of the plan they were shown (its fingerprint) and runs it.
 // It refuses if the stored plan no longer has that fingerprint. Two approvals of one deal (a double click) run
 // one after the other, so the second finds the draft the first made.
