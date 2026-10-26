@@ -21,7 +21,30 @@ import (
 	"margincheck/internal/reader"
 )
 
-// AnswerKeyFile matches testdata/answers.json.
+// AnswerFieldValue matches a deal field object {"value": ..., "source_sentence": ...} in answers.json.
+type AnswerFieldValue struct {
+	Value          any     `json:"value"`
+	SourceSentence *string `json:"source_sentence"`
+}
+
+// AnswerRow matches one element in testdata/answers.json.
+type AnswerRow struct {
+	EmailID                 string            `json:"email_id"`
+	BasedOn                 string            `json:"based_on"`
+	HasInjection            bool              `json:"has_injection"`
+	MustAsk                 []string          `json:"must_ask"`
+	Quantity                AnswerFieldValue  `json:"quantity"`
+	UnitPriceCents          AnswerFieldValue  `json:"unit_price_cents"`
+	DiscountPercent         AnswerFieldValue  `json:"discount_percent"`
+	FreeShipping            AnswerFieldValue  `json:"free_shipping"`
+	PaymentDays             AnswerFieldValue  `json:"payment_days"`
+	RebatePercent           AnswerFieldValue  `json:"rebate_percent"`
+	PriceIncreaseDiscounted AnswerFieldValue  `json:"price_increase_discounted"`
+	AcceptedOption          *AnswerFieldValue `json:"accepted_option"`
+	Terms                   []AnswerKeyTerm   `json:"terms"`
+}
+
+// AnswerKeyFile holds the map of email_id -> AnswerEmail.
 type AnswerKeyFile struct {
 	Emails map[string]AnswerEmail `json:"emails"`
 }
@@ -34,6 +57,45 @@ type AnswerEmail struct {
 	AcceptedOption *string         `json:"accepted_option"`
 	MustAsk        []string        `json:"must_ask"`
 	Terms          []AnswerKeyTerm `json:"terms"`
+}
+
+func loadAnswerKey(path string) (AnswerKeyFile, error) {
+	ansBytes, err := os.ReadFile(path)
+	if err != nil {
+		return AnswerKeyFile{}, fmt.Errorf("read answers.json: %w", err)
+	}
+	var rows []AnswerRow
+	if err := json.Unmarshal(ansBytes, &rows); err == nil && len(rows) > 0 && rows[0].EmailID != "" {
+		out := AnswerKeyFile{Emails: make(map[string]AnswerEmail, len(rows))}
+		for _, r := range rows {
+			var accOpt *string
+			if r.AcceptedOption != nil && r.AcceptedOption.Value != nil {
+				s := fmt.Sprintf("%v", r.AcceptedOption.Value)
+				accOpt = &s
+			}
+			out.Emails[r.EmailID] = AnswerEmail{
+				HasInjection: r.HasInjection,
+				MustAsk:      r.MustAsk,
+				Deal: map[string]any{
+					"quantity":                  r.Quantity.Value,
+					"unit_price_cents":          r.UnitPriceCents.Value,
+					"discount_percent":          r.DiscountPercent.Value,
+					"free_shipping":             r.FreeShipping.Value,
+					"payment_days":              r.PaymentDays.Value,
+					"rebate_percent":            r.RebatePercent.Value,
+					"price_increase_discounted": r.PriceIncreaseDiscounted.Value,
+				},
+				AcceptedOption: accOpt,
+				Terms:          r.Terms,
+			}
+		}
+		return out, nil
+	}
+	var ansKey AnswerKeyFile
+	if err := json.Unmarshal(ansBytes, &ansKey); err != nil {
+		return AnswerKeyFile{}, fmt.Errorf("parse answers.json: %w", err)
+	}
+	return ansKey, nil
 }
 
 // AnswerKeyTerm is a single expected term in answers.json.
@@ -322,13 +384,9 @@ func runExam(
 	emailFilter []string,
 	runMutations bool,
 ) (ExamSummary, error) {
-	ansBytes, err := os.ReadFile(filepath.Join(dir, "answers.json"))
+	ansKey, err := loadAnswerKey(filepath.Join(dir, "answers.json"))
 	if err != nil {
-		return ExamSummary{}, fmt.Errorf("read answers.json: %w", err)
-	}
-	var ansKey AnswerKeyFile
-	if err := json.Unmarshal(ansBytes, &ansKey); err != nil {
-		return ExamSummary{}, fmt.Errorf("parse answers.json: %w", err)
+		return ExamSummary{}, err
 	}
 	if _, err := os.Stat(filepath.Join(dir, "seller.json")); err != nil {
 		return ExamSummary{}, fmt.Errorf("missing seller.json in %s: %w", dir, err)

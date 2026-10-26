@@ -299,6 +299,17 @@ func (c *Client) doWithSingleRateLimitRetry(ctx context.Context, model string, b
 		if status >= 200 && status < 300 {
 			return respBody, nil
 		}
+		if status == http.StatusServiceUnavailable {
+			if attempt == 0 {
+				select {
+				case <-ctx.Done():
+					return "", ctx.Err()
+				case <-time.After(3 * time.Second):
+				}
+				continue
+			}
+			return "", fmt.Errorf("gemini: HTTP 503 service unavailable persisted after retry for model %s: %s", model, truncateSafe(c.scrubString(respBody), 300))
+		}
 		if status == http.StatusTooManyRequests {
 			if isDailyQuotaError(respBody) {
 				return "", fmt.Errorf("%w: HTTP 429 daily quota exhausted for model %s", ErrDailyLimitReached, model)

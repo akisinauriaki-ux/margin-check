@@ -91,6 +91,14 @@ func TestScoringRules(t *testing.T) {
 
 func TestMutationsFileMatchesEmails(t *testing.T) {
 	testDataDir := filepath.Join("..", "..", "testdata")
+	ak, err := loadAnswerKey(filepath.Join(testDataDir, "answers.json"))
+	if err != nil {
+		t.Fatalf("loadAnswerKey: %v", err)
+	}
+	if len(ak.Emails) != 20 {
+		t.Fatalf("expected 20 emails in answers.json, got %d", len(ak.Emails))
+	}
+
 	mf, err := loadMutations(testDataDir)
 	if err != nil {
 		t.Fatalf("loadMutations: %v", err)

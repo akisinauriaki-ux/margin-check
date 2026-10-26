@@ -1,0 +1,3 @@
+﻿go vet ./internal/gemini/... ./internal/normalize/... ./internal/quote/... ./internal/reader/... ./cmd/exam/...
+EXIT_CODE=0
+
