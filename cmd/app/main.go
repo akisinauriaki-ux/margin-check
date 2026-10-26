@@ -94,7 +94,11 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Fprintf(os.Stdout, "margin-check screen on http://%s (sandbox, drafts only)\n", *addr)
-	log.Fatal(http.ListenAndServe(*addr, s.routes()))
+	log.Fatal(newHTTPServer(*addr, s.routes()).ListenAndServe())
+}
+
+func newHTTPServer(addr string, h http.Handler) *http.Server {
+	return &http.Server{Addr: addr, Handler: h}
 }
 
 type server struct {

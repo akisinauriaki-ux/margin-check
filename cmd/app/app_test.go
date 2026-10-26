@@ -131,3 +131,16 @@ func TestTheHomePageRenders(t *testing.T) {
 		t.Error("no check form on the home page")
 	}
 }
+
+// The screen's server must not wait forever on a slow or stuck connection, but it must leave the slowest real
+// step (an approved run, or reading an email twice and drafting the reply) time to finish.
+func TestTheServerHasTimeLimits(t *testing.T) {
+	srv := newHTTPServer("127.0.0.1:0", http.NewServeMux())
+	if srv.ReadHeaderTimeout <= 0 || srv.ReadTimeout <= 0 || srv.IdleTimeout <= 0 || srv.WriteTimeout <= 0 {
+		t.Fatalf("limits: header %v, read %v, idle %v, write %v; want all set",
+			srv.ReadHeaderTimeout, srv.ReadTimeout, srv.IdleTimeout, srv.WriteTimeout)
+	}
+	if srv.WriteTimeout <= flow.RunTimeLimit {
+		t.Errorf("write limit %v must be longer than a run's own limit %v", srv.WriteTimeout, flow.RunTimeLimit)
+	}
+}
