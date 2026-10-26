@@ -234,6 +234,14 @@ func extractOldUnitPriceCents(res reader.CheckResult, emailText string) int64 {
 	return 0
 }
 
+// DealCurrency returns the deal's one currency, taken from its own money, or false when it has none or several.
+func DealCurrency(res reader.CheckResult) (string, bool) {
+	if c := dealMoneyCurrencies(res); len(c) == 1 {
+		return c[0], true
+	}
+	return "", false
+}
+
 // dealMoneyCurrencies returns the sorted, distinct currencies of the deal's own money: offered or agreed
 // money terms, plus the currency written beside the unit price in its quote. Requested terms are left out.
 func dealMoneyCurrencies(res reader.CheckResult) []string {

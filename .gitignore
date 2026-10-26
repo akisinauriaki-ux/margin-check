@@ -4,3 +4,4 @@ reports/*.raw
 *.exe
 .cache/
 reports/traces/
+.data/
