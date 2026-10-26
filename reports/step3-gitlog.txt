@@ -1,0 +1,22 @@
+c7549dd step 3: Kill 3 proof through the screen (quantity and early-payment drafts), vet, tests, exam regression
+1cd5e66 step 3: the screen (localhost only, form token, one big number, three cards, plan with fingerprint, read-back, how it decided)
+9c2041d step 3: deal flow (start, buyer reply, approve-and-run bound to the shown fingerprint) and deal store
+2ae656b step 3: deal flow tests (no money from unsure values; yes -> plan; unclear/changed -> no plan; approval bound to the shown plan)
+efe1364 step 3: label each choice in the reply (Option N (Kind)) so the buyer's answer maps back
+ceb938c step 3: AI planner (sees only verified values; interceptor blocks any difference; code plan offered instead)
+b0fbab0 step 3: AI planner tests (sees no email, wrong plans blocked, code plan offered, no numbers in its words)
+ddcb0b1 step 3: actcheck - act path proven in the PayPal sandbox (toolkit draft, REST due date, read-back, repeat, tamper refusals)
+e1bf8f4 step 3: real tools (toolkit create_invoice with find-first repeat guard, REST due date and read-back); ErrInvoiceNotFound
+3b56e9d step 3: SetDueDate (full update of a DRAFT only, notifications off, nothing else changed)
+b6ce2d4 step 3: tests for set-due-date (no notifications, rest of the draft unchanged, drafts only)
+b1d03fd step 3: act core (two tools, fingerprinted approval, interceptor at plan and at execution, resumable second call, read-back)
+9c1d340 step 3: act tests (fingerprint, interceptor, approval, repeat, half-done, read-back) and invoice shipping read-back type
+eabafd2 step 3: reply writer (AI sees no email and no numbers; digits, number words and splitting the difference rejected; code fills blanks)
+b9f4985 step 3: reply writer tests (no numbers from the AI, blanks filled by code, retry then template)
+ffd33e3 step 3: offer builder (standard, quantity, early payment as plan B), every number from the profit engine
+349dc84 step 3: offer builder tests with hand-checked numbers (exam emails 17 and 18)
+77c0377 step 3: check never assumes a currency, finds or asks for the old price, ignores requests when testing for mixed currency
+8e04006 step 3: tests for the step-2 carry-overs (currency never assumed, old price asked, requests not mixed in)
+167a368 step 2 part D: join reader to profit engine and run full exam with scorecard
+b9af9d7 fix A: evaluate listed models, pair gemini-3.1-flash-lite, normalize free shipping, handle unavailable models
+3e51e56 profit: save refreshed step2-b-test.txt and step2-b-vet.txt reports
