@@ -210,3 +210,41 @@ func TestGeminiClientFakeServer(t *testing.T) {
 		}
 	})
 }
+
+func TestReplayOnlySwitchNoNetworkCall(t *testing.T) {
+	var networkCalls int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&networkCalls, 1)
+		t.Fatalf("unexpected network call made to server: %s %s", r.Method, r.URL.Path)
+	}))
+	defer srv.Close()
+
+	t.Setenv("MARGINCHECK_REPLAY_ONLY", "1")
+
+	cacheDir := t.TempDir()
+	cli, err := NewClient("test-key", cacheDir, false)
+	if err != nil {
+		t.Fatalf("NewClient: %v", err)
+	}
+	cli.BaseURL = srv.URL
+	cli.MinInterval = 5 * time.Second
+
+	start := time.Now()
+	_, err = cli.Generate(context.Background(), Request{
+		Model:              "gemini-3.5-flash-lite",
+		InstructionVersion: "reader-v1",
+		UserText:           "cache-miss-probe",
+	})
+	elapsed := time.Since(start)
+
+	if err == nil {
+		t.Fatal("expected error on cache miss in replay-only mode, got nil")
+	}
+	if elapsed >= 2*time.Second {
+		t.Fatalf("expected immediate return without pacing, took %v", elapsed)
+	}
+	if atomic.LoadInt32(&networkCalls) != 0 {
+		t.Fatalf("expected 0 network calls, got %d", atomic.LoadInt32(&networkCalls))
+	}
+}
+
