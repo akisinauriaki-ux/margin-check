@@ -282,3 +282,46 @@ func TestAReadBackMismatchIsReported(t *testing.T) {
 		t.Errorf("checks %+v, want a failed quantity check", res.Checks)
 	}
 }
+
+// The read-back is the last check that PayPal holds what the seller approved, so it must read PayPal's amounts
+// exactly: a sign, extra non-zero decimals or anything unreadable is a mismatch, never a near value.
+func TestTheReadBackReadsAmountsExactly(t *testing.T) {
+	want := &CreateInvoiceArgs{Currency: "USD", InvoiceNumber: "MC-1", Quantity: 1, UnitPriceCents: 50, DiscountBP: 150}
+	held := func(unit, pct string) *paypal.Invoice {
+		return &paypal.Invoice{Status: "DRAFT", Detail: paypal.InvoiceDetail{CurrencyCode: "USD", InvoiceNumber: "MC-1"},
+			Items: []paypal.InvoiceLineItem{{Quantity: "1", UnitAmount: paypal.Money{CurrencyCode: "USD", Value: unit},
+				Discount: &paypal.ItemDiscount{Percent: pct}}}}
+	}
+	ok := func(checks []ReadCheck, field string) bool {
+		for _, c := range checks {
+			if c.Field == field {
+				return c.OK
+			}
+		}
+		t.Fatalf("no %s check", field)
+		return false
+	}
+	for _, tc := range []struct {
+		unit, pct     string
+		unitOK, pctOK bool
+	}{
+		{"0.50", "1.5", true, true},
+		{"0.5", "1.50", true, true},
+		{"0.50", "1.500", true, true},
+		{"-0.50", "1.5", false, true},
+		{"+0.50", "1.5", false, true},
+		{"0.509", "1.5", false, true},
+		{"0.50", "1.505", true, false},
+		{"abc", "1.5", false, true},
+		{"0.5x", "1.5", false, true},
+		{"0.-5", "1.5", false, true},
+	} {
+		checks := compare(held(tc.unit, tc.pct), want, nil)
+		if got := ok(checks, "unit_price_cents"); got != tc.unitOK {
+			t.Errorf("unit amount %q read back OK=%v, want %v", tc.unit, got, tc.unitOK)
+		}
+		if got := ok(checks, "discount_bp"); got != tc.pctOK {
+			t.Errorf("discount %q read back OK=%v, want %v", tc.pct, got, tc.pctOK)
+		}
+	}
+}
