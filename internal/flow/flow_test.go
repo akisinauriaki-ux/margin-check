@@ -1,0 +1,248 @@
+package flow
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"strconv"
+	"strings"
+	"testing"
+	"time"
+
+	"margincheck/internal/act"
+	"margincheck/internal/gemini"
+	"margincheck/internal/offer"
+	"margincheck/internal/paypal"
+	"margincheck/internal/profit"
+	"margincheck/internal/reader"
+)
+
+// --- stand-ins -------------------------------------------------------------------------------------------
+
+type fakeReader struct{ byEmail map[string]reader.CheckResult }
+
+func (f fakeReader) Check(_ context.Context, id, email string) (reader.CheckResult, error) {
+	r, ok := f.byEmail[email]
+	if !ok {
+		return reader.CheckResult{}, errors.New("unexpected email")
+	}
+	r.EmailID = id
+	return r, nil
+}
+
+type noModel struct{}
+
+func (noModel) Generate(context.Context, gemini.Request) (gemini.Response, error) {
+	return gemini.Response{}, errors.New("no model in tests")
+}
+
+type fakeTools struct {
+	created int
+	calls   int
+	inv     *paypal.Invoice
+}
+
+func (f *fakeTools) CreateInvoice(_ context.Context, a act.CreateInvoiceArgs) (string, bool, error) {
+	f.calls++
+	if f.inv != nil {
+		return f.inv.ID, true, nil
+	}
+	f.created++
+	f.inv = &paypal.Invoice{ID: "INV2-TEST-0001", Status: "DRAFT",
+		Detail: paypal.InvoiceDetail{CurrencyCode: a.Currency, InvoiceNumber: a.InvoiceNumber},
+		Items: []paypal.InvoiceLineItem{{Quantity: itoa(a.Quantity),
+			UnitAmount: paypal.Money{CurrencyCode: a.Currency, Value: cents(a.UnitPriceCents)}}}}
+	return f.inv.ID, false, nil
+}
+func (f *fakeTools) SetDueDate(context.Context, string, act.SetDueDateArgs) error {
+	f.calls++
+	return nil
+}
+func (f *fakeTools) ReadBack(context.Context, string) (*paypal.Invoice, error) {
+	c := *f.inv
+	return &c, nil
+}
+
+func sure(v int64, q string) reader.IntFieldResult {
+	return reader.IntFieldResult{Value: v, Sure: true, Quote: q}
+}
+func sureB(v bool, q string) reader.BoolFieldResult {
+	return reader.BoolFieldResult{Value: v, Sure: true, Quote: q}
+}
+
+const (
+	askEmail    = "Buyer: We want 20 boxes at $40 per box, but we need free shipping and two months to pay."
+	replyYes    = "Buyer: OK, 30 boxes with free shipping works for us."
+	replyMore   = "Buyer: We accept the bulk deal but can we do 35 boxes instead?"
+	replyMaybe  = "Buyer: Sounds interesting, let's go ahead with that proposal."
+	replyWrongQ = "Buyer: Option 2 please, 35 boxes."
+)
+
+func readings() map[string]reader.CheckResult {
+	first := reader.CheckResult{
+		Quantity:                sure(20, "We want 20 boxes at $40 per box, but we need free shipping and two months to pay."),
+		UnitPriceCents:          sure(4000, "We want 20 boxes at $40 per box, but we need free shipping and two months to pay."),
+		DiscountPercent:         sure(0, ""),
+		FreeShipping:            sureB(false, ""),
+		PaymentDays:             sure(0, ""),
+		RebatePercent:           sure(0, ""),
+		PriceIncreaseDiscounted: sureB(false, ""),
+		Terms: []reader.TermResult{
+			{Name: "free_shipping", Value: true, By: "buyer", Status: "requested", SourceSentence: "We want 20 boxes at $40 per box, but we need free shipping and two months to pay."},
+			{Name: "payment_days", Value: float64(60), By: "buyer", Status: "requested", SourceSentence: "We want 20 boxes at $40 per box, but we need free shipping and two months to pay."},
+		},
+	}
+	yes := first
+	yes.Quantity = sure(30, "OK, 30 boxes with free shipping works for us.")
+	yes.FreeShipping = sureB(true, "OK, 30 boxes with free shipping works for us.")
+	yes.AcceptedOption = reader.StringFieldResult{Value: "quantity", Sure: true, Quote: "OK, 30 boxes with free shipping works for us."}
+	more := first
+	more.AcceptedOption = reader.StringFieldResult{Value: "changed", Sure: true, Quote: "We accept the bulk deal but can we do 35 boxes instead?"}
+	maybe := first
+	maybe.AcceptedOption = reader.StringFieldResult{Value: "UNCLEAR", Unknown: true, Quote: "Sounds interesting, let's go ahead with that proposal."}
+	maybe.MustAsk = []string{"accepted_option"}
+	wrongQ := first
+	wrongQ.Quantity = sure(35, "Option 2 please, 35 boxes.")
+	wrongQ.AcceptedOption = reader.StringFieldResult{Value: "quantity", Sure: true, Quote: "Option 2 please, 35 boxes."}
+	return map[string]reader.CheckResult{askEmail: first, replyYes: yes, replyMore: more, replyMaybe: maybe, replyWrongQ: wrongQ}
+}
+
+func deps(t *testing.T, tools act.Tools) Deps {
+	t.Helper()
+	store, err := NewStore(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	return Deps{
+		Reader: fakeReader{byEmail: readings()}, Writer: noModel{}, Planner: noModel{}, Tools: tools,
+		Seller: profit.Seller{UnitCostCents: 2300, ShippingCostCentsPerOrder: 600, ShippingCostCentsPerBox: 150,
+			PayPalFeePercentBP: 349, PayPalFixedFeeCents: 49, YearlyCostOfMoneyBP: 1000, UnderlineMinGiveawayBP: 200, Currency: "USD"},
+		Parties: act.Parties{SellerEmail: "s@example.com", BuyerEmail: "b@example.com", ItemName: "Mugs"},
+		Store:   store,
+		Now:     func() time.Time { return time.Date(2026, 10, 26, 9, 0, 0, 0, time.UTC) },
+	}
+}
+
+// --- the flow ----------------------------------------------------------------------------------------------
+
+func TestStartShowsWhatTheDealKeepsAndThreeChoices(t *testing.T) {
+	d := deps(t, &fakeTools{})
+	deal, err := d.Start(context.Background(), askEmail)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if deal.Check.Outcome != "evaluated" || deal.Check.Profit == nil {
+		t.Fatalf("check %+v", deal.Check)
+	}
+	if deal.Offers == nil || len(deal.Offers.Options) != 3 {
+		t.Fatalf("offers %+v", deal.Offers)
+	}
+	if deal.Request.RequestedPaymentDays != 60 {
+		t.Errorf("asked payment days %d, want 60 from the buyer's request", deal.Request.RequestedPaymentDays)
+	}
+	if deal.Reply == nil || !deal.Reply.ByCode || !strings.Contains(deal.Reply.Text, "Option 2 (Quantity)") {
+		t.Errorf("reply %+v", deal.Reply)
+	}
+	loaded, err := d.Store.Load(deal.ID)
+	if err != nil || loaded.ID != deal.ID {
+		t.Fatalf("store round trip: %v", err)
+	}
+}
+
+func TestAnUnsureDealShowsNoMoneyAndNoChoices(t *testing.T) {
+	d := deps(t, &fakeTools{})
+	r := readings()[askEmail]
+	r.UnitPriceCents = reader.IntFieldResult{Unknown: true, Reason: "readings_disagree"}
+	d.Reader = fakeReader{byEmail: map[string]reader.CheckResult{askEmail: r}}
+	deal, err := d.Start(context.Background(), askEmail)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if deal.Check.Profit != nil || deal.Offers != nil {
+		t.Fatalf("a money figure or choices were made from an unsure price: %+v %+v", deal.Check.Profit, deal.Offers)
+	}
+	if len(deal.Check.Questions) == 0 {
+		t.Error("no questions for the seller")
+	}
+}
+
+func TestTheBuyersYesBecomesAPlanForApproval(t *testing.T) {
+	d := deps(t, &fakeTools{})
+	deal, _ := d.Start(context.Background(), askEmail)
+	deal, err := d.BuyerReplied(context.Background(), deal.ID, replyYes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if deal.Next != NextDraft || deal.Accepted != offer.Quantity || deal.Proposal == nil {
+		t.Fatalf("next %q, accepted %q, proposal %v (%s)", deal.Next, deal.Accepted, deal.Proposal != nil, deal.NextReason)
+	}
+	if c := deal.Proposal.Plan.Calls; len(c) != 1 || c[0].Create.Quantity != 30 {
+		t.Errorf("plan %+v", c)
+	}
+}
+
+func TestUnclearOrChangedRepliesNeverPlanAnything(t *testing.T) {
+	for email, want := range map[string]string{replyMaybe: NextAsk, replyMore: NextSellerDecides, replyWrongQ: NextSellerDecides} {
+		d := deps(t, &fakeTools{})
+		deal, _ := d.Start(context.Background(), askEmail)
+		deal, err := d.BuyerReplied(context.Background(), deal.ID, email)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if deal.Next != want || deal.Proposal != nil {
+			t.Errorf("%q: next %q (want %q), proposal %v", email, deal.Next, want, deal.Proposal != nil)
+		}
+	}
+}
+
+func TestApprovalMustMatchThePlanShown(t *testing.T) {
+	tools := &fakeTools{}
+	d := deps(t, tools)
+	deal, _ := d.Start(context.Background(), askEmail)
+	deal, _ = d.BuyerReplied(context.Background(), deal.ID, replyYes)
+
+	if _, err := d.ApproveAndRun(context.Background(), deal.ID, strings.Repeat("0", 64)); err == nil {
+		t.Fatal("an approval for a different fingerprint was accepted")
+	}
+	if tools.calls != 0 {
+		t.Fatalf("PayPal was called %d times without a matching approval", tools.calls)
+	}
+
+	deal, err := d.ApproveAndRun(context.Background(), deal.ID, act.Fingerprint(deal.Proposal.Plan))
+	if err != nil {
+		t.Fatalf("approve: %v", err)
+	}
+	if deal.Result == nil || deal.Result.Status != "DRAFT" || tools.created != 1 {
+		t.Fatalf("result %+v, created %d", deal.Result, tools.created)
+	}
+
+	// Approving the same plan again must not create a second invoice.
+	if _, err := d.ApproveAndRun(context.Background(), deal.ID, act.Fingerprint(deal.Proposal.Plan)); err != nil {
+		t.Fatal(err)
+	}
+	if tools.created != 1 {
+		t.Errorf("created %d invoices", tools.created)
+	}
+}
+
+func TestAPlanEditedOnDiskIsRefused(t *testing.T) {
+	tools := &fakeTools{}
+	d := deps(t, tools)
+	deal, _ := d.Start(context.Background(), askEmail)
+	deal, _ = d.BuyerReplied(context.Background(), deal.ID, replyYes)
+	shown := act.Fingerprint(deal.Proposal.Plan)
+
+	deal.Proposal.Plan.Calls[0].Create.UnitPriceCents = 100 // someone edits the saved deal
+	if err := d.Store.Save(deal); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := d.ApproveAndRun(context.Background(), deal.ID, shown); err == nil {
+		t.Fatal("a plan changed after it was shown was run")
+	}
+	if tools.calls != 0 {
+		t.Errorf("PayPal was called %d times", tools.calls)
+	}
+}
+
+func itoa(n int64) string  { return strconv.FormatInt(n, 10) }
+func cents(c int64) string { return fmt.Sprintf("%d.%02d", c/100, c%100) }
