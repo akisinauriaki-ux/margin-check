@@ -384,3 +384,65 @@ func TestADamagedDealDateStopsTheDeal(t *testing.T) {
 		t.Errorf("PayPal was called %d times with a damaged date", tools.calls)
 	}
 }
+
+// A buyer's "yes" only becomes a plan when nothing the buyer stated contradicts the choice. A term counts as
+// stated when the reading is sure and quotes the sentence; an unstated term is fixed by the choice itself, and
+// the seller still sees the plan before approving it.
+func TestAStatedChangedTermStopsThePlan(t *testing.T) {
+	base := readings()[replyYes] // the buyer accepts the quantity choice: 30 boxes, free shipping, $40, on receipt
+	cases := []struct {
+		name, reply, want string
+		edit            func(*reader.CheckResult)
+	}{
+		{"unit price", "Buyer: Option 2 works, 30 boxes at $30 each.", "$30.00",
+			func(r *reader.CheckResult) { r.UnitPriceCents = sure(3000, "Option 2 works, 30 boxes at $30 each.") }},
+		{"payment days", "Buyer: Option 2 works, on net 60.", "60 days",
+			func(r *reader.CheckResult) { r.PaymentDays = sure(60, "Option 2 works, on net 60.") }},
+		{"free shipping", "Buyer: Option 2 works, we'll pay the shipping.", "shipping",
+			func(r *reader.CheckResult) { r.FreeShipping = sureB(false, "Option 2 works, we'll pay the shipping.") }},
+		{"discount", "Buyer: Option 2 works with 10% off.", "10%",
+			func(r *reader.CheckResult) { r.DiscountPercent = sure(10, "Option 2 works with 10% off.") }},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			r := base
+			r.AcceptedOption = reader.StringFieldResult{Value: "quantity", Sure: true, Quote: strings.TrimPrefix(c.reply, "Buyer: ")}
+			c.edit(&r)
+			d := deps(t, &fakeTools{})
+			d.Reader.(fakeReader).byEmail[c.reply] = r
+			deal, err := d.Start(context.Background(), askEmail)
+			if err != nil {
+				t.Fatal(err)
+			}
+			deal, err = d.BuyerReplied(context.Background(), deal.ID, c.reply)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if deal.Next != NextSellerDecides || deal.Proposal != nil {
+				t.Fatalf("next %q, proposal %v: a changed %s must stop the plan", deal.Next, deal.Proposal != nil, c.name)
+			}
+			if !strings.Contains(deal.NextReason, c.want) {
+				t.Errorf("reason %q should name %q", deal.NextReason, c.want)
+			}
+		})
+	}
+}
+
+// The demo reply states only that the buyer pays on receipt, which is what the quantity choice says.
+func TestTheDemoReplyStillBecomesAPlan(t *testing.T) {
+	const reply = "Buyer: We'll take Option 2, payment on receipt."
+	r := readings()[askEmail]
+	r.Quantity = reader.IntFieldResult{Unknown: true}
+	r.PaymentDays = sure(0, "We'll take Option 2, payment on receipt.")
+	r.AcceptedOption = reader.StringFieldResult{Value: "quantity", Sure: true, Quote: "We'll take Option 2, payment on receipt."}
+	d := deps(t, &fakeTools{})
+	d.Reader.(fakeReader).byEmail[reply] = r
+	deal, _ := d.Start(context.Background(), askEmail)
+	deal, err := d.BuyerReplied(context.Background(), deal.ID, reply)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if deal.Next != NextDraft || deal.Proposal == nil {
+		t.Fatalf("next %q (%s): the demo reply must still give a plan", deal.Next, deal.NextReason)
+	}
+}
