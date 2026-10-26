@@ -147,7 +147,7 @@ func TestLiveSamples(t *testing.T) {
 	}
 
 	var report strings.Builder
-	report.WriteString("Live Writer Samples Report (Step 4, Job C)\n")
+	report.WriteString("Live Writer Samples Report (Step 4, Fix C)\n")
 	report.WriteString("==========================================\n")
 	fmt.Fprintf(&report, "Date: %s\n", time.Now().UTC().Format(time.RFC3339))
 	fmt.Fprintf(&report, "Prompt version: %s\n", PromptVersion)
@@ -155,6 +155,8 @@ func TestLiveSamples(t *testing.T) {
 	report.WriteString("Rule: at most 8 live Gemini calls across all cases\n\n")
 
 	totalCallsBefore := 0
+	acceptedCount := 0
+	fallbackCount := 0
 	for i, tc := range cases {
 		t.Logf("Running case %d: %s (%s)", i+1, tc.id, tc.title)
 		callsStart := len(recorder.calls)
@@ -170,6 +172,12 @@ func TestLiveSamples(t *testing.T) {
 			Model:  "gemini-3.5-flash-lite",
 		}, set)
 		cancel()
+
+		if draft.ByCode {
+			fallbackCount++
+		} else {
+			acceptedCount++
+		}
 
 		callsThisCase := recorder.calls[callsStart:]
 
@@ -236,15 +244,17 @@ func TestLiveSamples(t *testing.T) {
 
 	report.WriteString("==========================================\n")
 	fmt.Fprintf(&report, "Total live Gemini API calls across all cases: %d (limit: <= 8)\n", totalCallsBefore)
+	fmt.Fprintf(&report, "Accepted from AI: %d / %d\n", acceptedCount, len(cases))
+	fmt.Fprintf(&report, "Fell back to template: %d / %d\n", fallbackCount, len(cases))
 	if totalCallsBefore > 8 {
 		t.Errorf("exceeded live call budget: %d > 8", totalCallsBefore)
 	}
 
-	// Write report to margin-check/reports/step4-writer-samples.txt
+	// Write report to margin-check/reports/step4-writer-samples-2.txt
 	reportPaths := []string{
-		"../../reports/step4-writer-samples.txt",
-		"../reports/step4-writer-samples.txt",
-		"reports/step4-writer-samples.txt",
+		"../../reports/step4-writer-samples-2.txt",
+		"../reports/step4-writer-samples-2.txt",
+		"reports/step4-writer-samples-2.txt",
 	}
 	written := false
 	for _, rp := range reportPaths {
@@ -258,6 +268,6 @@ func TestLiveSamples(t *testing.T) {
 		}
 	}
 	if !written {
-		t.Errorf("failed to write step4-writer-samples.txt")
+		t.Errorf("failed to write step4-writer-samples-2.txt")
 	}
 }
