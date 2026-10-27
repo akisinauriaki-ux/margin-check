@@ -80,7 +80,7 @@ A stranger setting up the repository needs the following prerequisites, each ava
 5. **Gemini API Key:** Obtain a free-tier API key from Google AI Studio at [aistudio.google.com](https://aistudio.google.com/app/apikey) and configure `GEMINI_API_KEY` in `.env` for extraction and reply drafting [C-13].
 6. **Environment Configuration:** Copy `.env.example` to `.env` to configure local credentials without committing secrets to version control [C-14].
 
-**Operational costs:** Running the full live 20-email evaluation exam consumes approximately 350,000 tokens on Gemini free tier; checking a single negotiation thread requires two reading model calls plus one reply draft [C-15].
+**Operational costs:** Running the full live 20-email evaluation exam consumes approximately 350,000 tokens on Gemini free tier; checking a single negotiation thread requires two reading model calls, one reply draft and one buyer's-why note, each retried at most once [C-15].
 
 ## How it works
 
@@ -90,6 +90,8 @@ The architecture implements the LLM-Modulo pattern: the AI proposes candidate re
 
 - **Understand (Reading):** Reads untrusted email text with no external tools, extracting structured deal terms where two independent models must agree and every extracted number must trace back to an exact sentence quote in the email [C-17].
 - **Write (Drafting):** Drafts conversational negotiation responses around structural blanks where Go code inserts all calculated numbers, rejecting any model draft that generates numbers or currency symbols [C-18].
+- **Why the buyer may be asking (a note for the seller only):** A separate AI call offers at most two guesses at the interest behind the buyer's request. Code keeps a guess only if it starts "The buyer may", has no figure, describes the buyer rather than advising the seller, and quotes words the buyer really wrote; a bad answer is retried once, then dropped [C-97]. The note appears before the choices, labelled as a guess, and is never given to the reply writer [C-98].
+- **Short buyer answers:** A reply such as "Option 2 please" is read next to the choices the app sent, but acceptance counts only when it is quoted from the buyer's own words, never from the app's choices [C-99]. The page marks the AI's reading on a row of choice buttons, and the seller confirms or corrects it with one tap [C-100].
 - **Act (Agentic Action):** An AI planner proposes invoice action sequences without ever seeing untrusted raw emails, translating verified terms into structured PayPal calls [C-19].
 - **Code verification:** Multi-stage deterministic checks enforce JSON schemas, quote matching, whole-cent arithmetic, and interceptor validation between proposed actions and agreed terms [C-20].
 - **Two PayPal tools only:** The agent has access to exactly two tools: `create_invoice` via PayPal's official Agent Toolkit MCP server, and setting due dates via PayPal's REST API [C-21].
@@ -164,6 +166,8 @@ The failure register records defects encountered during iterative development, t
 | Read-back accepting "-0.50" | Scaled amount reader stripped negative signs, treating "-0.50" as +50 cents, and silently truncated excess decimals. | Implemented strict parser requiring digits only, at most two decimals, and no sign; guarded by `TestTheReadBackReadsAmountsExactly` [C-67]. | `internal/act`: `TestTheReadBackReadsAmountsExactly` |
 | Double click on Approve | Concurrent approval clicks caused colliding deal file writes, while closing browser tabs canceled execution context mid-run. | Serialized deal execution with in-memory mutex and detached timeout context; guarded by `TestTwoApprovalsAtOnceRunOneAfterTheOther` [C-69]. | `internal/flow`: `TestTwoApprovalsAtOnceRunOneAfterTheOther` |
 | Reply checker ASCII-only digits | Reply validator only checked ASCII '0'-'9', allowing Unicode full-width digits, fractions, and non-Western currencies to slip through. | Replaced ASCII checks with unicode.IsDigit, unicode.IsNumber, and Unicode currency categories; guarded by `TestValidateRejectsNumbersAndCurrencySignsInAnyScript` [C-71]. | `internal/writer`: `TestValidateRejectsNumbersAndCurrencySignsInAnyScript` |
+| Short buyer reply read as unclear | In a demo rehearsal, a buyer reply of just "Option 2 please" came back unclear, because the reader saw only the buyer's line, not the choices the app had sent. | The reader is given the app's choices ahead of the buyer's words, while acceptance must still be quoted from the buyer; guarded by `TestAShortReplyIsReadWithTheChoicesWeSent` [C-101]. | `internal/flow`: `TestAShortReplyIsReadWithTheChoicesWeSent` |
+| No way to retry after a PayPal timeout | In a demo rehearsal, PayPal's login timed out; the page then hid the approve button and pointed to a draft that didn't exist. | Until a draft is made and read back, the page offers the same approval as "Try again" and says no draft came back; the invoice-number lookup keeps a retry to one draft; guarded by `TestAFailedRunCanBeTriedAgain` [C-102]. | `cmd/app`: `TestAFailedRunCanBeTriedAgain` |
 | Email 08 double-discount dropped | In step 2 live flow, when an old price was missing from quotes for a discounted price increase, the warning silently disappeared. | When old price cannot be derived from quotes or terms, the checker asks the seller instead of dropping the warning; guarded by `TestCheckDoubleDiscountFinding` [C-73]. | `internal/check`: `TestCheckDoubleDiscountFinding` |
 
 ## Honest limits
@@ -173,6 +177,7 @@ The failure register records defects encountered during iterative development, t
 3. **Early-payment discount structure:** The early-payment option is structured as an upfront item discount on a draft due in 7 days (Decision 0020), rather than PayPal's native early-payment conditional rule.
 4. **Anonymized demo emails:** Demonstration emails are based on real public seller posts from online negotiation threads, with names and personal identifiers anonymized.
 5. **Currency:** Built and tested with USD and US sandbox accounts. The seller's currency comes from `seller.json`; the reader recognises USD, EUR and GBP, and a deal in another currency stops with a question.
+6. **The buyer's-why note is a guess:** When the buyer gives no reason, its guesses can be obvious ("wants to protect cash flow"). It never changes a number, a choice or the reply; the seller decides whether it matters.
 
 ## Licence
 
