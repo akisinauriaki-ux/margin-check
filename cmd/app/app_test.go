@@ -245,3 +245,35 @@ func TestTheBuyersWhyIsShownAsAGuessForTheSellerOnly(t *testing.T) {
 		t.Error("with no guess the page should say the AI couldn't tell why")
 	}
 }
+
+// A run that failed before PayPal made anything (a network timeout, say) can be tried again: the page offers the
+// same approval, named as a retry, and says plainly that nothing was created. A retry can't make a second draft,
+// because the run first looks in PayPal for this deal's invoice number. After a draft was made and read back, no
+// approve button is offered at all.
+func TestAFailedRunCanBeTriedAgain(t *testing.T) {
+	s, deal := testServer(t)
+	deal.Result = &act.Result{}
+	deal.ResultError = `act: create_invoice: Post "https://api-m.sandbox.paypal.com/v1/oauth2/token": net/http: TLS handshake timeout`
+	if err := s.deps.Store.Save(deal); err != nil {
+		t.Fatal(err)
+	}
+	page := get(t, s.routes(), "/deal/"+deal.ID)
+	for _, want := range []string{`action="/deal/` + deal.ID + `/approve"`, "Try again: Create the PayPal draft",
+		"Nothing was created in PayPal", "can't make a second draft"} {
+		if !strings.Contains(page, want) {
+			t.Errorf("after a failed run the page lacks %q", want)
+		}
+	}
+	if strings.Contains(page, "Open it in your PayPal sandbox") {
+		t.Error("the page points to a draft that doesn't exist")
+	}
+
+	deal.Result = &act.Result{InvoiceID: "INV2-AAAA-BBBB-CCCC-7CVE", Status: "DRAFT", ReadBackOK: true}
+	deal.ResultError = ""
+	if err := s.deps.Store.Save(deal); err != nil {
+		t.Fatal(err)
+	}
+	if page := get(t, s.routes(), "/deal/"+deal.ID); strings.Contains(page, "/approve\"") {
+		t.Error("after a draft was made and read back, no approve button may be offered")
+	}
+}

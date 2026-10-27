@@ -758,3 +758,40 @@ func TestNoWhyModelStillGivesTheChoices(t *testing.T) {
 		t.Fatalf("why note %+v", deal.Why)
 	}
 }
+
+// flakyTools fails its first create, the way a network timeout does, then works.
+type flakyTools struct {
+	fakeTools
+	fails int
+}
+
+func (f *flakyTools) CreateInvoice(ctx context.Context, a act.CreateInvoiceArgs) (string, bool, error) {
+	if f.fails > 0 {
+		f.fails--
+		f.calls++
+		return "", false, errors.New("net/http: TLS handshake timeout")
+	}
+	return f.fakeTools.CreateInvoice(ctx, a)
+}
+
+// After a failed run the same approval can run again, and it makes exactly one draft.
+func TestAFailedRunCanBeTriedAgainWithoutADuplicate(t *testing.T) {
+	tools := &flakyTools{fails: 1}
+	d := deps(t, tools)
+	deal, _ := d.Start(context.Background(), askEmail)
+	deal, err := d.BuyerReplied(context.Background(), deal.ID, replyYes)
+	if err != nil || deal.Proposal == nil {
+		t.Fatalf("no plan: %v", err)
+	}
+	fp := act.Fingerprint(deal.Proposal.Plan)
+	if _, err := d.ApproveAndRun(context.Background(), deal.ID, fp); err == nil {
+		t.Fatal("the first run should have failed")
+	}
+	deal, err = d.ApproveAndRun(context.Background(), deal.ID, fp)
+	if err != nil || deal.Result == nil || !deal.Result.ReadBackOK || deal.ResultError != "" {
+		t.Fatalf("the retry did not make the draft: %v %+v %q", err, deal.Result, deal.ResultError)
+	}
+	if tools.created != 1 {
+		t.Fatalf("%d drafts made; a retry must make exactly one", tools.created)
+	}
+}
