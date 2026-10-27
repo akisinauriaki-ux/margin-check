@@ -2,6 +2,8 @@
 
 A spell-checker for profit: it catches giveaways in your sales emails and turns them into fair deals before you hit send.
 
+**▶ Demo video (2:42):** https://www.youtube.com/watch?v=_fbNhKHnrDg
+
 - **Who it is for:** Small sellers who negotiate custom orders or wholesale lots over email and bill through PayPal Invoicing.
 - **The problem:** Friendly negotiation emails give away margin through uncalculated volume discounts, absorbed shipping fees, carrying costs of extended terms, and processing fees without the seller noticing the leak [C-03].
 - **What it does:** It extracts deal terms from customer emails, calculates kept profit in whole cents across eight margin leaks, drafts fair counter-offers, and prepares approved draft invoices in the PayPal Sandbox without ever sending automatically [C-04].
