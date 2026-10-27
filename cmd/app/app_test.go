@@ -247,7 +247,7 @@ func TestTheBuyersWhyIsShownAsAGuessForTheSellerOnly(t *testing.T) {
 }
 
 // A run that failed before PayPal made anything (a network timeout, say) can be tried again: the page offers the
-// same approval, named as a retry, and says plainly that nothing was created. A retry can't make a second draft,
+// same approval, named as a retry, and says plainly that no draft came back. A retry can't make a second draft,
 // because the run first looks in PayPal for this deal's invoice number. After a draft was made and read back, no
 // approve button is offered at all.
 func TestAFailedRunCanBeTriedAgain(t *testing.T) {
@@ -259,7 +259,7 @@ func TestAFailedRunCanBeTriedAgain(t *testing.T) {
 	}
 	page := get(t, s.routes(), "/deal/"+deal.ID)
 	for _, want := range []string{`action="/deal/` + deal.ID + `/approve"`, "Try again: Create the PayPal draft",
-		"Nothing was created in PayPal", "can't make a second draft"} {
+		"No draft came back from PayPal", "can't make a second draft"} {
 		if !strings.Contains(page, want) {
 			t.Errorf("after a failed run the page lacks %q", want)
 		}

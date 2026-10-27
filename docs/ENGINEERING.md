@@ -60,6 +60,7 @@ The model's own "confidence" is never used. The headline metric is therefore **w
 - **Duplicates are suppressed end to end.** *Designing Data-Intensive Applications* is explicit: the application itself must suppress duplicates, whatever the layers below promise.
   - We tested PayPal's own request-id in the sandbox. It was ignored on invoice create: two creates made two invoices.
   - So each deal and choice gets one fixed invoice number. The agent looks for it before creating, and again after any failure. A repeat run finds the same draft [E-18].
+  - That makes a failed run (a network timeout, say) safe to try again. The page offers "Try again" and the retry makes exactly one draft [E-27].
 - **Change money only through an approved procedure.** *Security Engineering* describes the Clark-Wilson model: data changes only through approved transformation procedures. The only path to PayPal is the approved, fingerprinted plan.
 - **Common-sense checks before acting** (*The Design of Everyday Things*):
   - a choice that would lose money is never offered [E-19];

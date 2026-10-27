@@ -131,10 +131,10 @@ td.q{color:var(--muted);font-size:13px}.ok{color:var(--green);font-weight:600}.n
     {{with $c.DueDate}}due date {{.DueDate}} (no notification sent){{end}}
   </td></tr>{{end}}</table>
   <p class="fp">Fingerprint of exactly these calls: {{fingerprint .Plan}}</p>
-  {{if not $.Deal.Result}}
+  {{if or (not $.Deal.Result) (not $.Deal.Result.ReadBackOK)}}
   <form method="post" action="/deal/{{$.Deal.ID}}/approve">
     <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="fingerprint" value="{{fingerprint .Plan}}">
-    <div class="row"><button class="approve" type="submit">{{action .Plan}}</button><span class="note">Runs only if the plan still has this fingerprint.</span></div>
+    <div class="row"><button class="approve" type="submit">{{if $.Deal.Result}}Try again: {{end}}{{action .Plan}}</button><span class="note">Runs only if the plan still has this fingerprint.{{if $.Deal.Result}} Trying again can't make a second draft: it first looks in PayPal for this deal's invoice number.{{end}}</span></div>
   </form>{{end}}
   {{end}}
 </div>
@@ -143,11 +143,13 @@ td.q{color:var(--muted);font-size:13px}.ok{color:var(--green);font-weight:600}.n
 {{with .Result}}
 <h2 id="result">The PayPal draft</h2>
 <div class="plan">
+  {{if not .InvoiceID}}<p><strong>No draft came back from PayPal.</strong> <span class="note">The run stopped (the reason is below). Try again: if PayPal did make the draft, the retry finds it instead of making a second.</span></p>
+  {{else}}
   <p><strong>{{if .ReadBackOK}}Draft {{maskID .InvoiceID}} is ready in PayPal: status {{.Status}}.{{else}}The draft needs a look.{{end}}</strong>
   {{if .AlreadyExisted}}<span class="note">It already existed, so nothing new was created.</span>{{end}}</p>
   <table><tr><th>PayPal read-back</th><th>Planned</th><th>In PayPal</th><th></th></tr>
   {{range .Checks}}<tr><td>{{.Field}}</td><td>{{.Want}}</td><td>{{.Got}}</td><td>{{if .OK}}<span class="ok">match</span>{{else}}<span class="no">differs</span>{{end}}</td></tr>{{end}}</table>
-  <p class="note">Open it in your PayPal sandbox, check it, and send it yourself.</p>
+  <p class="note">Open it in your PayPal sandbox, check it, and send it yourself.</p>{{end}}
 </div>
 {{end}}
 {{if .ResultError}}<div class="err" style="margin-top:12px">{{.ResultError}}</div>{{end}}
